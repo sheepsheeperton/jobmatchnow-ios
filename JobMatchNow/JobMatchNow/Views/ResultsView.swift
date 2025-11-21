@@ -1,13 +1,7 @@
 import SwiftUI
 
 struct ResultsView: View {
-    // Placeholder job data
-    let placeholderJobs = [
-        JobCard(title: "iOS Developer", company: "Tech Corp", location: "Remote", matchScore: 95),
-        JobCard(title: "Senior Swift Engineer", company: "StartupXYZ", location: "San Francisco, CA", matchScore: 88),
-        JobCard(title: "Mobile App Developer", company: "Digital Solutions", location: "New York, NY", matchScore: 82),
-        JobCard(title: "Software Engineer", company: "Innovation Labs", location: "Austin, TX", matchScore: 78)
-    ]
+    let jobs: [Job]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,7 +11,7 @@ struct ResultsView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
 
-                Text("Found \(placeholderJobs.count) matches based on your résumé")
+                Text("Found \(jobs.count) matches based on your résumé")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -27,7 +21,7 @@ struct ResultsView: View {
             // Job cards list
             ScrollView {
                 VStack(spacing: 16) {
-                    ForEach(placeholderJobs) { job in
+                    ForEach(jobs) { job in
                         JobCardView(job: job)
                     }
                 }
@@ -50,50 +44,37 @@ struct ResultsView: View {
     }
 }
 
-// Model for job card
-struct JobCard: Identifiable {
-    let id = UUID()
-    let title: String
-    let company: String
-    let location: String
-    let matchScore: Int
-}
-
 // Job card component
 struct JobCardView: View {
-    let job: JobCard
+    let job: Job
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header with match score
+            // Header
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(job.title)
                         .font(.headline)
                         .foregroundColor(.primary)
 
-                    Text(job.company)
+                    Text(job.company_name)
                         .font(.subheadline)
                         .foregroundColor(.blue)
                 }
 
                 Spacer()
 
-                // Match score badge
-                VStack(spacing: 4) {
-                    Text("\(job.matchScore)%")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(matchScoreColor)
-
-                    Text("Match")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                // Category badge (if available)
+                if let category = job.category {
+                    Text(category)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(matchScoreColor.opacity(0.1))
-                .cornerRadius(8)
             }
 
             // Location
@@ -106,18 +87,42 @@ struct JobCardView: View {
                     .foregroundColor(.secondary)
             }
 
+            // Posted date (if available)
+            if let postedAt = job.posted_at {
+                HStack(spacing: 6) {
+                    Image(systemName: "calendar")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(postedAt)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+
             // Action button
-            Button(action: {
-                // Placeholder action
-            }) {
-                Text("View Details")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.blue)
-                    .cornerRadius(8)
+            if let jobURL = job.job_url, let url = URL(string: jobURL) {
+                Link(destination: url) {
+                    Text("View Details")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.blue)
+                        .cornerRadius(8)
+                }
+            } else {
+                Button(action: {}) {
+                    Text("Details Unavailable")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.gray)
+                        .cornerRadius(8)
+                }
+                .disabled(true)
             }
         }
         .padding()
@@ -125,20 +130,15 @@ struct JobCardView: View {
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
-
-    private var matchScoreColor: Color {
-        if job.matchScore >= 90 {
-            return .green
-        } else if job.matchScore >= 75 {
-            return .orange
-        } else {
-            return .gray
-        }
-    }
 }
 
 #Preview {
-    NavigationStack {
-        ResultsView()
+    let sampleJobs = [
+        Job(id: "1", job_id: "job1", title: "iOS Developer", company_name: "Tech Corp", location: "Remote", posted_at: "2 days ago", job_url: "https://example.com", source_query: "iOS developer", category: "Engineering"),
+        Job(id: "2", job_id: "job2", title: "Senior Swift Engineer", company_name: "StartupXYZ", location: "San Francisco, CA", posted_at: "1 week ago", job_url: "https://example.com", source_query: "Swift developer", category: "Engineering")
+    ]
+
+    return NavigationStack {
+        ResultsView(jobs: sampleJobs)
     }
 }

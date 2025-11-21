@@ -5,6 +5,11 @@ struct PipelineLoadingView: View {
 
     @State private var currentStep = 0
     @State private var navigateToResults = false
+    @State private var jobs: [Job] = []
+    @State private var pollingTask: Task<Void, Never>?
+    @State private var sessionStatus: String?
+    @State private var showErrorAlert = false
+    @State private var errorMessage = ""
 
     let steps = [
         PipelineStep(icon: "doc.text.magnifyingglass", title: "Parsing your résumé..."),
@@ -45,10 +50,18 @@ struct PipelineLoadingView: View {
         }
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $navigateToResults) {
-            ResultsView()
+            ResultsView(jobs: jobs)
+        }
+        .alert("Processing Failed", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
         }
         .onAppear {
-            startPipeline()
+            startPolling()
+        }
+        .onDisappear {
+            stopPolling()
         }
     }
 
@@ -62,19 +75,81 @@ struct PipelineLoadingView: View {
         }
     }
 
-    private func startPipeline() {
-        // Simulate each step with delays
-        Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { timer in
-            if currentStep < steps.count {
-                withAnimation {
-                    currentStep += 1
+    private func startPolling() {
+        pollingTask = Task {
+            while !Task.isCancelled {
+                do {
+                    // Poll session status
+                    let status = try await APIService.shared.getSessionStatus(viewToken: viewToken)
+
+                    await MainActor.run {
+                        sessionStatus = status.status
+
+                        // Animate step progression for visual feedback
+                        if currentStep < steps.count - 1 {
+                            withAnimation {
+                                currentStep += 1
+                            }
+                        }
+                    }
+
+                    // Check status
+                    if status.status == "completed" {
+                        // Fetch jobs and navigate
+                        await fetchJobsAndNavigate()
+                        break
+                    } else if status.status == "failed" {
+                        // Show error
+                        await MainActor.run {
+                            errorMessage = status.error_message ?? "An unknown error occurred"
+                            showErrorAlert = true
+                        }
+                        break
+                    }
+                    // If status is "running", continue polling
+
+                } catch {
+                    // Handle network/API errors
+                    await MainActor.run {
+                        errorMessage = "Failed to check status: \(error.localizedDescription)"
+                        showErrorAlert = true
+                    }
+                    break
                 }
-            } else {
-                timer.invalidate()
-                // Wait a moment before navigating
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+
+                // Wait 2 seconds before next poll
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+            }
+        }
+    }
+
+    private func stopPolling() {
+        pollingTask?.cancel()
+        pollingTask = nil
+    }
+
+    private func fetchJobsAndNavigate() async {
+        do {
+            let fetchedJobs = try await APIService.shared.getJobs(viewToken: viewToken)
+
+            await MainActor.run {
+                // Mark all steps as complete
+                withAnimation {
+                    currentStep = steps.count
+                }
+
+                // Store jobs and navigate
+                jobs = fetchedJobs
+
+                // Wait a moment to show completion
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     navigateToResults = true
                 }
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = "Failed to fetch jobs: \(error.localizedDescription)"
+                showErrorAlert = true
             }
         }
     }
