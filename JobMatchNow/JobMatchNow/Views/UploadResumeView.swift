@@ -137,16 +137,14 @@ struct DocumentPicker: UIViewControllerRepresentable {
     @Environment(\.presentationMode) private var presentationMode
 
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-        // Configure for PDF and DOCX files
-        let types = [
-            UTType.pdf,
-            UTType(filenameExtension: "docx") ?? UTType.data,
-            UTType(filenameExtension: "doc") ?? UTType.data
-        ]
+        // Configure for PDF and document files
+        // Using permissive content types to ensure PDFs can be selected
+        let types: [UTType] = [.pdf, .item]
 
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: types, asCopy: true)
         picker.delegate = context.coordinator
         picker.shouldShowFileExtensions = true
+        picker.allowsMultipleSelection = false
         return picker
     }
 
@@ -164,7 +162,14 @@ struct DocumentPicker: UIViewControllerRepresentable {
         }
 
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            guard let url = urls.first else { return }
+            print("Document picker delegate called with \(urls.count) URL(s)")
+            guard let url = urls.first else {
+                print("No URL found in picker result")
+                return
+            }
+
+            print("Picked file: \(url)")
+            print("File name: \(url.lastPathComponent)")
 
             // Extract just the file name
             parent.selectedFileName = url.lastPathComponent
@@ -172,6 +177,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
         }
 
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            print("Document picker was cancelled")
             parent.presentationMode.wrappedValue.dismiss()
         }
     }
