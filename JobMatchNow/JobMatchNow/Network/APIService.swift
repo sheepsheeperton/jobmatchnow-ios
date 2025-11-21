@@ -107,6 +107,8 @@ class APIService {
 
         request.httpBody = body
 
+        print("DEBUG: Uploading resume to:", url)
+
         // Perform request
         let (data, response): (Data, URLResponse)
         do {
@@ -157,6 +159,8 @@ class APIService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
+        print("DEBUG: Checking session status at:", url)
+
         // Perform request
         let (data, response): (Data, URLResponse)
         do {
@@ -202,6 +206,8 @@ class APIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+
+        print("DEBUG: Fetching jobs from:", url)
 
         // Perform request
         let (data, response): (Data, URLResponse)
