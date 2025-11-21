@@ -174,6 +174,14 @@ class APIService {
             throw APIError.invalidResponse
         }
 
+        print("DEBUG: Session status response - Status code:", httpResponse.statusCode, "URL:", url)
+
+        // Log raw response body
+        if let responseBody = String(data: data, encoding: .utf8) {
+            let preview = responseBody.prefix(200)
+            print("DEBUG: Session status raw response:", preview)
+        }
+
         // Handle error status codes
         if httpResponse.statusCode != 200 {
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
@@ -185,8 +193,11 @@ class APIService {
         do {
             sessionStatus = try JSONDecoder().decode(SessionStatus.self, from: data)
         } catch {
+            print("DEBUG: Failed to decode session status:", error)
             throw APIError.decodingError(error)
         }
+
+        print("DEBUG: Session status decoded - status:", sessionStatus.status ?? "nil")
 
         return sessionStatus
     }
@@ -222,6 +233,14 @@ class APIService {
             throw APIError.invalidResponse
         }
 
+        print("DEBUG: Get jobs response - Status code:", httpResponse.statusCode, "URL:", url)
+
+        // Log raw response body
+        if let responseBody = String(data: data, encoding: .utf8) {
+            let preview = responseBody.prefix(500)
+            print("DEBUG: Get jobs raw response:", preview)
+        }
+
         // Handle error status codes
         if httpResponse.statusCode != 200 {
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
@@ -233,8 +252,11 @@ class APIService {
         do {
             jobs = try JSONDecoder().decode([Job].self, from: data)
         } catch {
+            print("DEBUG: Failed to decode jobs:", error)
             throw APIError.decodingError(error)
         }
+
+        print("DEBUG: Successfully decoded \(jobs.count) jobs")
 
         return jobs
     }

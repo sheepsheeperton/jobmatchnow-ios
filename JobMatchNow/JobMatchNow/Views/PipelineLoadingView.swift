@@ -76,11 +76,16 @@ struct PipelineLoadingView: View {
     }
 
     private func startPolling() {
+        print("DEBUG: Starting session status polling with viewToken:", viewToken)
+
         pollingTask = Task {
             while !Task.isCancelled {
                 do {
                     // Poll session status
+                    print("DEBUG: Polling session status...")
                     let status = try await APIService.shared.getSessionStatus(viewToken: viewToken)
+
+                    print("DEBUG: Received status:", status.status ?? "nil")
 
                     await MainActor.run {
                         sessionStatus = status.status
@@ -94,22 +99,32 @@ struct PipelineLoadingView: View {
                     }
 
                     // Check status
-                    if status.status == "completed" {
-                        // Fetch jobs and navigate
-                        await fetchJobsAndNavigate()
-                        break
-                    } else if status.status == "failed" {
-                        // Show error
-                        await MainActor.run {
-                            errorMessage = status.error_message ?? "An unknown error occurred"
-                            showErrorAlert = true
+                    if let statusValue = status.status {
+                        if statusValue == "completed" {
+                            print("DEBUG: Status completed, fetching jobs")
+                            // Fetch jobs and navigate
+                            await fetchJobsAndNavigate()
+                            break
+                        } else if statusValue == "failed" {
+                            print("DEBUG: Status failed:", status.error_message ?? "No error message")
+                            // Show error
+                            await MainActor.run {
+                                errorMessage = status.error_message ?? "An unknown error occurred"
+                                showErrorAlert = true
+                            }
+                            break
+                        } else if statusValue == "running" {
+                            print("DEBUG: Status running, continuing to poll")
+                        } else {
+                            print("DEBUG: Unexpected status value:", statusValue)
                         }
-                        break
+                    } else {
+                        print("DEBUG: Status is nil!")
                     }
-                    // If status is "running", continue polling
 
                 } catch {
                     // Handle network/API errors
+                    print("DEBUG: Error polling status:", error.localizedDescription)
                     await MainActor.run {
                         errorMessage = "Failed to check status: \(error.localizedDescription)"
                         showErrorAlert = true
@@ -129,8 +144,12 @@ struct PipelineLoadingView: View {
     }
 
     private func fetchJobsAndNavigate() async {
+        print("DEBUG: fetchJobsAndNavigate called")
+
         do {
             let fetchedJobs = try await APIService.shared.getJobs(viewToken: viewToken)
+
+            print("DEBUG: Fetched \(fetchedJobs.count) jobs")
 
             await MainActor.run {
                 // Mark all steps as complete
@@ -141,12 +160,16 @@ struct PipelineLoadingView: View {
                 // Store jobs and navigate
                 jobs = fetchedJobs
 
+                print("DEBUG: Jobs stored, scheduling navigation")
+
                 // Wait a moment to show completion
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    print("DEBUG: Setting navigateToResults = true")
                     navigateToResults = true
                 }
             }
         } catch {
+            print("DEBUG: Error fetching jobs:", error.localizedDescription)
             await MainActor.run {
                 errorMessage = "Failed to fetch jobs: \(error.localizedDescription)"
                 showErrorAlert = true
