@@ -162,14 +162,51 @@ struct UploadResumeView: View {
     }
 
     private func useSampleResume() {
-        // Debug bypass: pretend a sample resume was selected
-        selectedFileURL = URL(string: "file:///sample/path/SampleResume.pdf")
-        selectedFileName = "SampleResume.pdf"
-        viewToken = "debug_sample_token"
-        print("DEBUG: Using sample resume - \(selectedFileName ?? "")")
+        print("DEBUG: useSampleResume button pressed")
 
-        // Immediately navigate to pipeline
-        navigateToPipeline = true
+        // Get bundled sample resume URL
+        guard let sampleURL = AppResources.sampleResumeURL() else {
+            print("DEBUG: Failed to get sample resume URL from bundle")
+            errorMessage = "Sample resume not found in app bundle"
+            showErrorAlert = true
+            return
+        }
+
+        print("DEBUG: Using bundled sample resume at:", sampleURL)
+
+        // Update UI to show selected file
+        selectedFileURL = sampleURL
+        selectedFileName = "SampleResume.pdf"
+
+        // Upload using real backend pipeline
+        isUploading = true
+
+        Task {
+            defer {
+                isUploading = false
+            }
+
+            do {
+                print("DEBUG: Uploading bundled sample resume to backend...")
+                // Call the real API with bundled resume
+                let token = try await APIService.shared.uploadResume(fileURL: sampleURL)
+
+                print("DEBUG: Sample resume upload successful! viewToken:", token)
+
+                // On success: capture token and navigate
+                await MainActor.run {
+                    viewToken = token
+                    navigateToPipeline = true
+                }
+            } catch {
+                // On failure: show error alert
+                print("DEBUG: Sample resume upload failed:", error.localizedDescription)
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    showErrorAlert = true
+                }
+            }
+        }
     }
 }
 
