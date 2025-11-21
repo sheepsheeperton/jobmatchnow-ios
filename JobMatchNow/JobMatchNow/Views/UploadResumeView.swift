@@ -5,6 +5,7 @@ struct UploadResumeView: View {
     @State private var selectedFileName: String? = nil
     @State private var isDocumentPickerPresented = false
     @State private var isLoading = false
+    @State private var navigateToPipeline = false
 
     // Computed property to check if analyze button should be enabled
     var canAnalyze: Bool {
@@ -85,20 +86,17 @@ struct UploadResumeView: View {
             .padding(.bottom, 30)
         }
         .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(isPresented: $navigateToPipeline) {
+            PipelineLoadingView()
+        }
         .sheet(isPresented: $isDocumentPickerPresented) {
             DocumentPicker(selectedFileName: $selectedFileName)
         }
     }
 
     private func analyzeResume() {
-        // Placeholder loading state
-        isLoading = true
-        print("Analyze tapped")
-
-        // Simulate API call with delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            isLoading = false
-        }
+        // Navigate to pipeline loading view
+        navigateToPipeline = true
     }
 }
 
