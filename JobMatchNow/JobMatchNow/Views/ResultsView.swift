@@ -1,7 +1,25 @@
 import SwiftUI
 
+enum JobFilter: String, CaseIterable {
+    case all = "All"
+    case direct = "Direct"
+    case adjacent = "Adjacent"
+}
+
 struct ResultsView: View {
     let jobs: [Job]
+    @State private var selectedFilter: JobFilter = .all
+
+    var filteredJobs: [Job] {
+        switch selectedFilter {
+        case .all:
+            return jobs
+        case .direct:
+            return jobs.filter { $0.category?.lowercased() == "direct" }
+        case .adjacent:
+            return jobs.filter { $0.category?.lowercased() == "adjacent" }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -11,17 +29,27 @@ struct ResultsView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
 
-                Text("Found \(jobs.count) matches based on your résumé")
+                Text("Found \(filteredJobs.count) matches based on your résumé")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
             .padding(.top, 20)
-            .padding(.bottom, 24)
+            .padding(.bottom, 16)
+
+            // Filter segmented control
+            Picker("Filter", selection: $selectedFilter) {
+                ForEach(JobFilter.allCases, id: \.self) { filter in
+                    Text(filter.rawValue).tag(filter)
+                }
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            .padding(.horizontal)
+            .padding(.bottom, 16)
 
             // Job cards list
             ScrollView {
                 VStack(spacing: 16) {
-                    ForEach(jobs) { job in
+                    ForEach(filteredJobs) { job in
                         JobCardView(job: job)
                     }
                 }
@@ -134,8 +162,10 @@ struct JobCardView: View {
 
 #Preview {
     let sampleJobs = [
-        Job(id: "1", job_id: "job1", title: "iOS Developer", company_name: "Tech Corp", location: "Remote", posted_at: "2 days ago", job_url: "https://example.com", source_query: "iOS developer", category: "Engineering"),
-        Job(id: "2", job_id: "job2", title: "Senior Swift Engineer", company_name: "StartupXYZ", location: "San Francisco, CA", posted_at: "1 week ago", job_url: "https://example.com", source_query: "Swift developer", category: "Engineering")
+        Job(id: "1", job_id: "job1", title: "iOS Developer", company_name: "Tech Corp", location: "Remote", posted_at: "2 days ago", job_url: "https://example.com", source_query: "iOS developer", category: "direct"),
+        Job(id: "2", job_id: "job2", title: "Senior Swift Engineer", company_name: "StartupXYZ", location: "San Francisco, CA", posted_at: "1 week ago", job_url: "https://example.com", source_query: "Swift developer", category: "direct"),
+        Job(id: "3", job_id: "job3", title: "Product Manager", company_name: "Innovation Labs", location: "Austin, TX", posted_at: "3 days ago", job_url: "https://example.com", source_query: "product manager", category: "adjacent"),
+        Job(id: "4", job_id: "job4", title: "UX Designer", company_name: "Design Studio", location: "New York, NY", posted_at: "5 days ago", job_url: "https://example.com", source_query: "ux designer", category: "adjacent")
     ]
 
     return NavigationStack {
