@@ -59,7 +59,7 @@ enum APIError: LocalizedError {
 class APIService {
     static let shared = APIService()
 
-    private let baseURL = "http://localhost:8000"
+    private let baseURL = "https://jobmatchnow.ai"
     private let session: URLSession
 
     private init() {
