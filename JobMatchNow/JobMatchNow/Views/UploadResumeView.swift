@@ -42,6 +42,7 @@ struct UploadResumeView: View {
 
                 // Choose file button
                 Button(action: {
+                    print("DEBUG: Choose File button pressed")
                     isImporterPresented = true
                 }) {
                     Label("Choose File", systemImage: "doc.badge.plus")
@@ -52,6 +53,7 @@ struct UploadResumeView: View {
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(10)
                 }
+                .disabled(isUploading)
 
                 // Debug bypass button
                 Button(action: {
@@ -107,52 +109,122 @@ struct UploadResumeView: View {
         }
         .fileImporter(
             isPresented: $isImporterPresented,
-            allowedContentTypes: [.pdf, .data],
+            allowedContentTypes: [
+                .pdf,
+                UTType(filenameExtension: "docx") ?? .data,
+                UTType(filenameExtension: "doc") ?? .data,
+                .plainText,
+                .rtf,
+                .data
+            ],
             allowsMultipleSelection: false
         ) { result in
+            print("DEBUG: File picker completion handler called")
+
             switch result {
             case .success(let urls):
-                guard let url = urls.first else { return }
+                print("DEBUG: File picker success with \(urls.count) URLs")
+
+                guard let url = urls.first else {
+                    print("DEBUG: No URL in urls array")
+                    return
+                }
+
+                print("DEBUG: Selected file URL:", url)
+                print("DEBUG: File name:", url.lastPathComponent)
+                print("DEBUG: File path:", url.path)
+                print("DEBUG: Is file URL:", url.isFileURL)
+
+                // Try to determine MIME type
+                if let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey]),
+                   let contentType = resourceValues.contentType {
+                    print("DEBUG: Content type:", contentType.identifier)
+                    print("DEBUG: Preferred MIME type:", contentType.preferredMIMEType ?? "unknown")
+                } else {
+                    print("DEBUG: Could not determine content type")
+                }
+
+                // Update UI state
                 selectedFileURL = url
                 selectedFileName = url.lastPathComponent
-                print("Picked file URL:", url)
-                print("File name:", url.lastPathComponent)
+
+                print("DEBUG: File selected, triggering automatic upload")
+
+                // Automatically trigger upload after file selection
+                uploadSelectedFile(url)
+
             case .failure(let error):
-                print("File import error:", error)
+                print("DEBUG: File picker error:", error.localizedDescription)
+                errorMessage = "Failed to select file: \(error.localizedDescription)"
+                showErrorAlert = true
             }
         }
     }
 
     private func analyzeResume() {
-        guard let fileURL = selectedFileURL else { return }
+        print("DEBUG: analyzeResume() called from Analyze button")
+        guard let fileURL = selectedFileURL else {
+            print("DEBUG: No file selected")
+            return
+        }
+
+        uploadSelectedFile(fileURL)
+    }
+
+    private func uploadSelectedFile(_ fileURL: URL) {
+        print("DEBUG: uploadSelectedFile() called with URL:", fileURL)
+
+        guard !isUploading else {
+            print("DEBUG: Upload already in progress, ignoring")
+            return
+        }
 
         isUploading = true
+        print("DEBUG: Set isUploading = true")
 
         Task {
             // Start accessing security-scoped resource
+            print("DEBUG: Attempting to access security-scoped resource")
             let didStartAccessing = fileURL.startAccessingSecurityScopedResource()
+            print("DEBUG: Security-scoped access granted:", didStartAccessing)
 
             defer {
                 // Always stop accessing security-scoped resource
                 if didStartAccessing {
+                    print("DEBUG: Stopping security-scoped resource access")
                     fileURL.stopAccessingSecurityScopedResource()
                 }
 
                 // Reset uploading state
+                print("DEBUG: Setting isUploading = false")
                 isUploading = false
             }
 
             do {
+                // Verify file exists and is readable
+                let fileExists = FileManager.default.fileExists(atPath: fileURL.path)
+                print("DEBUG: File exists at path:", fileExists)
+
+                if fileExists, let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path) {
+                    let fileSize = attributes[.size] as? Int64 ?? 0
+                    print("DEBUG: File size:", fileSize, "bytes")
+                }
+
+                print("DEBUG: Starting API upload call")
                 // Call the real API
                 let token = try await APIService.shared.uploadResume(fileURL: fileURL)
 
+                print("DEBUG: Upload completed successfully! Received viewToken:", token)
+
                 // On success: capture token and navigate
                 await MainActor.run {
+                    print("DEBUG: Setting viewToken and triggering navigation")
                     viewToken = token
                     navigateToPipeline = true
                 }
             } catch {
                 // On failure: show error alert
+                print("DEBUG: Upload failed with error:", error.localizedDescription)
                 await MainActor.run {
                     errorMessage = error.localizedDescription
                     showErrorAlert = true
@@ -178,35 +250,8 @@ struct UploadResumeView: View {
         selectedFileURL = sampleURL
         selectedFileName = "SampleResume.pdf"
 
-        // Upload using real backend pipeline
-        isUploading = true
-
-        Task {
-            defer {
-                isUploading = false
-            }
-
-            do {
-                print("DEBUG: Uploading bundled sample resume to backend...")
-                // Call the real API with bundled resume
-                let token = try await APIService.shared.uploadResume(fileURL: sampleURL)
-
-                print("DEBUG: Sample resume upload successful! viewToken:", token)
-
-                // On success: capture token and navigate
-                await MainActor.run {
-                    viewToken = token
-                    navigateToPipeline = true
-                }
-            } catch {
-                // On failure: show error alert
-                print("DEBUG: Sample resume upload failed:", error.localizedDescription)
-                await MainActor.run {
-                    errorMessage = error.localizedDescription
-                    showErrorAlert = true
-                }
-            }
-        }
+        // Upload using the same upload function
+        uploadSelectedFile(sampleURL)
     }
 }
 
