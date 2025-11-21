@@ -48,6 +48,19 @@ struct UploadResumeView: View {
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(10)
                 }
+
+                // Debug bypass button
+                Button(action: {
+                    useSampleResume()
+                }) {
+                    Label("Use sample résumé (debug)", systemImage: "doc.text.fill")
+                        .font(.subheadline)
+                        .foregroundColor(.orange)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(Color.orange.opacity(0.1))
+                        .cornerRadius(10)
+                }
             }
             .padding(.horizontal)
 
@@ -93,6 +106,16 @@ struct UploadResumeView: View {
 
     private func analyzeResume() {
         // Navigate to pipeline loading view
+        navigateToPipeline = true
+    }
+
+    private func useSampleResume() {
+        // Debug bypass: pretend a sample resume was selected
+        selectedFileURL = URL(string: "file:///sample/path/SampleResume.pdf")
+        selectedFileName = "SampleResume.pdf"
+        print("DEBUG: Using sample resume - \(selectedFileName ?? "")")
+
+        // Immediately navigate to pipeline
         navigateToPipeline = true
     }
 }
