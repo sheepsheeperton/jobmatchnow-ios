@@ -6,10 +6,14 @@ struct UploadResumeView: View {
     @State private var selectedFileURL: URL? = nil
     @State private var selectedFileName: String? = nil
     @State private var navigateToPipeline = false
+    @State private var viewToken: String? = nil
+    @State private var isUploading = false
+    @State private var showErrorAlert = false
+    @State private var errorMessage = ""
 
     // Computed property to check if analyze button should be enabled
     var canAnalyze: Bool {
-        selectedFileURL != nil
+        selectedFileURL != nil && !isUploading
     }
 
     var body: some View {
@@ -70,13 +74,21 @@ struct UploadResumeView: View {
             Button(action: {
                 analyzeResume()
             }) {
-                Text("Analyze My Résumé")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(canAnalyze ? Color.blue : Color.gray)
-                    .cornerRadius(12)
+                HStack {
+                    if isUploading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        Text("Uploading...")
+                    } else {
+                        Text("Analyze My Résumé")
+                    }
+                }
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(canAnalyze ? Color.blue : Color.gray)
+                .cornerRadius(12)
             }
             .disabled(!canAnalyze)
             .padding(.horizontal)
@@ -84,7 +96,14 @@ struct UploadResumeView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $navigateToPipeline) {
-            PipelineLoadingView()
+            if let token = viewToken {
+                PipelineLoadingView(viewToken: token)
+            }
+        }
+        .alert("Upload Failed", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
         }
         .fileImporter(
             isPresented: $isImporterPresented,
@@ -105,14 +124,48 @@ struct UploadResumeView: View {
     }
 
     private func analyzeResume() {
-        // Navigate to pipeline loading view
-        navigateToPipeline = true
+        guard let fileURL = selectedFileURL else { return }
+
+        isUploading = true
+
+        Task {
+            // Start accessing security-scoped resource
+            let didStartAccessing = fileURL.startAccessingSecurityScopedResource()
+
+            defer {
+                // Always stop accessing security-scoped resource
+                if didStartAccessing {
+                    fileURL.stopAccessingSecurityScopedResource()
+                }
+
+                // Reset uploading state
+                isUploading = false
+            }
+
+            do {
+                // Call the real API
+                let token = try await APIService.shared.uploadResume(fileURL: fileURL)
+
+                // On success: capture token and navigate
+                await MainActor.run {
+                    viewToken = token
+                    navigateToPipeline = true
+                }
+            } catch {
+                // On failure: show error alert
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    showErrorAlert = true
+                }
+            }
+        }
     }
 
     private func useSampleResume() {
         // Debug bypass: pretend a sample resume was selected
         selectedFileURL = URL(string: "file:///sample/path/SampleResume.pdf")
         selectedFileName = "SampleResume.pdf"
+        viewToken = "debug_sample_token"
         print("DEBUG: Using sample resume - \(selectedFileName ?? "")")
 
         // Immediately navigate to pipeline

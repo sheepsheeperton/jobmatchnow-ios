@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct PipelineLoadingView: View {
+    let viewToken: String
+
     @State private var currentStep = 0
     @State private var navigateToResults = false
 
@@ -142,6 +144,6 @@ struct PipelineStepRow: View {
 
 #Preview {
     NavigationStack {
-        PipelineLoadingView()
+        PipelineLoadingView(viewToken: "sample_token")
     }
 }
