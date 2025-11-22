@@ -3,99 +3,78 @@ import UniformTypeIdentifiers
 
 struct UploadResumeView: View {
     @State private var showingFilePicker = false
-    @State private var selectedFileURL: URL? = nil
-    @State private var selectedFileName: String? = nil
     @State private var navigateToPipeline = false
     @State private var viewToken: String? = nil
     @State private var isUploading = false
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
 
-    // Computed property to check if analyze button should be enabled
-    var canAnalyze: Bool {
-        selectedFileURL != nil && !isUploading
-    }
-
     var body: some View {
-        VStack(spacing: 24) {
-            // Header section
-            VStack(spacing: 12) {
-                Text("Upload your résumé")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-
-                Text("We'll extract your skills and match you to relevant job listings.")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-            .padding(.top, 40)
-
-            Spacer()
-
-            // File upload section
+        VStack(spacing: 0) {
+            // Top content section
             VStack(spacing: 20) {
-                // File card
-                FileCard(fileName: selectedFileName)
+                // Header
+                VStack(spacing: 12) {
+                    Text("Upload Your Résumé")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .multilineTextAlignment(.center)
 
-                // Choose file button
+                    Text("We'll analyze your skills and match you with relevant job opportunities")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+                .padding(.top, 60)
+
+                Spacer()
+
+                // Status indicator
+                if isUploading {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .tint(.blue)
+
+                        Text("Analyzing your résumé...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 40)
+                }
+
+                Spacer()
+            }
+
+            // Bottom button section
+            VStack(spacing: 16) {
+                // Primary upload button
                 Button(action: {
-                    print("[UploadResumeView] Choose File button pressed")
+                    print("[UploadResumeView] Upload button pressed")
                     showingFilePicker = true
-                    print("[UploadResumeView] fileImporter presented")
                 }) {
-                    Label("Choose File", systemImage: "doc.badge.plus")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(10)
+                    HStack(spacing: 12) {
+                        Image(systemName: "doc.badge.arrow.up")
+                            .font(.title3)
+                        Text("Choose Your Résumé")
+                            .font(.headline)
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(isUploading ? Color.gray : Color.blue)
+                    .cornerRadius(12)
                 }
                 .disabled(isUploading)
 
-                // Debug bypass button
-                Button(action: {
-                    useSampleResume()
-                }) {
-                    Label("Use sample résumé (debug)", systemImage: "doc.text.fill")
-                        .font(.subheadline)
-                        .foregroundColor(.orange)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(Color.orange.opacity(0.1))
-                        .cornerRadius(10)
-                }
+                // Supported formats hint
+                Text("Supports PDF, Word, and image files")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
-            .padding(.horizontal)
-
-            Spacer()
-
-            // Analyze button
-            Button(action: {
-                analyzeResume()
-            }) {
-                HStack {
-                    if isUploading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        Text("Uploading...")
-                    } else {
-                        Text("Analyze My Résumé")
-                    }
-                }
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(canAnalyze ? Color.blue : Color.gray)
-                .cornerRadius(12)
-            }
-            .disabled(!canAnalyze)
-            .padding(.horizontal)
-            .padding(.bottom, 30)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 40)
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $navigateToPipeline) {
@@ -118,228 +97,120 @@ struct UploadResumeView: View {
                 UTType(filenameExtension: "doc") ?? .data
             ]
         ) { result in
-            print("[UploadResumeView] fileImporter completion: \(result)")
+            handleFileSelection(result)
+        }
+    }
 
-            switch result {
-            case .success(let url):
-                print("[UploadResumeView] fileImporter completion: success")
-                print("[UploadResumeView] Selected URL:", url)
-                print("[UploadResumeView] File name:", url.lastPathComponent)
+    private func handleFileSelection(_ result: Result<URL, Error>) {
+        print("[UploadResumeView] File selection result: \(result)")
 
-                // Get content type and MIME type
-                if let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey]) {
-                    if let contentType = resourceValues.contentType {
-                        print("[UploadResumeView] Content type identifier:", contentType.identifier)
-                        print("[UploadResumeView] MIME type:", contentType.preferredMIMEType ?? "unknown")
-                    }
-                }
+        switch result {
+        case .success(let fileURL):
+            print("[UploadResumeView] File selected: \(fileURL.lastPathComponent)")
+            uploadFile(fileURL)
 
-                // Update state
-                selectedFileURL = url
-                selectedFileName = url.lastPathComponent
-
-                print("[UploadResumeView] Starting upload for selected file...")
-
-                // Trigger upload automatically
-                uploadSelectedFile(url)
-
-            case .failure(let error):
-                print("[UploadResumeView] fileImporter completion: failure")
-                print("[UploadResumeView] Error:", error.localizedDescription)
-                errorMessage = "Failed to select file: \(error.localizedDescription)"
+        case .failure(let error):
+            print("[UploadResumeView] File selection failed: \(error.localizedDescription)")
+            // Only show error if user didn't cancel
+            if (error as NSError).code != -128 { // User cancelled
+                errorMessage = "Failed to select file. Please try again."
                 showErrorAlert = true
             }
         }
     }
 
-    private func analyzeResume() {
-        print("[UploadResumeView] Analyze button pressed")
-        guard let fileURL = selectedFileURL else {
-            print("[UploadResumeView] No file selected for analyze")
-            return
-        }
-
-        uploadSelectedFile(fileURL)
-    }
-
-    private func uploadSelectedFile(_ fileURL: URL) {
-        print("[UploadResumeView] uploadSelectedFile() called with URL:", fileURL)
+    private func uploadFile(_ fileURL: URL) {
+        print("[UploadResumeView] Starting upload for file: \(fileURL)")
 
         guard !isUploading else {
-            print("[UploadResumeView] Upload already in progress, ignoring")
+            print("[UploadResumeView] Upload already in progress")
             return
         }
 
         isUploading = true
-        print("[UploadResumeView] Setting isUploading = true")
 
         Task {
             // Start accessing security-scoped resource
-            print("[UploadResumeView] Attempting to access security-scoped resource")
             let didStartAccessing = fileURL.startAccessingSecurityScopedResource()
-            print("[UploadResumeView] Security-scoped access granted:", didStartAccessing)
+            print("[UploadResumeView] Security-scoped access: \(didStartAccessing)")
 
             defer {
-                // Always stop accessing security-scoped resource
                 if didStartAccessing {
-                    print("[UploadResumeView] Stopping security-scoped resource access")
                     fileURL.stopAccessingSecurityScopedResource()
                 }
             }
 
             do {
-                // Verify file exists and is readable
-                let fileExists = FileManager.default.fileExists(atPath: fileURL.path)
-                print("[UploadResumeView] File exists at path:", fileExists)
-
-                if fileExists, let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path) {
-                    let fileSize = attributes[.size] as? Int64 ?? 0
-                    print("[UploadResumeView] File size:", fileSize, "bytes")
+                // Log file info
+                if let resourceValues = try? fileURL.resourceValues(forKeys: [.contentTypeKey, .fileSizeKey]) {
+                    if let contentType = resourceValues.contentType {
+                        print("[UploadResumeView] Content type: \(contentType.identifier)")
+                        print("[UploadResumeView] MIME type: \(contentType.preferredMIMEType ?? "unknown")")
+                    }
+                    if let fileSize = resourceValues.fileSize {
+                        print("[UploadResumeView] File size: \(fileSize) bytes")
+                    }
                 }
 
-                print("[UploadResumeView] Starting API upload call to /api/resume")
-                // Call the real API
+                // Upload to API
+                print("[UploadResumeView] Calling API upload...")
                 let token = try await APIService.shared.uploadResume(fileURL: fileURL)
 
-                print("[UploadResumeView] Upload success! Received viewToken:", token)
+                print("[UploadResumeView] Upload successful, received token: \(token)")
 
-                // On success: capture token and navigate
+                // Navigate to pipeline
                 await MainActor.run {
-                    // Stop the uploading state
-                    isUploading = false
-                    print("[UploadResumeView] Upload succeeded, stopping upload state")
-
-                    // Navigate to pipeline
-                    print("[UploadResumeView] Upload succeeded, navigating to pipeline with viewToken=\(token)")
                     viewToken = token
                     navigateToPipeline = true
-                }
-            } catch let error as APIError {
-                // Handle specific API errors
-                print("[UploadResumeView] APIError caught:", error)
-                await MainActor.run {
-                    // Reset uploading state on error
                     isUploading = false
+                }
 
-                    // Create user-friendly error message based on error type
-                    switch error {
-                    case .invalidURL:
-                        errorMessage = "Invalid server URL configuration"
-                    case .fileNotFound:
-                        errorMessage = "Selected file was not found"
-                    case .fileReadError:
-                        errorMessage = "Failed to read the selected file"
-                    case .invalidResponse:
-                        errorMessage = "Invalid response from server"
-                    case .httpError(let statusCode, let message):
-                        if statusCode == 413 {
-                            errorMessage = "File is too large to upload"
-                        } else if statusCode == 400 {
-                            errorMessage = "Invalid file format: \(message)"
-                        } else if statusCode >= 500 {
-                            errorMessage = "Server error (\(statusCode)): \(message)"
-                        } else {
-                            errorMessage = "Upload failed (HTTP \(statusCode)): \(message)"
-                        }
-                    case .decodingError:
-                        errorMessage = "Server returned unexpected response format"
-                    case .networkError(let underlyingError):
-                        if let urlError = underlyingError as? URLError {
-                            switch urlError.code {
-                            case .timedOut:
-                                errorMessage = "Upload failed: Request timed out. Please check your internet connection and try again."
-                            case .notConnectedToInternet:
-                                errorMessage = "Upload failed: No internet connection"
-                            case .cannotFindHost, .dnsLookupFailed:
-                                errorMessage = "Upload failed: Cannot connect to server (DNS error)"
-                            case .cannotConnectToHost:
-                                errorMessage = "Upload failed: Cannot connect to server"
-                            case .networkConnectionLost:
-                                errorMessage = "Upload failed: Connection lost during upload"
-                            case .secureConnectionFailed:
-                                errorMessage = "Upload failed: SSL/TLS connection error"
-                            case .serverCertificateUntrusted:
-                                errorMessage = "Upload failed: Server certificate is not trusted"
-                            default:
-                                errorMessage = "Upload failed: Network error (\(urlError.localizedDescription))"
-                            }
-                        } else {
-                            errorMessage = "Upload failed: \(underlyingError.localizedDescription)"
-                        }
-                    case .missingViewToken:
-                        errorMessage = "Server response missing view token"
-                    }
-
-                    print("[UploadResumeView] Showing error alert:", errorMessage)
+            } catch let error as APIError {
+                print("[UploadResumeView] API error: \(error)")
+                await MainActor.run {
+                    isUploading = false
+                    errorMessage = getErrorMessage(for: error)
                     showErrorAlert = true
                 }
             } catch {
-                // Handle unexpected errors
-                print("[UploadResumeView] Unexpected error:", error)
+                print("[UploadResumeView] Unexpected error: \(error)")
                 await MainActor.run {
-                    // Reset uploading state on error
                     isUploading = false
-                    errorMessage = "Upload failed: \(error.localizedDescription)"
+                    errorMessage = "We couldn't process your résumé. Please try again."
                     showErrorAlert = true
                 }
             }
         }
     }
 
-    private func useSampleResume() {
-        print("========================================")
-        print("[DEBUG BUTTON] Sample resume button pressed")
-        print("========================================")
-
-        // Get bundled sample resume URL
-        guard let sampleURL = AppResources.sampleResumeURL() else {
-            print("[DEBUG BUTTON] ERROR: Failed to get sample resume URL from bundle")
-            errorMessage = "Sample resume not found in app bundle"
-            showErrorAlert = true
-            return
-        }
-
-        print("[DEBUG BUTTON] Found bundled sample resume at:", sampleURL)
-        print("[DEBUG BUTTON] File exists:", FileManager.default.fileExists(atPath: sampleURL.path))
-
-        // Update UI to show selected file
-        selectedFileURL = sampleURL
-        selectedFileName = "SampleResume.pdf"
-
-        print("[DEBUG BUTTON] Calling shared upload function...")
-        // Upload using the same upload function
-        uploadSelectedFile(sampleURL)
-    }
-}
-
-// File card component
-struct FileCard: View {
-    let fileName: String?
-
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: fileName != nil ? "doc.fill" : "doc")
-                .font(.title)
-                .foregroundColor(fileName != nil ? .blue : .gray)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(fileName ?? "No file selected yet")
-                    .font(.headline)
-                    .foregroundColor(fileName != nil ? .primary : .secondary)
-
-                if fileName != nil {
-                    Text("Ready to analyze")
-                        .font(.caption)
-                        .foregroundColor(.green)
+    private func getErrorMessage(for error: APIError) -> String {
+        switch error {
+        case .fileNotFound, .fileReadError:
+            return "We couldn't read the selected file. Please try again."
+        case .httpError(let code, _):
+            if code == 413 {
+                return "The file is too large. Please choose a smaller file."
+            } else if code == 400 {
+                return "This file format isn't supported. Please use PDF, Word, or image files."
+            } else if code >= 500 {
+                return "Our servers are having issues. Please try again later."
+            }
+            return "We couldn't process your résumé. Please try again."
+        case .networkError(let underlyingError):
+            if let urlError = underlyingError as? URLError {
+                switch urlError.code {
+                case .timedOut:
+                    return "The upload took too long. Please check your connection and try again."
+                case .notConnectedToInternet:
+                    return "No internet connection. Please check your connection and try again."
+                default:
+                    break
                 }
             }
-
-            Spacer()
+            return "Connection error. Please check your internet and try again."
+        default:
+            return "We couldn't process your résumé. Please try again."
         }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(Color(UIColor.secondarySystemBackground))
-        .cornerRadius(12)
     }
 }
 
