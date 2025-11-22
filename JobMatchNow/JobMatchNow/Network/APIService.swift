@@ -113,9 +113,12 @@ class APIService {
     // MARK: - 1. Upload Resume (Improved with MIME detection)
 
     func uploadResume(fileURL: URL) async throws -> String {
-        print("[APIService] uploadResume() called")
+        print("========================================")
+        print("[APIService] RESUME UPLOAD START")
+        print("========================================")
         print("[APIService] File URL:", fileURL)
         print("[APIService] File name:", fileURL.lastPathComponent)
+        print("[APIService] Timestamp:", Date())
 
         guard let url = URL(string: "\(baseURL)/api/resume") else {
             throw APIError.invalidURL
@@ -161,36 +164,112 @@ class APIService {
 
         request.httpBody = body
 
-        print("[APIService] Sending POST request to:", url)
-        print("[APIService] Request Content-Type: multipart/form-data; boundary=\(boundary)")
-        print("[APIService] File Content-Type in multipart:", mimeType)
+        print("[APIService] ----------------------------------------")
+        print("[APIService] REQUEST DETAILS:")
+        print("[APIService] URL:", url.absoluteString)
+        print("[APIService] Method:", request.httpMethod ?? "nil")
+        print("[APIService] Content-Type: multipart/form-data; boundary=\(boundary)")
+        print("[APIService] Body size:", body.count, "bytes")
+        print("[APIService] File MIME type in multipart:", mimeType)
+        print("[APIService] Timeout interval:", request.timeoutInterval, "seconds")
+        print("[APIService] ----------------------------------------")
 
         // Perform request
         let (data, response): (Data, URLResponse)
+        let requestStartTime = Date()
+
         do {
+            print("[APIService] Sending request at:", requestStartTime)
             (data, response) = try await session.data(for: request)
+            let requestDuration = Date().timeIntervalSince(requestStartTime)
+            print("[APIService] Request completed in:", String(format: "%.2f", requestDuration), "seconds")
+        } catch let error as URLError {
+            let requestDuration = Date().timeIntervalSince(requestStartTime)
+            print("[APIService] ========================================")
+            print("[APIService] NETWORK ERROR after", String(format: "%.2f", requestDuration), "seconds")
+            print("[APIService] URLError Code:", error.code.rawValue)
+            print("[APIService] Error Description:", error.localizedDescription)
+
+            // Diagnose specific error types
+            switch error.code {
+            case .timedOut:
+                print("[APIService] ERROR TYPE: Request Timeout")
+                print("[APIService] The server did not respond within the timeout interval")
+            case .cannotFindHost:
+                print("[APIService] ERROR TYPE: DNS Failure")
+                print("[APIService] Cannot resolve host:", baseURL)
+            case .cannotConnectToHost:
+                print("[APIService] ERROR TYPE: Connection Failed")
+                print("[APIService] Cannot establish connection to host")
+            case .networkConnectionLost:
+                print("[APIService] ERROR TYPE: Connection Lost")
+                print("[APIService] Network connection was lost during request")
+            case .dnsLookupFailed:
+                print("[APIService] ERROR TYPE: DNS Lookup Failed")
+            case .httpTooManyRedirects:
+                print("[APIService] ERROR TYPE: Too Many Redirects")
+            case .secureConnectionFailed:
+                print("[APIService] ERROR TYPE: TLS/SSL Error")
+                print("[APIService] Failed to establish secure connection")
+            case .serverCertificateUntrusted:
+                print("[APIService] ERROR TYPE: Certificate Error")
+                print("[APIService] Server certificate is not trusted")
+            case .notConnectedToInternet:
+                print("[APIService] ERROR TYPE: No Internet Connection")
+            default:
+                print("[APIService] ERROR TYPE: Other URLError")
+            }
+
+            if let underlyingError = error.underlyingError {
+                print("[APIService] Underlying Error:", underlyingError)
+            }
+
+            print("[APIService] ========================================")
+            throw APIError.networkError(error)
         } catch {
-            print("[APIService] ERROR: Network request failed:", error)
+            let requestDuration = Date().timeIntervalSince(requestStartTime)
+            print("[APIService] ========================================")
+            print("[APIService] UNEXPECTED ERROR after", String(format: "%.2f", requestDuration), "seconds")
+            print("[APIService] Error Type:", type(of: error))
+            print("[APIService] Error:", error)
+            print("[APIService] ========================================")
             throw APIError.networkError(error)
         }
 
         // Check HTTP response
         guard let httpResponse = response as? HTTPURLResponse else {
-            print("[APIService] ERROR: Invalid response type")
+            print("[APIService] ERROR: Invalid response type (not HTTPURLResponse)")
             throw APIError.invalidResponse
         }
 
-        print("[APIService] Response status code:", httpResponse.statusCode)
+        print("[APIService] ========================================")
+        print("[APIService] RESPONSE RECEIVED")
+        print("[APIService] HTTP Status Code:", httpResponse.statusCode)
+        print("[APIService] HTTP Status:", HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))
+
+        // Log response headers
+        print("[APIService] Response Headers:")
+        for (key, value) in httpResponse.allHeaderFields {
+            print("[APIService]   \(key): \(value)")
+        }
 
         // Log response body
+        print("[APIService] Response Body Size:", data.count, "bytes")
         if let responseString = String(data: data, encoding: .utf8) {
-            print("[APIService] Response body:", responseString)
+            print("[APIService] Response Body (as string):")
+            print("[APIService]", responseString)
+        } else {
+            print("[APIService] Response Body: (unable to decode as UTF-8)")
+            print("[APIService] Raw bytes (first 100):", data.prefix(100))
         }
+        print("[APIService] ========================================")
 
         // Handle error status codes
         if httpResponse.statusCode != 200 {
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-            print("[APIService] ERROR: HTTP \(httpResponse.statusCode) - \(errorMessage)")
+            print("[APIService] ERROR: HTTP Error")
+            print("[APIService] Status Code:", httpResponse.statusCode)
+            print("[APIService] Error Message:", errorMessage)
             throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
         }
 
@@ -202,12 +281,20 @@ class APIService {
         let uploadResponse: UploadResponse
         do {
             uploadResponse = try JSONDecoder().decode(UploadResponse.self, from: data)
-            print("[APIService] Successfully decoded response")
+            print("[APIService] SUCCESS: Response decoded successfully")
             print("[APIService] Received view_token:", uploadResponse.view_token)
         } catch {
-            print("[APIService] ERROR: Failed to decode response:", error)
+            print("[APIService] ERROR: Failed to decode JSON response")
+            print("[APIService] Decoding error:", error)
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("[APIService] Raw response that failed to decode:", responseString)
+            }
             throw APIError.decodingError(error)
         }
+
+        print("[APIService] ========================================")
+        print("[APIService] RESUME UPLOAD SUCCESS")
+        print("[APIService] ========================================")
 
         return uploadResponse.view_token
     }

@@ -185,10 +185,6 @@ struct UploadResumeView: View {
                     print("[UploadResumeView] Stopping security-scoped resource access")
                     fileURL.stopAccessingSecurityScopedResource()
                 }
-
-                // Reset uploading state
-                print("[UploadResumeView] Setting isUploading = false")
-                isUploading = false
             }
 
             do {
@@ -213,11 +209,72 @@ struct UploadResumeView: View {
                     viewToken = token
                     navigateToPipeline = true
                 }
-            } catch {
-                // On failure: show error alert
-                print("[UploadResumeView] Upload error:", error.localizedDescription)
+            } catch let error as APIError {
+                // Handle specific API errors
+                print("[UploadResumeView] APIError caught:", error)
                 await MainActor.run {
-                    errorMessage = error.localizedDescription
+                    // Reset uploading state on error
+                    isUploading = false
+
+                    // Create user-friendly error message based on error type
+                    switch error {
+                    case .invalidURL:
+                        errorMessage = "Invalid server URL configuration"
+                    case .fileNotFound:
+                        errorMessage = "Selected file was not found"
+                    case .fileReadError:
+                        errorMessage = "Failed to read the selected file"
+                    case .invalidResponse:
+                        errorMessage = "Invalid response from server"
+                    case .httpError(let statusCode, let message):
+                        if statusCode == 413 {
+                            errorMessage = "File is too large to upload"
+                        } else if statusCode == 400 {
+                            errorMessage = "Invalid file format: \(message)"
+                        } else if statusCode >= 500 {
+                            errorMessage = "Server error (\(statusCode)): \(message)"
+                        } else {
+                            errorMessage = "Upload failed (HTTP \(statusCode)): \(message)"
+                        }
+                    case .decodingError:
+                        errorMessage = "Server returned unexpected response format"
+                    case .networkError(let underlyingError):
+                        if let urlError = underlyingError as? URLError {
+                            switch urlError.code {
+                            case .timedOut:
+                                errorMessage = "Upload failed: Request timed out. Please check your internet connection and try again."
+                            case .notConnectedToInternet:
+                                errorMessage = "Upload failed: No internet connection"
+                            case .cannotFindHost, .dnsLookupFailed:
+                                errorMessage = "Upload failed: Cannot connect to server (DNS error)"
+                            case .cannotConnectToHost:
+                                errorMessage = "Upload failed: Cannot connect to server"
+                            case .networkConnectionLost:
+                                errorMessage = "Upload failed: Connection lost during upload"
+                            case .secureConnectionFailed:
+                                errorMessage = "Upload failed: SSL/TLS connection error"
+                            case .serverCertificateUntrusted:
+                                errorMessage = "Upload failed: Server certificate is not trusted"
+                            default:
+                                errorMessage = "Upload failed: Network error (\(urlError.localizedDescription))"
+                            }
+                        } else {
+                            errorMessage = "Upload failed: \(underlyingError.localizedDescription)"
+                        }
+                    case .missingViewToken:
+                        errorMessage = "Server response missing view token"
+                    }
+
+                    print("[UploadResumeView] Showing error alert:", errorMessage)
+                    showErrorAlert = true
+                }
+            } catch {
+                // Handle unexpected errors
+                print("[UploadResumeView] Unexpected error:", error)
+                await MainActor.run {
+                    // Reset uploading state on error
+                    isUploading = false
+                    errorMessage = "Upload failed: \(error.localizedDescription)"
                     showErrorAlert = true
                 }
             }

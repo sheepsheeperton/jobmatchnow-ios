@@ -1,5 +1,9 @@
 # Debug Button Test Checklist
 
+## Enhanced Error Logging (Updated)
+
+The resume upload function now includes comprehensive error logging and diagnosis to help identify timeout and connection issues.
+
 ## Expected Console Output Flow
 
 When you press the "Use sample résumé (debug)" button, you should see the following in Xcode console:
@@ -25,29 +29,52 @@ When you press the "Use sample résumé (debug)" button, you should see the foll
 [UploadResumeView] Starting API upload call to /api/resume
 ```
 
-### 3. API Service Upload
+### 3. API Service Upload (Enhanced Logging)
 ```
-[APIService] uploadResume() called
+========================================
+[APIService] RESUME UPLOAD START
+========================================
 [APIService] File URL: file:///path/to/SampleResume.pdf
 [APIService] File name: SampleResume.pdf
+[APIService] Timestamp: 2025-11-21 10:30:00
 [APIService] File exists, reading data...
 [APIService] File data read successfully, size: [size] bytes
 [APIService] Detecting MIME type for: SampleResume.pdf
 [APIService] Extension-based MIME type: application/pdf
 [APIService] Using MIME type for upload: application/pdf
-[APIService] Sending POST request to: https://jobmatchnow.ai/api/resume
-[APIService] Request Content-Type: multipart/form-data; boundary=[UUID]
-[APIService] File Content-Type in multipart: application/pdf
+[APIService] ----------------------------------------
+[APIService] REQUEST DETAILS:
+[APIService] URL: https://jobmatchnow.ai/api/resume
+[APIService] Method: POST
+[APIService] Content-Type: multipart/form-data; boundary=[UUID]
+[APIService] Body size: [size] bytes
+[APIService] File MIME type in multipart: application/pdf
+[APIService] Timeout interval: 30.0 seconds
+[APIService] ----------------------------------------
+[APIService] Sending request at: 2025-11-21 10:30:00
 ```
 
-### 4. Success Response
+### 4. Success Response (Enhanced)
 ```
-[APIService] Response status code: 200
-[APIService] Response body: {"view_token":"[token_value]"}
-[APIService] Successfully decoded response
-[APIService] Received view_token: [token_value]
-[UploadResumeView] Upload success! Received viewToken: [token_value]
-[UploadResumeView] Navigating to PipelineLoadingView with viewToken=[token_value]
+[APIService] Request completed in: 1.25 seconds
+[APIService] ========================================
+[APIService] RESPONSE RECEIVED
+[APIService] HTTP Status Code: 200
+[APIService] HTTP Status: no error
+[APIService] Response Headers:
+[APIService]   Content-Type: application/json
+[APIService]   Content-Length: 45
+[APIService] Response Body Size: 45 bytes
+[APIService] Response Body (as string):
+[APIService] {"view_token":"abc123def456"}
+[APIService] ========================================
+[APIService] SUCCESS: Response decoded successfully
+[APIService] Received view_token: abc123def456
+[APIService] ========================================
+[APIService] RESUME UPLOAD SUCCESS
+[APIService] ========================================
+[UploadResumeView] Upload success! Received viewToken: abc123def456
+[UploadResumeView] Navigating to PipelineLoadingView with viewToken=abc123def456
 ```
 
 ### 5. Pipeline Loading
@@ -73,13 +100,65 @@ DEBUG: Setting navigateToResults = true
 5. ✅ **Polling works** - Should see status checks every 2 seconds
 6. ✅ **Jobs fetched** - Should eventually fetch and display job results
 
+## Error Scenarios (New Enhanced Logging)
+
+### Timeout Error Example:
+```
+[APIService] Sending request at: 2025-11-21 10:30:00
+[APIService] ========================================
+[APIService] NETWORK ERROR after 30.00 seconds
+[APIService] URLError Code: -1001
+[APIService] Error Description: The request timed out.
+[APIService] ERROR TYPE: Request Timeout
+[APIService] The server did not respond within the timeout interval
+[APIService] ========================================
+[UploadResumeView] APIError caught: networkError(URLError(_nsError: Error Domain=NSURLErrorDomain Code=-1001))
+[UploadResumeView] Showing error alert: Upload failed: Request timed out. Please check your internet connection and try again.
+```
+
+### DNS/Connection Error Example:
+```
+[APIService] ========================================
+[APIService] NETWORK ERROR after 5.32 seconds
+[APIService] URLError Code: -1003
+[APIService] Error Description: A server with the specified hostname could not be found.
+[APIService] ERROR TYPE: DNS Failure
+[APIService] Cannot resolve host: https://jobmatchnow.ai
+[APIService] ========================================
+[UploadResumeView] Showing error alert: Upload failed: Cannot connect to server (DNS error)
+```
+
+### HTTP Error Example:
+```
+[APIService] ========================================
+[APIService] RESPONSE RECEIVED
+[APIService] HTTP Status Code: 400
+[APIService] HTTP Status: bad request
+[APIService] Response Headers:
+[APIService]   Content-Type: text/plain
+[APIService] Response Body (as string):
+[APIService] INVALID_FILE_TYPE
+[APIService] ========================================
+[APIService] ERROR: HTTP Error
+[APIService] Status Code: 400
+[APIService] Error Message: INVALID_FILE_TYPE
+[UploadResumeView] Showing error alert: Invalid file format: INVALID_FILE_TYPE
+```
+
 ## Troubleshooting
+
+### If you see a timeout error:
+- Check that the backend server is running and accessible
+- Verify network connectivity
+- Consider if file size is too large (check Body size in logs)
+- The default timeout is 30 seconds
 
 ### If you see INVALID_FILE_TYPE error:
 - Check that MIME type shows as `application/pdf` not `application/octet-stream`
 - Verify the multipart Content-Type header includes correct MIME
 
 ### If upload fails with network error:
+- Check the specific URLError code in logs
 - Verify device has internet connection
 - Check that backend is running at https://jobmatchnow.ai
 
