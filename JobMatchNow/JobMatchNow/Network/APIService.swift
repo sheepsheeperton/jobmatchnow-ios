@@ -275,14 +275,18 @@ class APIService {
 
         // Decode response
         struct UploadResponse: Decodable {
+            let user_search_id: String
             let view_token: String
+            let search_session_id: String
         }
 
         let uploadResponse: UploadResponse
         do {
             uploadResponse = try JSONDecoder().decode(UploadResponse.self, from: data)
             print("[APIService] SUCCESS: Response decoded successfully")
+            print("[APIService] Received user_search_id:", uploadResponse.user_search_id)
             print("[APIService] Received view_token:", uploadResponse.view_token)
+            print("[APIService] Received search_session_id:", uploadResponse.search_session_id)
         } catch {
             print("[APIService] ERROR: Failed to decode JSON response")
             print("[APIService] Decoding error:", error)

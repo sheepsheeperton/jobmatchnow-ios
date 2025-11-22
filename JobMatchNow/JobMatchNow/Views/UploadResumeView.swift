@@ -205,7 +205,12 @@ struct UploadResumeView: View {
 
                 // On success: capture token and navigate
                 await MainActor.run {
-                    print("[UploadResumeView] Navigating to PipelineLoadingView with viewToken=\(token)")
+                    // Stop the uploading state
+                    isUploading = false
+                    print("[UploadResumeView] Upload succeeded, stopping upload state")
+
+                    // Navigate to pipeline
+                    print("[UploadResumeView] Upload succeeded, navigating to pipeline with viewToken=\(token)")
                     viewToken = token
                     navigateToPipeline = true
                 }
