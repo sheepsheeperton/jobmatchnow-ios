@@ -2,7 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct UploadResumeView: View {
-    @State private var isImporterPresented = false
+    @State private var showingFilePicker = false
     @State private var selectedFileURL: URL? = nil
     @State private var selectedFileName: String? = nil
     @State private var navigateToPipeline = false
@@ -42,8 +42,9 @@ struct UploadResumeView: View {
 
                 // Choose file button
                 Button(action: {
-                    print("DEBUG: Choose File button pressed")
-                    isImporterPresented = true
+                    print("[UploadResumeView] Choose File button pressed")
+                    showingFilePicker = true
+                    print("[UploadResumeView] fileImporter presented")
                 }) {
                     Label("Choose File", systemImage: "doc.badge.plus")
                         .font(.headline)
@@ -107,43 +108,54 @@ struct UploadResumeView: View {
         } message: {
             Text(errorMessage)
         }
-        .fullScreenCover(isPresented: $isImporterPresented) {
-            DocumentPickerViewController(
-                isPresented: $isImporterPresented,
-                onDocumentPicked: { url in
-                    print("DEBUG: [UploadResumeView] Document picked callback received")
-                    print("DEBUG: [UploadResumeView] URL:", url)
-                    print("DEBUG: [UploadResumeView] File name:", url.lastPathComponent)
+        .fileImporter(
+            isPresented: $showingFilePicker,
+            allowedContentTypes: [
+                .pdf,
+                .png,
+                .jpeg,
+                UTType(filenameExtension: "docx") ?? .data,
+                UTType(filenameExtension: "doc") ?? .data
+            ]
+        ) { result in
+            print("[UploadResumeView] fileImporter completion: \(result)")
 
-                    // Get detailed file info
-                    if let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey, .fileSizeKey]) {
-                        if let contentType = resourceValues.contentType {
-                            print("DEBUG: [UploadResumeView] Content type:", contentType.identifier)
-                            print("DEBUG: [UploadResumeView] MIME type:", contentType.preferredMIMEType ?? "unknown")
-                        }
-                        if let fileSize = resourceValues.fileSize {
-                            print("DEBUG: [UploadResumeView] File size:", fileSize, "bytes")
-                        }
+            switch result {
+            case .success(let url):
+                print("[UploadResumeView] fileImporter completion: success")
+                print("[UploadResumeView] Selected URL:", url)
+                print("[UploadResumeView] File name:", url.lastPathComponent)
+
+                // Get content type and MIME type
+                if let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey]) {
+                    if let contentType = resourceValues.contentType {
+                        print("[UploadResumeView] Content type identifier:", contentType.identifier)
+                        print("[UploadResumeView] MIME type:", contentType.preferredMIMEType ?? "unknown")
                     }
-
-                    // Update UI state
-                    selectedFileURL = url
-                    selectedFileName = url.lastPathComponent
-
-                    print("DEBUG: [UploadResumeView] Triggering automatic upload")
-
-                    // Trigger upload automatically
-                    uploadSelectedFile(url)
                 }
-            )
-            .background(Color.clear)
+
+                // Update state
+                selectedFileURL = url
+                selectedFileName = url.lastPathComponent
+
+                print("[UploadResumeView] Starting upload for selected file...")
+
+                // Trigger upload automatically
+                uploadSelectedFile(url)
+
+            case .failure(let error):
+                print("[UploadResumeView] fileImporter completion: failure")
+                print("[UploadResumeView] Error:", error.localizedDescription)
+                errorMessage = "Failed to select file: \(error.localizedDescription)"
+                showErrorAlert = true
+            }
         }
     }
 
     private func analyzeResume() {
-        print("DEBUG: analyzeResume() called from Analyze button")
+        print("[UploadResumeView] Analyze button pressed")
         guard let fileURL = selectedFileURL else {
-            print("DEBUG: No file selected")
+            print("[UploadResumeView] No file selected for analyze")
             return
         }
 
@@ -151,59 +163,59 @@ struct UploadResumeView: View {
     }
 
     private func uploadSelectedFile(_ fileURL: URL) {
-        print("DEBUG: uploadSelectedFile() called with URL:", fileURL)
+        print("[UploadResumeView] uploadSelectedFile() called with URL:", fileURL)
 
         guard !isUploading else {
-            print("DEBUG: Upload already in progress, ignoring")
+            print("[UploadResumeView] Upload already in progress, ignoring")
             return
         }
 
         isUploading = true
-        print("DEBUG: Set isUploading = true")
+        print("[UploadResumeView] Setting isUploading = true")
 
         Task {
             // Start accessing security-scoped resource
-            print("DEBUG: Attempting to access security-scoped resource")
+            print("[UploadResumeView] Attempting to access security-scoped resource")
             let didStartAccessing = fileURL.startAccessingSecurityScopedResource()
-            print("DEBUG: Security-scoped access granted:", didStartAccessing)
+            print("[UploadResumeView] Security-scoped access granted:", didStartAccessing)
 
             defer {
                 // Always stop accessing security-scoped resource
                 if didStartAccessing {
-                    print("DEBUG: Stopping security-scoped resource access")
+                    print("[UploadResumeView] Stopping security-scoped resource access")
                     fileURL.stopAccessingSecurityScopedResource()
                 }
 
                 // Reset uploading state
-                print("DEBUG: Setting isUploading = false")
+                print("[UploadResumeView] Setting isUploading = false")
                 isUploading = false
             }
 
             do {
                 // Verify file exists and is readable
                 let fileExists = FileManager.default.fileExists(atPath: fileURL.path)
-                print("DEBUG: File exists at path:", fileExists)
+                print("[UploadResumeView] File exists at path:", fileExists)
 
                 if fileExists, let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path) {
                     let fileSize = attributes[.size] as? Int64 ?? 0
-                    print("DEBUG: File size:", fileSize, "bytes")
+                    print("[UploadResumeView] File size:", fileSize, "bytes")
                 }
 
-                print("DEBUG: Starting API upload call")
+                print("[UploadResumeView] Starting API upload call to /api/resume")
                 // Call the real API
                 let token = try await APIService.shared.uploadResume(fileURL: fileURL)
 
-                print("DEBUG: Upload completed successfully! Received viewToken:", token)
+                print("[UploadResumeView] Upload success! Received viewToken:", token)
 
                 // On success: capture token and navigate
                 await MainActor.run {
-                    print("DEBUG: Setting viewToken and triggering navigation")
+                    print("[UploadResumeView] Navigating to PipelineLoadingView with viewToken=\(token)")
                     viewToken = token
                     navigateToPipeline = true
                 }
             } catch {
                 // On failure: show error alert
-                print("DEBUG: Upload failed with error:", error.localizedDescription)
+                print("[UploadResumeView] Upload error:", error.localizedDescription)
                 await MainActor.run {
                     errorMessage = error.localizedDescription
                     showErrorAlert = true
