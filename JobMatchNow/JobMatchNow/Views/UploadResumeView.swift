@@ -107,44 +107,69 @@ struct UploadResumeView: View {
         } message: {
             Text(errorMessage)
         }
-        .sheet(isPresented: $isImporterPresented) {
-            DocumentPicker(
-                isPresented: $isImporterPresented,
-                onFilePicked: { url in
-                    print("DEBUG: onFilePicked callback called with URL:", url)
-                    handlePickedFile(url)
-                },
-                onError: { error in
-                    print("DEBUG: onError callback called:", error.localizedDescription)
-                    errorMessage = "File picker error: \(error.localizedDescription)"
-                    showErrorAlert = true
+        .fileImporter(
+            isPresented: $isImporterPresented,
+            allowedContentTypes: [
+                .pdf,
+                .png,
+                .jpeg,
+                UTType(filenameExtension: "docx") ?? .data,
+                UTType(filenameExtension: "doc") ?? .data
+            ],
+            allowsMultipleSelection: false
+        ) { result in
+            print("DEBUG: fileImporter completion handler triggered")
+
+            switch result {
+            case .success(let urls):
+                print("DEBUG: fileImporter SUCCESS - got \(urls.count) URL(s)")
+
+                guard let url = urls.first else {
+                    print("DEBUG: ERROR - urls array is empty")
+                    return
                 }
-            )
-        }
-    }
 
-    private func handlePickedFile(_ url: URL) {
-        print("DEBUG: handlePickedFile() called")
-        print("DEBUG: URL:", url)
-        print("DEBUG: File name:", url.lastPathComponent)
+                print("DEBUG: File selected!")
+                print("DEBUG: URL:", url)
+                print("DEBUG: Absolute string:", url.absoluteString)
+                print("DEBUG: Path:", url.path)
+                print("DEBUG: File name:", url.lastPathComponent)
+                print("DEBUG: Is file URL:", url.isFileURL)
 
-        // Detect MIME type
-        if let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey]),
-           let contentType = resourceValues.contentType {
-            print("DEBUG: Content type identifier:", contentType.identifier)
-            if let mimeType = contentType.preferredMIMEType {
-                print("DEBUG: MIME type:", mimeType)
+                // Detect MIME type
+                do {
+                    let resourceValues = try url.resourceValues(forKeys: [.contentTypeKey, .fileSizeKey])
+
+                    if let contentType = resourceValues.contentType {
+                        print("DEBUG: Content type identifier:", contentType.identifier)
+                        print("DEBUG: Preferred MIME type:", contentType.preferredMIMEType ?? "none")
+                    } else {
+                        print("DEBUG: No content type available")
+                    }
+
+                    if let fileSize = resourceValues.fileSize {
+                        print("DEBUG: File size from resource values:", fileSize, "bytes")
+                    }
+                } catch {
+                    print("DEBUG: Error getting resource values:", error)
+                }
+
+                // Update UI state
+                selectedFileURL = url
+                selectedFileName = url.lastPathComponent
+
+                print("DEBUG: Triggering automatic upload")
+
+                // Automatically trigger upload
+                uploadSelectedFile(url)
+
+            case .failure(let error):
+                print("DEBUG: fileImporter FAILURE")
+                print("DEBUG: Error:", error.localizedDescription)
+                errorMessage = "File selection failed: \(error.localizedDescription)"
+                showErrorAlert = true
             }
         }
-
-        // Update UI state
-        selectedFileURL = url
-        selectedFileName = url.lastPathComponent
-
-        print("DEBUG: File picker dismissed, triggering automatic upload")
-
-        // Automatically trigger upload
-        uploadSelectedFile(url)
     }
 
     private func analyzeResume() {
