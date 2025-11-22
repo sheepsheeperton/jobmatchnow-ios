@@ -72,6 +72,29 @@ struct UploadResumeView: View {
                 Text("Supports PDF, Word, and image files")
                     .font(.caption)
                     .foregroundColor(.secondary)
+
+                #if DEBUG
+                // Test button for simulator - only shows in debug builds
+                if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != nil ||
+                   UIDevice.current.userInterfaceIdiom == .pad ||
+                   UIDevice.current.userInterfaceIdiom == .phone {
+                    Button(action: {
+                        uploadTestResume()
+                    }) {
+                        Text("Test with Sample (Dev Only)")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 40)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.orange.opacity(0.5), lineWidth: 1)
+                            )
+                    }
+                    .disabled(isUploading)
+                    .padding(.top, 8)
+                }
+                #endif
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
@@ -182,6 +205,33 @@ struct UploadResumeView: View {
             }
         }
     }
+
+    #if DEBUG
+    private func uploadTestResume() {
+        print("[UploadResumeView - DEBUG] Test button pressed")
+
+        // Try to use bundled sample if available
+        if let sampleURL = Bundle.main.url(forResource: "SampleResume", withExtension: "pdf") {
+            print("[UploadResumeView - DEBUG] Using bundled SampleResume.pdf")
+            uploadFile(sampleURL)
+        } else {
+            // Create a temporary test file if no bundle resource
+            print("[UploadResumeView - DEBUG] No bundled sample, creating test file")
+
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("test-resume.pdf")
+            let testData = Data("Test Resume Content".utf8)
+
+            do {
+                try testData.write(to: tempURL)
+                uploadFile(tempURL)
+            } catch {
+                print("[UploadResumeView - DEBUG] Failed to create test file: \(error)")
+                errorMessage = "Test file creation failed (Dev mode)"
+                showErrorAlert = true
+            }
+        }
+    }
+    #endif
 
     private func getErrorMessage(for error: APIError) -> String {
         switch error {
