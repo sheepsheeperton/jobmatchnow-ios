@@ -107,68 +107,36 @@ struct UploadResumeView: View {
         } message: {
             Text(errorMessage)
         }
-        .fileImporter(
-            isPresented: $isImporterPresented,
-            allowedContentTypes: [
-                .pdf,
-                .png,
-                .jpeg,
-                UTType(filenameExtension: "docx") ?? .data,
-                UTType(filenameExtension: "doc") ?? .data
-            ],
-            allowsMultipleSelection: false
-        ) { result in
-            print("DEBUG: fileImporter completion handler triggered")
+        .fullScreenCover(isPresented: $isImporterPresented) {
+            DocumentPickerViewController(
+                isPresented: $isImporterPresented,
+                onDocumentPicked: { url in
+                    print("DEBUG: [UploadResumeView] Document picked callback received")
+                    print("DEBUG: [UploadResumeView] URL:", url)
+                    print("DEBUG: [UploadResumeView] File name:", url.lastPathComponent)
 
-            switch result {
-            case .success(let urls):
-                print("DEBUG: fileImporter SUCCESS - got \(urls.count) URL(s)")
-
-                guard let url = urls.first else {
-                    print("DEBUG: ERROR - urls array is empty")
-                    return
-                }
-
-                print("DEBUG: File selected!")
-                print("DEBUG: URL:", url)
-                print("DEBUG: Absolute string:", url.absoluteString)
-                print("DEBUG: Path:", url.path)
-                print("DEBUG: File name:", url.lastPathComponent)
-                print("DEBUG: Is file URL:", url.isFileURL)
-
-                // Detect MIME type
-                do {
-                    let resourceValues = try url.resourceValues(forKeys: [.contentTypeKey, .fileSizeKey])
-
-                    if let contentType = resourceValues.contentType {
-                        print("DEBUG: Content type identifier:", contentType.identifier)
-                        print("DEBUG: Preferred MIME type:", contentType.preferredMIMEType ?? "none")
-                    } else {
-                        print("DEBUG: No content type available")
+                    // Get detailed file info
+                    if let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey, .fileSizeKey]) {
+                        if let contentType = resourceValues.contentType {
+                            print("DEBUG: [UploadResumeView] Content type:", contentType.identifier)
+                            print("DEBUG: [UploadResumeView] MIME type:", contentType.preferredMIMEType ?? "unknown")
+                        }
+                        if let fileSize = resourceValues.fileSize {
+                            print("DEBUG: [UploadResumeView] File size:", fileSize, "bytes")
+                        }
                     }
 
-                    if let fileSize = resourceValues.fileSize {
-                        print("DEBUG: File size from resource values:", fileSize, "bytes")
-                    }
-                } catch {
-                    print("DEBUG: Error getting resource values:", error)
+                    // Update UI state
+                    selectedFileURL = url
+                    selectedFileName = url.lastPathComponent
+
+                    print("DEBUG: [UploadResumeView] Triggering automatic upload")
+
+                    // Trigger upload automatically
+                    uploadSelectedFile(url)
                 }
-
-                // Update UI state
-                selectedFileURL = url
-                selectedFileName = url.lastPathComponent
-
-                print("DEBUG: Triggering automatic upload")
-
-                // Automatically trigger upload
-                uploadSelectedFile(url)
-
-            case .failure(let error):
-                print("DEBUG: fileImporter FAILURE")
-                print("DEBUG: Error:", error.localizedDescription)
-                errorMessage = "File selection failed: \(error.localizedDescription)"
-                showErrorAlert = true
-            }
+            )
+            .background(Color.clear)
         }
     }
 
