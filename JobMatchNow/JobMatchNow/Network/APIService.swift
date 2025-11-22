@@ -220,10 +220,6 @@ class APIService {
                 print("[APIService] ERROR TYPE: Other URLError")
             }
 
-            if let underlyingError = error.underlyingError {
-                print("[APIService] Underlying Error:", underlyingError)
-            }
-
             print("[APIService] ========================================")
             throw APIError.networkError(error)
         } catch {
