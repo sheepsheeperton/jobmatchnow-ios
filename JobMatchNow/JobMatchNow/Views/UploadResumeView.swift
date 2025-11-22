@@ -225,22 +225,26 @@ struct UploadResumeView: View {
     }
 
     private func useSampleResume() {
-        print("DEBUG: useSampleResume button pressed")
+        print("========================================")
+        print("[DEBUG BUTTON] Sample resume button pressed")
+        print("========================================")
 
         // Get bundled sample resume URL
         guard let sampleURL = AppResources.sampleResumeURL() else {
-            print("DEBUG: Failed to get sample resume URL from bundle")
+            print("[DEBUG BUTTON] ERROR: Failed to get sample resume URL from bundle")
             errorMessage = "Sample resume not found in app bundle"
             showErrorAlert = true
             return
         }
 
-        print("DEBUG: Using bundled sample resume at:", sampleURL)
+        print("[DEBUG BUTTON] Found bundled sample resume at:", sampleURL)
+        print("[DEBUG BUTTON] File exists:", FileManager.default.fileExists(atPath: sampleURL.path))
 
         // Update UI to show selected file
         selectedFileURL = sampleURL
         selectedFileName = "SampleResume.pdf"
 
+        print("[DEBUG BUTTON] Calling shared upload function...")
         // Upload using the same upload function
         uploadSelectedFile(sampleURL)
     }
