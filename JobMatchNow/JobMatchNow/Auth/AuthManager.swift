@@ -14,8 +14,8 @@ final class AuthManager: ObservableObject {
     @Published var error: AuthError?
     
     // MARK: - Supabase Configuration
-    private let supabaseURL = "https://tnlqebhvkgjbafrdpngk.supabase.co"
-    private let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRubHFlYmh2a2dqYmFmcmRwbmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE3MzE2ODcsImV4cCI6MjA0NzMwNzY4N30.Mw3_jRGx4HqNe-HiPfA-Q2qb1RBGCHxKsC6JUBwwvuY"
+    private let supabaseURL = "https://nxbhfoqaoaeiguoldnng.supabase.co"
+    private let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54Ymhmb3Fhb2FlaWd1b2xkbm5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2OTM3MDIsImV4cCI6MjA3ODI2OTcwMn0.USnk23E4MW9jnFPZ3WTYYsiRQ_ajy2ro6FT-10qwdEs"
     private let redirectURL = "jobmatchnow://auth/callback"
     
     // MARK: - Session Storage Keys

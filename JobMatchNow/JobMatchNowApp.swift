@@ -38,7 +38,7 @@ struct JobMatchNowApp: App {
         
         // Set tint color
         UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = UIColor(Theme.primaryBlue)
-    }
+        }
     
     // MARK: - URL Handling
     
@@ -49,6 +49,6 @@ struct JobMatchNowApp: App {
         if url.scheme == "jobmatchnow" && url.host == "auth" {
             // The AuthManager will handle this via ASWebAuthenticationSession
             print("[JobMatchNowApp] OAuth callback received")
-        }
     }
+}
 }

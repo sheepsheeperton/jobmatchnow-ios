@@ -105,6 +105,23 @@ struct AuthView: View {
                         }
                         .padding(.vertical, 8)
                         
+                        #if DEBUG
+                        // Demo mode for testing
+                        Button(action: {
+                            // Skip auth for testing
+                            AppState.shared.signIn(user: AppState.UserInfo(
+                                id: "demo_user",
+                                email: "demo@jobmatchnow.ai",
+                                providers: ["demo"]
+                            ))
+                        }) {
+                            Text("Skip for Demo")
+                                .font(.subheadline)
+                                .foregroundColor(.orange)
+                        }
+                        .padding(.top, 8)
+                        #endif
+                        
                         // Email option
                         Button(action: {
                             withAnimation {
