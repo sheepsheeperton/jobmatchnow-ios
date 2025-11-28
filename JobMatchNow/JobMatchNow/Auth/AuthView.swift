@@ -202,7 +202,6 @@ struct AuthView: View {
             }
             
             TextField("Email", text: $email)
-                .textContentType(.emailAddress)
                 .keyboardType(.emailAddress)
                 .autocapitalization(.none)
                 .autocorrectionDisabled()
@@ -212,7 +211,7 @@ struct AuthView: View {
                 .foregroundColor(.white)
             
             SecureField("Password", text: $password)
-                .textContentType(authMode == .signUp ? .newPassword : .password)
+                .autocorrectionDisabled()
                 .padding()
                 .background(Color.white.opacity(0.1))
                 .cornerRadius(Theme.CornerRadius.small)
@@ -221,7 +220,7 @@ struct AuthView: View {
             // Confirm password for sign up
             if authMode == .signUp {
                 SecureField("Confirm Password", text: $confirmPassword)
-                    .textContentType(.newPassword)
+                    .autocorrectionDisabled()
                     .padding()
                     .background(Color.white.opacity(0.1))
                     .cornerRadius(Theme.CornerRadius.small)
