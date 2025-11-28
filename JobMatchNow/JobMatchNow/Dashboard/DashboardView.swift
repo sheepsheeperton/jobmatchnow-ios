@@ -39,7 +39,7 @@ struct DashboardView: View {
             }
         }
         .navigationDestination(isPresented: $navigateToResults) {
-            SearchResultsView(jobs: resultsJobs, viewToken: resultsViewToken)
+            SearchResultsView(jobs: resultsJobs, viewToken: resultsViewToken, source: .historical(sessionId: resultsViewToken))
         }
         .onAppear {
             loadSearchHistory()

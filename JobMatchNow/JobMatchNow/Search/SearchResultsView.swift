@@ -8,30 +8,63 @@ enum JobFilter: String, CaseIterable {
     case adjacent = "Adjacent"
 }
 
+// MARK: - Results Source
+
+enum ResultsSource {
+    case currentSearch
+    case historical(sessionId: String)
+}
+
 // MARK: - Search Results View
 
 /// Displays job matches with filtering and actions
 struct SearchResultsView: View {
     let jobs: [Job]
     let viewToken: String
+    var source: ResultsSource = .currentSearch
     
     @StateObject private var appState = AppState.shared
     @State private var selectedFilter: JobFilter = .all
+    @State private var searchText = ""
     @State private var showActionMenu = false
     @State private var showSettings = false
     @State private var selectedJobURL: URL?
     @State private var showSafari = false
+    @State private var showSavePrompt = true
     @Environment(\.dismiss) private var dismiss
     
+    // Computed counts
+    var directCount: Int {
+        jobs.filter { $0.category?.lowercased() == "direct" }.count
+    }
+    
+    var adjacentCount: Int {
+        jobs.filter { $0.category?.lowercased() == "adjacent" }.count
+    }
+    
     var filteredJobs: [Job] {
+        var result = jobs
+        
+        // Apply category filter
         switch selectedFilter {
         case .all:
-            return jobs
+            break
         case .direct:
-            return jobs.filter { $0.category?.lowercased() == "direct" }
+            result = result.filter { $0.category?.lowercased() == "direct" }
         case .adjacent:
-            return jobs.filter { $0.category?.lowercased() == "adjacent" }
+            result = result.filter { $0.category?.lowercased() == "adjacent" }
         }
+        
+        // Apply search text filter
+        if !searchText.isEmpty {
+            result = result.filter { job in
+                job.title.localizedCaseInsensitiveContains(searchText) ||
+                job.company_name.localizedCaseInsensitiveContains(searchText) ||
+                job.location.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+        
+        return result
     }
     
     var body: some View {
@@ -49,19 +82,50 @@ struct SearchResultsView: View {
             .padding(.top, 20)
             .padding(.bottom, 16)
             
-            // Filter segmented control
-            Picker("Filter", selection: $selectedFilter) {
-                ForEach(JobFilter.allCases, id: \.self) { filter in
-                    Text(filter.rawValue).tag(filter)
+            // Search bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("Search jobs...", text: $searchText)
+                    .textFieldStyle(PlainTextFieldStyle())
+                if !searchText.isEmpty {
+                    Button(action: { searchText = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
                 }
+            }
+            .padding(12)
+            .background(Theme.secondaryBackground)
+            .cornerRadius(Theme.CornerRadius.small)
+            .padding(.horizontal)
+            .padding(.bottom, 12)
+            
+            // Filter segmented control with counts
+            Picker("Filter", selection: $selectedFilter) {
+                Text("All (\(jobs.count))").tag(JobFilter.all)
+                Text("Direct (\(directCount))").tag(JobFilter.direct)
+                Text("Adjacent (\(adjacentCount))").tag(JobFilter.adjacent)
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding(.horizontal)
-            .padding(.bottom, 16)
+            .padding(.bottom, 12)
             
-            // Results count for current filter
-            if selectedFilter != .all {
-                Text("\(filteredJobs.count) \(selectedFilter.rawValue.lowercased()) matches")
+            // Save prompt for new searches
+            if case .currentSearch = source, showSavePrompt {
+                SaveSearchPromptView {
+                    // Already saved via AppState
+                    withAnimation {
+                        showSavePrompt = false
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 12)
+            }
+            
+            // Results count
+            if !searchText.isEmpty || selectedFilter != .all {
+                Text("\(filteredJobs.count) results")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.bottom, 8)
@@ -151,82 +215,84 @@ struct JobCardView: View {
     let job: Job
     let onViewDetails: (URL) -> Void
     
+    private var jobURL: URL? {
+        guard let urlString = job.job_url else { return nil }
+        return URL(string: urlString)
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(job.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
+        Button(action: {
+            if let url = jobURL {
+                onViewDetails(url)
+            }
+        }) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Header
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(job.title)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .multilineTextAlignment(.leading)
+                        
+                        Text(job.company_name)
+                            .font(.subheadline)
+                            .foregroundColor(Theme.primaryBlue)
+                    }
                     
-                    Text(job.company_name)
-                        .font(.subheadline)
-                        .foregroundColor(Theme.primaryBlue)
+                    Spacer()
+                    
+                    // Category badge
+                    if let category = job.category {
+                        CategoryBadge(category: category)
+                    }
                 }
                 
-                Spacer()
-                
-                // Category badge
-                if let category = job.category {
-                    CategoryBadge(category: category)
-                }
-            }
-            
-            // Location
-            HStack(spacing: 6) {
-                Image(systemName: "location.fill")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(job.location)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            
-            // Posted date
-            if let postedAt = job.posted_at {
+                // Location
                 HStack(spacing: 6) {
-                    Image(systemName: "calendar")
+                    Image(systemName: "location.fill")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text(postedAt)
+                    Text(job.location)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-            }
-            
-            // Action button
-            if let jobURL = job.job_url, let url = URL(string: jobURL) {
-                Button(action: {
-                    onViewDetails(url)
-                }) {
+                
+                // Posted date
+                if let postedAt = job.posted_at {
+                    HStack(spacing: 6) {
+                        Image(systemName: "calendar")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text(postedAt)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // Action button
+                HStack {
                     Text("View Details")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Theme.primaryBlue)
+                        .background(jobURL != nil ? Theme.primaryBlue : Color.gray)
                         .cornerRadius(Theme.CornerRadius.small)
+                    
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
-            } else {
-                Button(action: {}) {
-                    Text("Details Unavailable")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.gray)
-                        .cornerRadius(Theme.CornerRadius.small)
-                }
-                .disabled(true)
             }
+            .padding()
+            .background(Theme.secondaryBackground)
+            .cornerRadius(Theme.CornerRadius.medium)
+            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         }
-        .padding()
-        .background(Theme.secondaryBackground)
-        .cornerRadius(Theme.CornerRadius.medium)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .buttonStyle(PlainButtonStyle())
+        .disabled(jobURL == nil)
     }
 }
 
@@ -258,6 +324,35 @@ struct CategoryBadge: View {
     }
 }
 
+// MARK: - Save Search Prompt
+
+struct SaveSearchPromptView: View {
+    let onSave: () -> Void
+    
+    var body: some View {
+        HStack {
+            Image(systemName: "bookmark")
+                .foregroundColor(Theme.primaryBlue)
+            
+            Text("Save this search to revisit later")
+                .font(.subheadline)
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            Button("Saved ✓") {
+                onSave()
+            }
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundColor(Theme.primaryBlue)
+        }
+        .padding(12)
+        .background(Theme.primaryBlue.opacity(0.1))
+        .cornerRadius(Theme.CornerRadius.small)
+    }
+}
+
 #Preview {
     let sampleJobs = [
         Job(id: "1", job_id: "job1", title: "iOS Developer", company_name: "Tech Corp", location: "Remote", posted_at: "2 days ago", job_url: "https://example.com", source_query: "iOS developer", category: "direct"),
@@ -269,4 +364,5 @@ struct CategoryBadge: View {
         SearchResultsView(jobs: sampleJobs, viewToken: "test_token")
     }
 }
+
 
