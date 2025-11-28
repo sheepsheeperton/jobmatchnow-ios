@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 import AuthenticationServices
-import GoogleSignIn
+import CryptoKit
 
 // MARK: - Auth Manager
 
@@ -19,8 +19,8 @@ final class AuthManager: ObservableObject {
     private let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54Ymhmb3Fhb2FlaWd1b2xkbm5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2OTM3MDIsImV4cCI6MjA3ODI2OTcwMn0.USnk23E4MW9jnFPZ3WTYYsiRQ_ajy2ro6FT-10qwdEs"
     private let redirectURL = "jobmatchnow://auth/callback"
     
-    // MARK: - Google Sign-In Configuration
-    private let googleClientID = "488011201804-i55cgjhmhcdfi047erahq92bjh6osvdv.apps.googleusercontent.com"
+    // MARK: - Apple Sign-In
+    private var currentNonce: String?
     
     // MARK: - Session Storage Keys
     private let accessTokenKey = "supabase_access_token"
@@ -104,61 +104,69 @@ final class AuthManager: ObservableObject {
         return false
     }
     
-    // MARK: - Native Google Sign In
+    // MARK: - Sign in with Apple
+    
+    func startSignInWithApple() -> ASAuthorizationAppleIDRequest {
+        let nonce = randomNonceString()
+        currentNonce = nonce
+        
+        let appleIDProvider = ASAuthorizationAppleIDProvider()
+        let request = appleIDProvider.createRequest()
+        request.requestedScopes = [.fullName, .email]
+        request.nonce = sha256(nonce)
+        
+        return request
+    }
     
     @MainActor
-    func signInWithGoogle() async throws {
+    func handleAppleSignIn(result: Result<ASAuthorization, Error>) async {
         isLoading = true
         error = nil
         
         defer { isLoading = false }
         
-        print("[AuthManager] Starting native Google Sign-In")
-        
-        // Get the root view controller
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootViewController = windowScene.windows.first?.rootViewController else {
-            throw AuthError.authenticationFailed("Unable to get root view controller")
-        }
-        
-        // Configure Google Sign-In
-        let config = GIDConfiguration(clientID: googleClientID)
-        GIDSignIn.sharedInstance.configuration = config
-        
-        do {
-            // Present the native Google Sign-In
-            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
-            
-            guard let idToken = result.user.idToken?.tokenString else {
-                throw AuthError.authenticationFailed("No ID token received from Google")
+        switch result {
+        case .success(let authorization):
+            guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+                error = .authenticationFailed("Invalid credential type")
+                return
             }
             
-            let accessToken = result.user.accessToken.tokenString
-            let email = result.user.profile?.email
-            let name = result.user.profile?.name
+            guard let nonce = currentNonce else {
+                error = .authenticationFailed("Invalid state: No nonce")
+                return
+            }
             
-            print("[AuthManager] Google Sign-In successful for: \(email ?? "unknown")")
+            guard let appleIDToken = appleIDCredential.identityToken,
+                  let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+                error = .authenticationFailed("Unable to get ID token")
+                return
+            }
             
-            // Exchange Google token with Supabase
-            try await signInWithGoogleToken(idToken: idToken, accessToken: accessToken)
+            let email = appleIDCredential.email
+            let fullName = appleIDCredential.fullName
+            let displayName = [fullName?.givenName, fullName?.familyName]
+                .compactMap { $0 }
+                .joined(separator: " ")
             
-        } catch let error as GIDSignInError {
-            if error.code == .canceled {
-                print("[AuthManager] User cancelled Google Sign-In")
-                // Don't set error for cancellation
+            print("[AuthManager] Apple Sign-In successful for: \(email ?? "hidden email")")
+            
+            do {
+                try await signInWithAppleToken(idToken: idTokenString, nonce: nonce)
+            } catch {
+                self.error = .authenticationFailed(error.localizedDescription)
+            }
+            
+        case .failure(let error):
+            if (error as NSError).code == ASAuthorizationError.canceled.rawValue {
+                print("[AuthManager] User cancelled Apple Sign-In")
             } else {
-                self.error = .authenticationFailed("Google Sign-In failed: \(error.localizedDescription)")
-                throw AuthError.authenticationFailed(error.localizedDescription)
+                self.error = .authenticationFailed(error.localizedDescription)
             }
-        } catch {
-            self.error = .networkError(error)
-            throw error
         }
     }
     
-    // MARK: - Exchange Google Token with Supabase
-    
-    private func signInWithGoogleToken(idToken: String, accessToken: String) async throws {
+    private func signInWithAppleToken(idToken: String, nonce: String) async throws {
         guard let url = URL(string: "\(supabaseURL)/auth/v1/token?grant_type=id_token") else {
             throw AuthError.invalidURL
         }
@@ -169,14 +177,14 @@ final class AuthManager: ObservableObject {
         request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
         
         let body: [String: Any] = [
-            "provider": "google",
+            "provider": "apple",
             "id_token": idToken,
-            "access_token": accessToken
+            "nonce": nonce
         ]
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
-        print("[AuthManager] Exchanging Google token with Supabase...")
+        print("[AuthManager] Exchanging Apple token with Supabase...")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -194,6 +202,32 @@ final class AuthManager: ObservableObject {
             print("[AuthManager] Token exchange error: \(errorMsg)")
             throw AuthError.authenticationFailed(errorMsg)
         }
+    }
+    
+    // MARK: - Nonce Generation for Apple Sign-In
+    
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var randomBytes = [UInt8](repeating: 0, count: length)
+        let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        if errorCode != errSecSuccess {
+            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+        }
+        
+        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        let nonce = randomBytes.map { byte in
+            charset[Int(byte) % charset.count]
+        }
+        return String(nonce)
+    }
+    
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        let hashedData = SHA256.hash(data: inputData)
+        let hashString = hashedData.compactMap {
+            String(format: "%02x", $0)
+        }.joined()
+        return hashString
     }
     
     // MARK: - LinkedIn OAuth (Web-based)
@@ -253,7 +287,7 @@ final class AuthManager: ObservableObject {
         session.start()
     }
     
-    // MARK: - Email Sign In (Optional)
+    // MARK: - Email Sign In
     
     func signInWithEmail(email: String, password: String) async throws {
         isLoading = true
@@ -277,6 +311,8 @@ final class AuthManager: ObservableObject {
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
+        print("[AuthManager] Signing in with email: \(email)")
+        
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -287,7 +323,68 @@ final class AuthManager: ObservableObject {
             try await parseAuthResponse(data)
         } else {
             let errorMsg = String(data: data, encoding: .utf8) ?? "Authentication failed"
-            throw AuthError.authenticationFailed(errorMsg)
+            print("[AuthManager] Sign in error: \(errorMsg)")
+            throw AuthError.authenticationFailed("Invalid email or password")
+        }
+    }
+    
+    // MARK: - Email Sign Up
+    
+    func signUpWithEmail(email: String, password: String) async throws {
+        isLoading = true
+        error = nil
+        
+        defer { isLoading = false }
+        
+        guard let url = URL(string: "\(supabaseURL)/auth/v1/signup") else {
+            throw AuthError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        
+        let body: [String: Any] = [
+            "email": email,
+            "password": password
+        ]
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        print("[AuthManager] Signing up with email: \(email)")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AuthError.networkError(NSError(domain: "", code: -1))
+        }
+        
+        print("[AuthManager] Sign up response status: \(httpResponse.statusCode)")
+        
+        if httpResponse.statusCode == 200 || httpResponse.statusCode == 201 {
+            // Check if email confirmation is required
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                // If we got tokens, sign in immediately
+                if json["access_token"] != nil {
+                    try await parseAuthResponse(data)
+                } else {
+                    // Email confirmation required
+                    throw AuthError.authenticationFailed("Please check your email to confirm your account")
+                }
+            }
+        } else {
+            let errorMsg = String(data: data, encoding: .utf8) ?? "Sign up failed"
+            print("[AuthManager] Sign up error: \(errorMsg)")
+            
+            // Parse error message
+            if errorMsg.contains("already registered") {
+                throw AuthError.authenticationFailed("This email is already registered. Please sign in instead.")
+            } else if errorMsg.contains("password") {
+                throw AuthError.authenticationFailed("Password must be at least 6 characters")
+            } else {
+                throw AuthError.authenticationFailed("Sign up failed. Please try again.")
+            }
         }
     }
     

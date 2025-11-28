@@ -1,4 +1,12 @@
 import SwiftUI
+import AuthenticationServices
+
+// MARK: - Auth Mode
+
+enum AuthMode {
+    case signIn
+    case signUp
+}
 
 // MARK: - Auth View
 
@@ -7,8 +15,10 @@ struct AuthView: View {
     @StateObject private var authManager = AuthManager.shared
     @StateObject private var appState = AppState.shared
     @State private var showEmailForm = false
+    @State private var authMode: AuthMode = .signIn
     @State private var email = ""
     @State private var password = ""
+    @State private var confirmPassword = ""
     
     var body: some View {
         ZStack {
@@ -52,24 +62,19 @@ struct AuthView: View {
                     
                     // OAuth Buttons
                     VStack(spacing: 16) {
-                        // Google
-                        Button(action: {
+                        // Sign in with Apple
+                        SignInWithAppleButton(.signIn) { request in
+                            let appleRequest = authManager.startSignInWithApple()
+                            request.requestedScopes = appleRequest.requestedScopes
+                            request.nonce = appleRequest.nonce
+                        } onCompletion: { result in
                             Task {
-                                try? await authManager.signInWithGoogle()
+                                await authManager.handleAppleSignIn(result: result)
                             }
-                        }) {
-                            HStack(spacing: 12) {
-                                Image(systemName: "g.circle.fill")
-                                    .font(.title2)
-                                Text("Continue with Google")
-                                    .font(.headline)
-                            }
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(Color.white)
-                            .cornerRadius(Theme.CornerRadius.medium)
                         }
+                        .signInWithAppleButtonStyle(.white)
+                        .frame(height: 56)
+                        .cornerRadius(Theme.CornerRadius.medium)
                         
                         // LinkedIn
                         Button(action: {
@@ -86,7 +91,7 @@ struct AuthView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            .background(Color(red: 0.0, green: 0.47, blue: 0.71)) // LinkedIn blue
+                            .background(Color(red: 0.0, green: 0.47, blue: 0.71))
                             .cornerRadius(Theme.CornerRadius.medium)
                         }
                         
@@ -104,23 +109,6 @@ struct AuthView: View {
                                 .frame(height: 1)
                         }
                         .padding(.vertical, 8)
-                        
-                        #if DEBUG
-                        // Demo mode for testing
-                        Button(action: {
-                            // Skip auth for testing
-                            AppState.shared.signIn(user: AppState.UserInfo(
-                                id: "demo_user",
-                                email: "demo@jobmatchnow.ai",
-                                providers: ["demo"]
-                            ))
-                        }) {
-                            Text("Skip for Demo")
-                                .font(.subheadline)
-                                .foregroundColor(.orange)
-                        }
-                        .padding(.top, 8)
-                        #endif
                         
                         // Email option
                         Button(action: {
@@ -147,41 +135,24 @@ struct AuthView: View {
                         
                         // Email form (expandable)
                         if showEmailForm {
-                            VStack(spacing: 16) {
-                                TextField("Email", text: $email)
-                                    .textContentType(.emailAddress)
-                                    .keyboardType(.emailAddress)
-                                    .autocapitalization(.none)
-                                    .padding()
-                                    .background(Color.white.opacity(0.1))
-                                    .cornerRadius(Theme.CornerRadius.small)
-                                    .foregroundColor(.white)
-                                
-                                SecureField("Password", text: $password)
-                                    .textContentType(.password)
-                                    .padding()
-                                    .background(Color.white.opacity(0.1))
-                                    .cornerRadius(Theme.CornerRadius.small)
-                                    .foregroundColor(.white)
-                                
-                                Button(action: {
-                                    Task {
-                                        try? await authManager.signInWithEmail(email: email, password: password)
-                                    }
-                                }) {
-                                    Text("Sign In")
-                                        .font(.headline)
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 50)
-                                        .background(Theme.primaryBlue)
-                                        .cornerRadius(Theme.CornerRadius.small)
-                                }
-                                .disabled(email.isEmpty || password.isEmpty)
-                            }
-                            .padding(.top, 8)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            emailFormView
                         }
+                        
+                        #if DEBUG
+                        // Demo mode for testing
+                        Button(action: {
+                            AppState.shared.signIn(user: AppState.UserInfo(
+                                id: "demo_user",
+                                email: "demo@jobmatchnow.ai",
+                                providers: ["demo"]
+                            ))
+                        }) {
+                            Text("Skip for Demo")
+                                .font(.subheadline)
+                                .foregroundColor(.orange)
+                        }
+                        .padding(.top, 8)
+                        #endif
                     }
                     .padding(.horizontal, 24)
                     
@@ -191,6 +162,7 @@ struct AuthView: View {
                             .font(.caption)
                             .foregroundColor(.red)
                             .padding(.horizontal, 24)
+                            .multilineTextAlignment(.center)
                     }
                     
                     Spacer(minLength: 40)
@@ -233,10 +205,110 @@ struct AuthView: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(1.5)
                     
-                    Text("Signing in...")
+                    Text(authMode == .signIn ? "Signing in..." : "Creating account...")
                         .font(.subheadline)
                         .foregroundColor(.white)
                 }
+            }
+        }
+    }
+    
+    // MARK: - Email Form View
+    
+    private var emailFormView: some View {
+        VStack(spacing: 16) {
+            // Mode toggle
+            Picker("Mode", selection: $authMode) {
+                Text("Sign In").tag(AuthMode.signIn)
+                Text("Sign Up").tag(AuthMode.signUp)
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            .padding(.bottom, 8)
+            
+            TextField("Email", text: $email)
+                .textContentType(.emailAddress)
+                .keyboardType(.emailAddress)
+                .autocapitalization(.none)
+                .autocorrectionDisabled()
+                .padding()
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(Theme.CornerRadius.small)
+                .foregroundColor(.white)
+            
+            SecureField("Password", text: $password)
+                .textContentType(authMode == .signUp ? .newPassword : .password)
+                .padding()
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(Theme.CornerRadius.small)
+                .foregroundColor(.white)
+            
+            // Confirm password for sign up
+            if authMode == .signUp {
+                SecureField("Confirm Password", text: $confirmPassword)
+                    .textContentType(.newPassword)
+                    .padding()
+                    .background(Color.white.opacity(0.1))
+                    .cornerRadius(Theme.CornerRadius.small)
+                    .foregroundColor(.white)
+                
+                Text("Password must be at least 6 characters")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.5))
+            }
+            
+            // Submit button
+            Button(action: submitEmailForm) {
+                Text(authMode == .signIn ? "Sign In" : "Create Account")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(isFormValid ? Theme.primaryBlue : Color.gray)
+                    .cornerRadius(Theme.CornerRadius.small)
+            }
+            .disabled(!isFormValid)
+            
+            // Switch mode text
+            Button(action: {
+                withAnimation {
+                    authMode = authMode == .signIn ? .signUp : .signIn
+                    confirmPassword = ""
+                }
+            }) {
+                Text(authMode == .signIn ? "Don't have an account? Sign up" : "Already have an account? Sign in")
+                    .font(.caption)
+                    .foregroundColor(Theme.primaryBlue)
+            }
+            .padding(.top, 4)
+        }
+        .padding(.top, 8)
+        .transition(.opacity.combined(with: .move(edge: .top)))
+    }
+    
+    // MARK: - Form Validation
+    
+    private var isFormValid: Bool {
+        let emailValid = !email.isEmpty && email.contains("@")
+        let passwordValid = password.count >= 6
+        
+        if authMode == .signUp {
+            return emailValid && passwordValid && password == confirmPassword
+        }
+        return emailValid && passwordValid
+    }
+    
+    // MARK: - Submit Form
+    
+    private func submitEmailForm() {
+        Task {
+            do {
+                if authMode == .signIn {
+                    try await authManager.signInWithEmail(email: email, password: password)
+                } else {
+                    try await authManager.signUpWithEmail(email: email, password: password)
+                }
+            } catch {
+                // Error is handled by authManager
             }
         }
     }
@@ -245,4 +317,3 @@ struct AuthView: View {
 #Preview {
     AuthView()
 }
-

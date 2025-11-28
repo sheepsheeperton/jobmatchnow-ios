@@ -1,5 +1,4 @@
 import SwiftUI
-import GoogleSignIn
 
 @main
 struct JobMatchNowApp: App {
@@ -46,13 +45,7 @@ struct JobMatchNowApp: App {
     private func handleIncomingURL(_ url: URL) {
         print("[JobMatchNowApp] Received URL: \(url)")
         
-        // Handle Google Sign-In callback
-        if GIDSignIn.sharedInstance.handle(url) {
-            print("[JobMatchNowApp] Google Sign-In handled URL")
-            return
-        }
-        
-        // Handle other OAuth callbacks (LinkedIn, etc.)
+        // Handle OAuth callbacks (LinkedIn, etc.)
         if url.scheme == "jobmatchnow" && url.host == "auth" {
             print("[JobMatchNowApp] OAuth callback received")
         }
