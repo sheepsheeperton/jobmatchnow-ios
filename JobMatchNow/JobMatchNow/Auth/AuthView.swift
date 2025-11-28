@@ -204,27 +204,39 @@ struct AuthView: View {
             TextField("Email", text: $email)
                 .keyboardType(.emailAddress)
                 .autocapitalization(.none)
-                .autocorrectionDisabled()
+                .disableAutocorrection(true)
                 .padding()
                 .background(Color.white.opacity(0.1))
                 .cornerRadius(Theme.CornerRadius.small)
                 .foregroundColor(.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                )
             
             SecureField("Password", text: $password)
-                .autocorrectionDisabled()
+                .disableAutocorrection(true)
                 .padding()
                 .background(Color.white.opacity(0.1))
                 .cornerRadius(Theme.CornerRadius.small)
                 .foregroundColor(.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                )
             
             // Confirm password for sign up
             if authMode == .signUp {
                 SecureField("Confirm Password", text: $confirmPassword)
-                    .autocorrectionDisabled()
+                    .disableAutocorrection(true)
                     .padding()
                     .background(Color.white.opacity(0.1))
                     .cornerRadius(Theme.CornerRadius.small)
                     .foregroundColor(.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    )
                 
                 Text("Password must be at least 6 characters")
                     .font(.caption)
