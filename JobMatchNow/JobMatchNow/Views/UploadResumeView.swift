@@ -11,9 +11,12 @@ struct DocumentPicker: UIViewControllerRepresentable {
     
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
         print("[DocumentPicker] Creating UIDocumentPickerViewController")
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: contentTypes, asCopy: true)
+        // Use asCopy: false for better simulator compatibility
+        // Files will be accessed via security-scoped URL
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: contentTypes, asCopy: false)
         picker.delegate = context.coordinator
         picker.allowsMultipleSelection = false
+        picker.shouldShowFileExtensions = true
         print("[DocumentPicker] Picker configured with content types: \(contentTypes.map { $0.identifier })")
         return picker
     }
@@ -72,14 +75,18 @@ struct UploadResumeView: View {
     // MARK: - Allowed Content Types
     /// Supported file types for resume upload:
     /// - PDF documents
-    /// - PNG and JPEG images
+    /// - PNG and JPEG images  
     /// - Microsoft Word documents (doc and docx)
+    /// - Generic data/content types for simulator compatibility
     private static let allowedContentTypes: [UTType] = [
         .pdf,
         .png,
         .jpeg,
+        .image,  // Covers all image types
         UTType("com.microsoft.word.doc") ?? .data,
-        UTType("org.openxmlformats.wordprocessingml.document") ?? .data
+        UTType("org.openxmlformats.wordprocessingml.document") ?? .data,
+        .data,   // Fallback for any binary data
+        .content // Generic content type
     ]
     
     // MARK: - Body
