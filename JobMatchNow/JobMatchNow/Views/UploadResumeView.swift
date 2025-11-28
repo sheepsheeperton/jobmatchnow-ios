@@ -1,9 +1,68 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+// MARK: - UIDocumentPicker Wrapper
+/// A UIViewControllerRepresentable wrapper for UIDocumentPickerViewController.
+/// More reliable than SwiftUI's .fileImporter in the iOS Simulator.
+struct DocumentPicker: UIViewControllerRepresentable {
+    let contentTypes: [UTType]
+    let onPicked: (URL) -> Void
+    let onCancelled: () -> Void
+    
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        print("[DocumentPicker] Creating UIDocumentPickerViewController")
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: contentTypes, asCopy: true)
+        picker.delegate = context.coordinator
+        picker.allowsMultipleSelection = false
+        print("[DocumentPicker] Picker configured with content types: \(contentTypes.map { $0.identifier })")
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {
+        // No updates needed
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onPicked: onPicked, onCancelled: onCancelled)
+    }
+    
+    class Coordinator: NSObject, UIDocumentPickerDelegate {
+        let onPicked: (URL) -> Void
+        let onCancelled: () -> Void
+        
+        init(onPicked: @escaping (URL) -> Void, onCancelled: @escaping () -> Void) {
+            self.onPicked = onPicked
+            self.onCancelled = onCancelled
+            super.init()
+            print("[DocumentPicker.Coordinator] Coordinator initialized")
+        }
+        
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            print("[DocumentPicker] documentPicker didPickDocumentsAt called")
+            print("[DocumentPicker] URLs received: \(urls)")
+            
+            guard let url = urls.first else {
+                print("[DocumentPicker] No URL in selection, treating as cancellation")
+                onCancelled()
+                return
+            }
+            
+            print("[DocumentPicker] Selected file: \(url.lastPathComponent)")
+            print("[DocumentPicker] Full URL: \(url)")
+            onPicked(url)
+        }
+        
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            print("[DocumentPicker] documentPickerWasCancelled called")
+            onCancelled()
+        }
+    }
+}
+
+// MARK: - Upload Resume View
 struct UploadResumeView: View {
     // MARK: - State
-    @State private var isShowingFileImporter = false
+    @State private var isShowingDocumentPicker = false
     @State private var navigateToPipeline = false
     @State private var viewToken: String? = nil
     @State private var isUploading = false
@@ -67,7 +126,7 @@ struct UploadResumeView: View {
                 // Primary upload button
                 Button(action: {
                     print("[UploadResumeView] Upload button pressed")
-                    isShowingFileImporter = true
+                    isShowingDocumentPicker = true
                 }) {
                     HStack(spacing: 12) {
                         Image(systemName: "doc.badge.arrow.up")
@@ -102,48 +161,24 @@ struct UploadResumeView: View {
         } message: {
             Text(errorMessage)
         }
-        // MARK: - File Importer
-        // Attached to the root VStack per SwiftUI best practices
-        .fileImporter(
-            isPresented: $isShowingFileImporter,
-            allowedContentTypes: Self.allowedContentTypes,
-            allowsMultipleSelection: false
-        ) { result in
-            handleFileImporterResult(result)
+        // MARK: - Document Picker Sheet
+        .sheet(isPresented: $isShowingDocumentPicker) {
+            DocumentPicker(
+                contentTypes: Self.allowedContentTypes,
+                onPicked: { url in
+                    print("[UploadResumeView] Document picker returned URL: \(url)")
+                    isShowingDocumentPicker = false
+                    uploadFile(url)
+                },
+                onCancelled: {
+                    print("[UploadResumeView] Document picker cancelled")
+                    isShowingDocumentPicker = false
+                }
+            )
+            .ignoresSafeArea()
         }
-        .onChange(of: isShowingFileImporter) { _, newValue in
-            print("[UploadResumeView] fileImporter isPresented changed to: \(newValue)")
-        }
-    }
-    
-    // MARK: - File Importer Result Handler
-    private func handleFileImporterResult(_ result: Result<[URL], Error>) {
-        print("[UploadResumeView] fileImporter completion called")
-        
-        switch result {
-        case .success(let urls):
-            guard let fileURL = urls.first else {
-                print("[UploadResumeView] fileImporter completion: success but no URL returned")
-                return
-            }
-            print("[UploadResumeView] fileImporter completion: success")
-            print("[UploadResumeView] Selected file URL: \(fileURL)")
-            uploadFile(fileURL)
-            
-        case .failure(let error):
-            print("[UploadResumeView] fileImporter completion: failure")
-            print("[UploadResumeView] Error: \(error.localizedDescription)")
-            
-            // Check if user cancelled (error code -128 is user cancellation)
-            let nsError = error as NSError
-            if nsError.domain == NSCocoaErrorDomain && nsError.code == NSUserCancelledError {
-                print("[UploadResumeView] User cancelled file selection")
-                return
-            }
-            
-            // Show error for actual failures
-            errorMessage = "We couldn't open that file. Please try again."
-            showErrorAlert = true
+        .onChange(of: isShowingDocumentPicker) { _, newValue in
+            print("[UploadResumeView] isShowingDocumentPicker changed to: \(newValue)")
         }
     }
     
