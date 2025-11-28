@@ -28,6 +28,30 @@
 		};
 /* End PBXFrameworksBuildPhase section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		89EA5B002ED0000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		89EA5B012ED0000000000002 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 89EA5B002ED0000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		89EA5B022ED0000000000003 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 89EA5B002ED0000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
+
 /* Begin PBXGroup section */
 		89EA5A442ECFF8FB001AF8FA = {
 			isa = PBXGroup;
@@ -65,6 +89,8 @@
 			);
 			name = JobMatchNow;
 			packageProductDependencies = (
+				89EA5B012ED0000000000002 /* GoogleSignIn */,
+				89EA5B022ED0000000000003 /* GoogleSignInSwift */,
 			);
 			productName = JobMatchNow;
 			productReference = 89EA5A4D2ECFF8FB001AF8FA /* JobMatchNow.app */;
@@ -100,6 +126,9 @@
 			projectRoot = "";
 			targets = (
 				89EA5A4C2ECFF8FB001AF8FA /* JobMatchNow */,
+			);
+			packageReferences = (
+				89EA5B002ED0000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 		};
 /* End PBXProject section */

@@ -1,4 +1,5 @@
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct JobMatchNowApp: App {
@@ -38,17 +39,22 @@ struct JobMatchNowApp: App {
         
         // Set tint color
         UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = UIColor(Theme.primaryBlue)
-        }
+    }
     
     // MARK: - URL Handling
     
     private func handleIncomingURL(_ url: URL) {
         print("[JobMatchNowApp] Received URL: \(url)")
         
-        // Handle OAuth callback
+        // Handle Google Sign-In callback
+        if GIDSignIn.sharedInstance.handle(url) {
+            print("[JobMatchNowApp] Google Sign-In handled URL")
+            return
+        }
+        
+        // Handle other OAuth callbacks (LinkedIn, etc.)
         if url.scheme == "jobmatchnow" && url.host == "auth" {
-            // The AuthManager will handle this via ASWebAuthenticationSession
             print("[JobMatchNowApp] OAuth callback received")
+        }
     }
-}
 }

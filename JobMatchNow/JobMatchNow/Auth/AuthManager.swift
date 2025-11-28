@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 import AuthenticationServices
+import GoogleSignIn
 
 // MARK: - Auth Manager
 
@@ -18,6 +19,9 @@ final class AuthManager: ObservableObject {
     private let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54Ymhmb3Fhb2FlaWd1b2xkbm5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2OTM3MDIsImV4cCI6MjA3ODI2OTcwMn0.USnk23E4MW9jnFPZ3WTYYsiRQ_ajy2ro6FT-10qwdEs"
     private let redirectURL = "jobmatchnow://auth/callback"
     
+    // MARK: - Google Sign-In Configuration
+    private let googleClientID = "488011201804-9t49erhs0gd49c76vkiobkdgbuccverr.apps.googleusercontent.com"
+    
     // MARK: - Session Storage Keys
     private let accessTokenKey = "supabase_access_token"
     private let refreshTokenKey = "supabase_refresh_token"
@@ -31,6 +35,7 @@ final class AuthManager: ObservableObject {
     
     enum AuthError: LocalizedError {
         case invalidURL
+        case invalidResponse
         case networkError(Error)
         case authenticationFailed(String)
         case noSession
@@ -40,6 +45,8 @@ final class AuthManager: ObservableObject {
             switch self {
             case .invalidURL:
                 return "Invalid authentication URL"
+            case .invalidResponse:
+                return "Invalid response from server"
             case .networkError(let error):
                 return "Network error: \(error.localizedDescription)"
             case .authenticationFailed(let message):
@@ -97,11 +104,99 @@ final class AuthManager: ObservableObject {
         return false
     }
     
-    // MARK: - OAuth Sign In
+    // MARK: - Native Google Sign In
     
+    @MainActor
     func signInWithGoogle() async throws {
-        try await signInWithOAuth(provider: "google")
+        isLoading = true
+        error = nil
+        
+        defer { isLoading = false }
+        
+        print("[AuthManager] Starting native Google Sign-In")
+        
+        // Get the root view controller
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = windowScene.windows.first?.rootViewController else {
+            throw AuthError.authenticationFailed("Unable to get root view controller")
+        }
+        
+        // Configure Google Sign-In
+        let config = GIDConfiguration(clientID: googleClientID)
+        GIDSignIn.sharedInstance.configuration = config
+        
+        do {
+            // Present the native Google Sign-In
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            
+            guard let idToken = result.user.idToken?.tokenString else {
+                throw AuthError.authenticationFailed("No ID token received from Google")
+            }
+            
+            let accessToken = result.user.accessToken.tokenString
+            let email = result.user.profile?.email
+            let name = result.user.profile?.name
+            
+            print("[AuthManager] Google Sign-In successful for: \(email ?? "unknown")")
+            
+            // Exchange Google token with Supabase
+            try await signInWithGoogleToken(idToken: idToken, accessToken: accessToken)
+            
+        } catch let error as GIDSignInError {
+            if error.code == .canceled {
+                print("[AuthManager] User cancelled Google Sign-In")
+                // Don't set error for cancellation
+            } else {
+                self.error = .authenticationFailed("Google Sign-In failed: \(error.localizedDescription)")
+                throw AuthError.authenticationFailed(error.localizedDescription)
+            }
+        } catch {
+            self.error = .networkError(error)
+            throw error
+        }
     }
+    
+    // MARK: - Exchange Google Token with Supabase
+    
+    private func signInWithGoogleToken(idToken: String, accessToken: String) async throws {
+        guard let url = URL(string: "\(supabaseURL)/auth/v1/token?grant_type=id_token") else {
+            throw AuthError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        
+        let body: [String: Any] = [
+            "provider": "google",
+            "id_token": idToken,
+            "access_token": accessToken
+        ]
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        print("[AuthManager] Exchanging Google token with Supabase...")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AuthError.invalidResponse
+        }
+        
+        print("[AuthManager] Supabase token exchange response: \(httpResponse.statusCode)")
+        
+        if httpResponse.statusCode == 200 {
+            try await parseAuthResponse(data)
+            print("[AuthManager] Successfully authenticated with Supabase")
+        } else {
+            let errorMsg = String(data: data, encoding: .utf8) ?? "Token exchange failed"
+            print("[AuthManager] Token exchange error: \(errorMsg)")
+            throw AuthError.authenticationFailed(errorMsg)
+        }
+    }
+    
+    // MARK: - LinkedIn OAuth (Web-based)
     
     func signInWithLinkedIn() async throws {
         try await signInWithOAuth(provider: "linkedin_oidc")
