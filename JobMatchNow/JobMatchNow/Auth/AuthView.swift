@@ -18,6 +18,8 @@ struct AuthView: View {
     @State private var password = ""
     @State private var confirmPassword = ""
     @State private var isSubmitting = false
+    @State private var alertMessage: String?
+    @State private var showAlert = false
     
     var body: some View {
         ZStack {
@@ -171,6 +173,16 @@ struct AuthView: View {
                 }
             }
         }
+        .alert("Account Created", isPresented: $showAlert) {
+            Button("OK") {
+                // Switch to sign in mode after confirmation message
+                authMode = .signIn
+                password = ""
+                confirmPassword = ""
+            }
+        } message: {
+            Text(alertMessage ?? "Please check your email to confirm your account, then sign in.")
+        }
     }
     
     // MARK: - Email Form View
@@ -275,6 +287,13 @@ struct AuthView: View {
                 } else {
                     try await authManager.signUpWithEmail(email: email, password: password)
                 }
+            } catch let error as AuthManager.AuthError {
+                // Check if it's the email confirmation message
+                if error.localizedDescription.contains("check your email") {
+                    alertMessage = "Account created! Please check your email to confirm your account, then sign in."
+                    showAlert = true
+                }
+                print("[AuthView] Error: \(error.localizedDescription)")
             } catch {
                 print("[AuthView] Error: \(error.localizedDescription)")
             }
