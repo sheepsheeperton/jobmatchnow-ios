@@ -153,6 +153,22 @@ struct UploadResumeView: View {
                 Text("Supports PDF, Word, and image files")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                
+                #if DEBUG
+                // Simulator workaround - document picker is broken in iOS Simulator
+                if isRunningInSimulator {
+                    Button(action: {
+                        print("[UploadResumeView] DEBUG: Using bundled sample resume")
+                        uploadBundledSampleResume()
+                    }) {
+                        Text("📱 Simulator: Use Sample Resume")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                    .disabled(isUploading)
+                    .padding(.top, 8)
+                }
+                #endif
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
@@ -281,6 +297,29 @@ struct UploadResumeView: View {
         }
         print("[UploadResumeView] ---- End File Details ----")
     }
+    
+    #if DEBUG
+    // MARK: - Simulator Detection
+    private var isRunningInSimulator: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return false
+        #endif
+    }
+    
+    // MARK: - Debug: Upload Bundled Sample
+    private func uploadBundledSampleResume() {
+        guard let sampleURL = Bundle.main.url(forResource: "SampleResume", withExtension: "pdf") else {
+            print("[UploadResumeView] DEBUG ERROR: SampleResume.pdf not found in bundle")
+            errorMessage = "Sample resume not found in app bundle."
+            showErrorAlert = true
+            return
+        }
+        print("[UploadResumeView] DEBUG: Found bundled sample at \(sampleURL)")
+        uploadFile(sampleURL)
+    }
+    #endif
     
     // MARK: - Error Message Helper
     private func getErrorMessage(for error: APIError) -> String {
