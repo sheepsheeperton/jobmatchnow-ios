@@ -4,7 +4,6 @@ import AuthenticationServices
 // MARK: - Auth Manager
 
 /// Handles authentication with Supabase OAuth providers
-@MainActor
 class AuthManager: ObservableObject {
     // MARK: - Singleton
     static let shared = AuthManager()

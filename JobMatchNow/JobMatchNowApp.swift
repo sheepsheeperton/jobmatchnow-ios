@@ -4,7 +4,6 @@ import SwiftUI
 struct JobMatchNowApp: App {
     // Initialize app state early
     @StateObject private var appState = AppState.shared
-    @StateObject private var authManager = AuthManager.shared
     
     init() {
         // Configure appearance
@@ -15,7 +14,6 @@ struct JobMatchNowApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
-                .environmentObject(authManager)
                 .onOpenURL { url in
                     // Handle OAuth callback URLs
                     handleIncomingURL(url)
