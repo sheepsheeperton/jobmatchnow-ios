@@ -13,11 +13,11 @@ enum AuthMode {
 struct AuthView: View {
     @StateObject private var authManager = AuthManager.shared
     @StateObject private var appState = AppState.shared
-    @State private var showEmailForm = false
     @State private var authMode: AuthMode = .signIn
     @State private var email = ""
     @State private var password = ""
     @State private var confirmPassword = ""
+    @State private var isSubmitting = false
     
     var body: some View {
         ZStack {
@@ -61,7 +61,7 @@ struct AuthView: View {
                     
                     // Auth Options
                     VStack(spacing: 16) {
-                        // Email Form (always visible for simplicity)
+                        // Email Form
                         emailFormView
                         
                         // Divider
@@ -80,11 +80,11 @@ struct AuthView: View {
                         .padding(.vertical, 8)
                         
                         // LinkedIn
-                        Button(action: {
+                        Button {
                             Task {
                                 try? await authManager.signInWithLinkedIn()
                             }
-                        }) {
+                        } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: "link.circle.fill")
                                     .font(.title2)
@@ -100,13 +100,13 @@ struct AuthView: View {
                         
                         #if DEBUG
                         // Demo mode for testing
-                        Button(action: {
+                        Button {
                             AppState.shared.signIn(user: AppState.UserInfo(
                                 id: "demo_user",
                                 email: "demo@jobmatchnow.ai",
                                 providers: ["demo"]
                             ))
-                        }) {
+                        } label: {
                             Text("Skip for Demo")
                                 .font(.subheadline)
                                 .foregroundColor(.orange)
@@ -156,7 +156,7 @@ struct AuthView: View {
             }
             
             // Loading overlay
-            if authManager.isLoading {
+            if isSubmitting {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()
                 
@@ -184,6 +184,10 @@ struct AuthView: View {
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding(.bottom, 8)
+            .onChange(of: authMode) { _, _ in
+                // Clear confirm password when switching modes
+                confirmPassword = ""
+            }
             
             TextField("Email", text: $email)
                 .textContentType(.emailAddress)
@@ -218,53 +222,61 @@ struct AuthView: View {
             }
             
             // Submit button
-            Button(action: submitEmailForm) {
+            Button {
+                submitForm()
+            } label: {
                 HStack {
                     Spacer()
-                    Text(authMode == .signIn ? "Sign In" : "Create Account")
-                        .font(.headline)
+                    if isSubmitting {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Text(authMode == .signIn ? "Sign In" : "Create Account")
+                            .font(.headline)
+                    }
                     Spacer()
                 }
                 .foregroundColor(.white)
                 .frame(height: 56)
-                .background(isFormValid ? Theme.primaryBlue : Color.gray)
+                .background(canSubmit ? Theme.primaryBlue : Color.gray)
                 .cornerRadius(Theme.CornerRadius.medium)
             }
-            .disabled(!isFormValid)
+            .disabled(!canSubmit)
         }
     }
     
     // MARK: - Form Validation
     
-    private var isFormValid: Bool {
+    private var canSubmit: Bool {
+        guard !isSubmitting else { return false }
+        
         let emailValid = !email.isEmpty && email.contains("@")
         let passwordValid = password.count >= 6
         
         if authMode == .signUp {
-            return emailValid && passwordValid && password == confirmPassword
+            return emailValid && passwordValid && password == confirmPassword && !confirmPassword.isEmpty
         }
         return emailValid && passwordValid
     }
     
     // MARK: - Submit Form
     
-    private func submitEmailForm() {
-        print("[AuthView] Submit button tapped, mode: \(authMode)")
-        print("[AuthView] Email: \(email), Password length: \(password.count)")
+    private func submitForm() {
+        guard canSubmit else { return }
         
-        Task { @MainActor in
+        isSubmitting = true
+        
+        Task {
+            defer { isSubmitting = false }
+            
             do {
                 if authMode == .signIn {
-                    print("[AuthView] Calling signInWithEmail...")
                     try await authManager.signInWithEmail(email: email, password: password)
                 } else {
-                    print("[AuthView] Calling signUpWithEmail...")
                     try await authManager.signUpWithEmail(email: email, password: password)
                 }
-                print("[AuthView] Auth completed successfully")
             } catch {
-                print("[AuthView] Auth error: \(error)")
-                // Error is displayed via authManager.error
+                print("[AuthView] Error: \(error.localizedDescription)")
             }
         }
     }

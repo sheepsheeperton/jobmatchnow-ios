@@ -159,15 +159,12 @@ final class AuthManager: ObservableObject {
     
     // MARK: - Email Sign In
     
-    @MainActor
     func signInWithEmail(email: String, password: String) async throws {
-        isLoading = true
         error = nil
         
         print("[AuthManager] Starting sign in for: \(email)")
         
         guard let url = URL(string: "\(supabaseURL)/auth/v1/token?grant_type=password") else {
-            isLoading = false
             throw AuthError.invalidURL
         }
         
@@ -185,47 +182,36 @@ final class AuthManager: ObservableObject {
         
         print("[AuthManager] Sending sign in request...")
         
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                isLoading = false
-                error = .networkError(NSError(domain: "", code: -1))
-                throw AuthError.networkError(NSError(domain: "", code: -1))
-            }
-            
-            print("[AuthManager] Sign in response status: \(httpResponse.statusCode)")
-            
-            if httpResponse.statusCode == 200 {
-                try await parseAuthResponse(data)
-                isLoading = false
-                print("[AuthManager] Sign in successful")
-            } else {
-                isLoading = false
-                let errorMsg = String(data: data, encoding: .utf8) ?? "Authentication failed"
-                print("[AuthManager] Sign in error: \(errorMsg)")
-                error = .authenticationFailed("Invalid email or password")
-                throw AuthError.authenticationFailed("Invalid email or password")
-            }
-        } catch let networkError where !(networkError is AuthError) {
-            isLoading = false
-            print("[AuthManager] Network error: \(networkError)")
-            error = .networkError(networkError)
-            throw AuthError.networkError(networkError)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            let err = AuthError.networkError(NSError(domain: "", code: -1))
+            error = err
+            throw err
+        }
+        
+        print("[AuthManager] Sign in response status: \(httpResponse.statusCode)")
+        
+        if httpResponse.statusCode == 200 {
+            try await parseAuthResponse(data)
+            print("[AuthManager] Sign in successful")
+        } else {
+            let errorMsg = String(data: data, encoding: .utf8) ?? "Authentication failed"
+            print("[AuthManager] Sign in error: \(errorMsg)")
+            let err = AuthError.authenticationFailed("Invalid email or password")
+            error = err
+            throw err
         }
     }
     
     // MARK: - Email Sign Up
     
-    @MainActor
     func signUpWithEmail(email: String, password: String) async throws {
-        isLoading = true
         error = nil
         
         print("[AuthManager] Starting sign up for: \(email)")
         
         guard let url = URL(string: "\(supabaseURL)/auth/v1/signup") else {
-            isLoading = false
             throw AuthError.invalidURL
         }
         
@@ -243,56 +229,47 @@ final class AuthManager: ObservableObject {
         
         print("[AuthManager] Sending sign up request...")
         
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                isLoading = false
-                error = .networkError(NSError(domain: "", code: -1))
-                throw AuthError.networkError(NSError(domain: "", code: -1))
-            }
-            
-            print("[AuthManager] Sign up response status: \(httpResponse.statusCode)")
-            let responseBody = String(data: data, encoding: .utf8) ?? "No body"
-            print("[AuthManager] Response body: \(responseBody)")
-            
-            if httpResponse.statusCode == 200 || httpResponse.statusCode == 201 {
-                // Check if email confirmation is required
-                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    // If we got tokens, sign in immediately
-                    if json["access_token"] != nil {
-                        try await parseAuthResponse(data)
-                        isLoading = false
-                        print("[AuthManager] Sign up successful, user signed in")
-                    } else {
-                        // Email confirmation required
-                        isLoading = false
-                        error = .authenticationFailed("Please check your email to confirm your account")
-                        throw AuthError.authenticationFailed("Please check your email to confirm your account")
-                    }
-                }
-            } else {
-                isLoading = false
-                let errorMsg = String(data: data, encoding: .utf8) ?? "Sign up failed"
-                print("[AuthManager] Sign up error: \(errorMsg)")
-                
-                // Parse error message
-                if errorMsg.contains("already registered") || errorMsg.contains("already been registered") {
-                    error = .authenticationFailed("This email is already registered. Please sign in instead.")
-                    throw AuthError.authenticationFailed("This email is already registered. Please sign in instead.")
-                } else if errorMsg.contains("password") {
-                    error = .authenticationFailed("Password must be at least 6 characters")
-                    throw AuthError.authenticationFailed("Password must be at least 6 characters")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            let err = AuthError.networkError(NSError(domain: "", code: -1))
+            error = err
+            throw err
+        }
+        
+        print("[AuthManager] Sign up response status: \(httpResponse.statusCode)")
+        let responseBody = String(data: data, encoding: .utf8) ?? "No body"
+        print("[AuthManager] Response body: \(responseBody)")
+        
+        if httpResponse.statusCode == 200 || httpResponse.statusCode == 201 {
+            // Check if email confirmation is required
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                // If we got tokens, sign in immediately
+                if json["access_token"] != nil {
+                    try await parseAuthResponse(data)
+                    print("[AuthManager] Sign up successful, user signed in")
                 } else {
-                    error = .authenticationFailed("Sign up failed. Please try again.")
-                    throw AuthError.authenticationFailed("Sign up failed. Please try again.")
+                    // Email confirmation required
+                    let err = AuthError.authenticationFailed("Please check your email to confirm your account")
+                    error = err
+                    throw err
                 }
             }
-        } catch let networkError where !(networkError is AuthError) {
-            isLoading = false
-            print("[AuthManager] Network error: \(networkError)")
-            error = .networkError(networkError)
-            throw AuthError.networkError(networkError)
+        } else {
+            let errorMsg = String(data: data, encoding: .utf8) ?? "Sign up failed"
+            print("[AuthManager] Sign up error: \(errorMsg)")
+            
+            // Parse error message
+            let err: AuthError
+            if errorMsg.contains("already registered") || errorMsg.contains("already been registered") {
+                err = .authenticationFailed("This email is already registered. Please sign in instead.")
+            } else if errorMsg.contains("password") {
+                err = .authenticationFailed("Password must be at least 6 characters")
+            } else {
+                err = .authenticationFailed("Sign up failed. Please try again.")
+            }
+            error = err
+            throw err
         }
     }
     
