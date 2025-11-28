@@ -4,7 +4,7 @@ import Combine
 // MARK: - App State
 
 /// Central app state manager for authentication and navigation
-class AppState: ObservableObject {
+final class AppState: ObservableObject {
     // MARK: - Singleton
     static let shared = AppState()
     

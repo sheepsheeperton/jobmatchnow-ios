@@ -1,10 +1,11 @@
 import SwiftUI
+import Combine
 import AuthenticationServices
 
 // MARK: - Auth Manager
 
 /// Handles authentication with Supabase OAuth providers
-class AuthManager: ObservableObject {
+final class AuthManager: ObservableObject {
     // MARK: - Singleton
     static let shared = AuthManager()
     
