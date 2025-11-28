@@ -1,5 +1,4 @@
 import SwiftUI
-import AuthenticationServices
 
 // MARK: - Auth Mode
 
@@ -60,21 +59,25 @@ struct AuthView: View {
                     }
                     .padding(.top, 60)
                     
-                    // OAuth Buttons
+                    // Auth Options
                     VStack(spacing: 16) {
-                        // Sign in with Apple
-                        SignInWithAppleButton(.signIn) { request in
-                            let appleRequest = authManager.startSignInWithApple()
-                            request.requestedScopes = appleRequest.requestedScopes
-                            request.nonce = appleRequest.nonce
-                        } onCompletion: { result in
-                            Task {
-                                await authManager.handleAppleSignIn(result: result)
-                            }
+                        // Email Form (always visible for simplicity)
+                        emailFormView
+                        
+                        // Divider
+                        HStack {
+                            Rectangle()
+                                .fill(Color.white.opacity(0.3))
+                                .frame(height: 1)
+                            Text("or")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.5))
+                                .padding(.horizontal, 8)
+                            Rectangle()
+                                .fill(Color.white.opacity(0.3))
+                                .frame(height: 1)
                         }
-                        .signInWithAppleButtonStyle(.white)
-                        .frame(height: 56)
-                        .cornerRadius(Theme.CornerRadius.medium)
+                        .padding(.vertical, 8)
                         
                         // LinkedIn
                         Button(action: {
@@ -93,49 +96,6 @@ struct AuthView: View {
                             .frame(height: 56)
                             .background(Color(red: 0.0, green: 0.47, blue: 0.71))
                             .cornerRadius(Theme.CornerRadius.medium)
-                        }
-                        
-                        // Divider
-                        HStack {
-                            Rectangle()
-                                .fill(Color.white.opacity(0.3))
-                                .frame(height: 1)
-                            Text("or")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.5))
-                                .padding(.horizontal, 8)
-                            Rectangle()
-                                .fill(Color.white.opacity(0.3))
-                                .frame(height: 1)
-                        }
-                        .padding(.vertical, 8)
-                        
-                        // Email option
-                        Button(action: {
-                            withAnimation {
-                                showEmailForm.toggle()
-                            }
-                        }) {
-                            HStack(spacing: 12) {
-                                Image(systemName: "envelope.fill")
-                                    .font(.title2)
-                                Text("Continue with Email")
-                                    .font(.headline)
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(Color.white.opacity(0.15))
-                            .cornerRadius(Theme.CornerRadius.medium)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
-                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                            )
-                        }
-                        
-                        // Email form (expandable)
-                        if showEmailForm {
-                            emailFormView
                         }
                         
                         #if DEBUG
@@ -254,35 +214,24 @@ struct AuthView: View {
                 Text("Password must be at least 6 characters")
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.5))
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             
             // Submit button
             Button(action: submitEmailForm) {
-                Text(authMode == .signIn ? "Sign In" : "Create Account")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(isFormValid ? Theme.primaryBlue : Color.gray)
-                    .cornerRadius(Theme.CornerRadius.small)
+                HStack {
+                    Spacer()
+                    Text(authMode == .signIn ? "Sign In" : "Create Account")
+                        .font(.headline)
+                    Spacer()
+                }
+                .foregroundColor(.white)
+                .frame(height: 56)
+                .background(isFormValid ? Theme.primaryBlue : Color.gray)
+                .cornerRadius(Theme.CornerRadius.medium)
             }
             .disabled(!isFormValid)
-            
-            // Switch mode text
-            Button(action: {
-                withAnimation {
-                    authMode = authMode == .signIn ? .signUp : .signIn
-                    confirmPassword = ""
-                }
-            }) {
-                Text(authMode == .signIn ? "Don't have an account? Sign up" : "Already have an account? Sign in")
-                    .font(.caption)
-                    .foregroundColor(Theme.primaryBlue)
-            }
-            .padding(.top, 4)
         }
-        .padding(.top, 8)
-        .transition(.opacity.combined(with: .move(edge: .top)))
     }
     
     // MARK: - Form Validation

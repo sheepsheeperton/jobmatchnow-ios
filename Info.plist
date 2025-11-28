@@ -20,8 +20,6 @@
 	<string>6.0</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>GIDClientID</key>
-	<string>488011201804-i55cgjhmhcdfi047erahq92bjh6osvdv.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -32,16 +30,6 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>jobmatchnow</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>com.google.GoogleSignIn</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.488011201804-i55cgjhmhcdfi047erahq92bjh6osvdv</string>
 			</array>
 		</dict>
 	</array>

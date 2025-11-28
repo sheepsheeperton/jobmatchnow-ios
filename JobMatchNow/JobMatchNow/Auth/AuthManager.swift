@@ -1,7 +1,6 @@
 import SwiftUI
 import Combine
 import AuthenticationServices
-import CryptoKit
 
 // MARK: - Auth Manager
 
@@ -18,9 +17,6 @@ final class AuthManager: ObservableObject {
     private let supabaseURL = "https://nxbhfoqaoaeiguoldnng.supabase.co"
     private let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54Ymhmb3Fhb2FlaWd1b2xkbm5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2OTM3MDIsImV4cCI6MjA3ODI2OTcwMn0.USnk23E4MW9jnFPZ3WTYYsiRQ_ajy2ro6FT-10qwdEs"
     private let redirectURL = "jobmatchnow://auth/callback"
-    
-    // MARK: - Apple Sign-In
-    private var currentNonce: String?
     
     // MARK: - Session Storage Keys
     private let accessTokenKey = "supabase_access_token"
@@ -102,132 +98,6 @@ final class AuthManager: ObservableObject {
         // Clear invalid session
         clearSession()
         return false
-    }
-    
-    // MARK: - Sign in with Apple
-    
-    func startSignInWithApple() -> ASAuthorizationAppleIDRequest {
-        let nonce = randomNonceString()
-        currentNonce = nonce
-        
-        let appleIDProvider = ASAuthorizationAppleIDProvider()
-        let request = appleIDProvider.createRequest()
-        request.requestedScopes = [.fullName, .email]
-        request.nonce = sha256(nonce)
-        
-        return request
-    }
-    
-    @MainActor
-    func handleAppleSignIn(result: Result<ASAuthorization, Error>) async {
-        isLoading = true
-        error = nil
-        
-        defer { isLoading = false }
-        
-        switch result {
-        case .success(let authorization):
-            guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
-                error = .authenticationFailed("Invalid credential type")
-                return
-            }
-            
-            guard let nonce = currentNonce else {
-                error = .authenticationFailed("Invalid state: No nonce")
-                return
-            }
-            
-            guard let appleIDToken = appleIDCredential.identityToken,
-                  let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
-                error = .authenticationFailed("Unable to get ID token")
-                return
-            }
-            
-            let email = appleIDCredential.email
-            let fullName = appleIDCredential.fullName
-            let displayName = [fullName?.givenName, fullName?.familyName]
-                .compactMap { $0 }
-                .joined(separator: " ")
-            
-            print("[AuthManager] Apple Sign-In successful for: \(email ?? "hidden email")")
-            
-            do {
-                try await signInWithAppleToken(idToken: idTokenString, nonce: nonce)
-            } catch {
-                self.error = .authenticationFailed(error.localizedDescription)
-            }
-            
-        case .failure(let error):
-            if (error as NSError).code == ASAuthorizationError.canceled.rawValue {
-                print("[AuthManager] User cancelled Apple Sign-In")
-            } else {
-                self.error = .authenticationFailed(error.localizedDescription)
-            }
-        }
-    }
-    
-    private func signInWithAppleToken(idToken: String, nonce: String) async throws {
-        guard let url = URL(string: "\(supabaseURL)/auth/v1/token?grant_type=id_token") else {
-            throw AuthError.invalidURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
-        
-        let body: [String: Any] = [
-            "provider": "apple",
-            "id_token": idToken,
-            "nonce": nonce
-        ]
-        
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        
-        print("[AuthManager] Exchanging Apple token with Supabase...")
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AuthError.invalidResponse
-        }
-        
-        print("[AuthManager] Supabase token exchange response: \(httpResponse.statusCode)")
-        
-        if httpResponse.statusCode == 200 {
-            try await parseAuthResponse(data)
-            print("[AuthManager] Successfully authenticated with Supabase")
-        } else {
-            let errorMsg = String(data: data, encoding: .utf8) ?? "Token exchange failed"
-            print("[AuthManager] Token exchange error: \(errorMsg)")
-            throw AuthError.authenticationFailed(errorMsg)
-        }
-    }
-    
-    // MARK: - Nonce Generation for Apple Sign-In
-    
-    private func randomNonceString(length: Int = 32) -> String {
-        precondition(length > 0)
-        var randomBytes = [UInt8](repeating: 0, count: length)
-        let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
-        if errorCode != errSecSuccess {
-            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
-        }
-        
-        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
-        let nonce = randomBytes.map { byte in
-            charset[Int(byte) % charset.count]
-        }
-        return String(nonce)
-    }
-    
-    private func sha256(_ input: String) -> String {
-        let inputData = Data(input.utf8)
-        let hashedData = SHA256.hash(data: inputData)
-        let hashString = hashedData.compactMap {
-            String(format: "%02x", $0)
-        }.joined()
-        return hashString
     }
     
     // MARK: - LinkedIn OAuth (Web-based)
