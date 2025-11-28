@@ -2,13 +2,28 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct UploadResumeView: View {
-    @State private var showingFilePicker = false
+    // MARK: - State
+    @State private var isShowingFileImporter = false
     @State private var navigateToPipeline = false
     @State private var viewToken: String? = nil
     @State private var isUploading = false
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
-
+    
+    // MARK: - Allowed Content Types
+    /// Supported file types for resume upload:
+    /// - PDF documents
+    /// - PNG and JPEG images
+    /// - Microsoft Word documents (doc and docx)
+    private static let allowedContentTypes: [UTType] = [
+        .pdf,
+        .png,
+        .jpeg,
+        UTType("com.microsoft.word.doc") ?? .data,
+        UTType("org.openxmlformats.wordprocessingml.document") ?? .data
+    ]
+    
+    // MARK: - Body
     var body: some View {
         VStack(spacing: 0) {
             // Top content section
@@ -19,7 +34,7 @@ struct UploadResumeView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .multilineTextAlignment(.center)
-
+                    
                     Text("We'll analyze your skills and match you with relevant job opportunities")
                         .font(.body)
                         .foregroundColor(.secondary)
@@ -27,37 +42,37 @@ struct UploadResumeView: View {
                         .padding(.horizontal, 32)
                 }
                 .padding(.top, 60)
-
+                
                 Spacer()
-
-                // Status indicator
+                
+                // Status indicator when uploading
                 if isUploading {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.5)
                             .tint(.blue)
-
+                        
                         Text("Analyzing your résumé...")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                     .padding(.vertical, 40)
                 }
-
+                
                 Spacer()
             }
-
+            
             // Bottom button section
             VStack(spacing: 16) {
                 // Primary upload button
                 Button(action: {
                     print("[UploadResumeView] Upload button pressed")
-                    showingFilePicker = true
+                    isShowingFileImporter = true
                 }) {
                     HStack(spacing: 12) {
                         Image(systemName: "doc.badge.arrow.up")
                             .font(.title3)
-                        Text("Choose Your Résumé")
+                        Text("Choose Résumé File")
                             .font(.headline)
                     }
                     .foregroundColor(.white)
@@ -67,34 +82,11 @@ struct UploadResumeView: View {
                     .cornerRadius(12)
                 }
                 .disabled(isUploading)
-
+                
                 // Supported formats hint
                 Text("Supports PDF, Word, and image files")
                     .font(.caption)
                     .foregroundColor(.secondary)
-
-                #if DEBUG
-                // Test button for simulator - only shows in debug builds
-                if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != nil ||
-                   UIDevice.current.userInterfaceIdiom == .pad ||
-                   UIDevice.current.userInterfaceIdiom == .phone {
-                    Button(action: {
-                        uploadTestResume()
-                    }) {
-                        Text("Test with Sample (Dev Only)")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 40)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.orange.opacity(0.5), lineWidth: 1)
-                            )
-                    }
-                    .disabled(isUploading)
-                    .padding(.top, 8)
-                }
-                #endif
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
@@ -110,93 +102,102 @@ struct UploadResumeView: View {
         } message: {
             Text(errorMessage)
         }
+        // MARK: - File Importer
+        // Attached to the root VStack per SwiftUI best practices
         .fileImporter(
-            isPresented: $showingFilePicker,
-            allowedContentTypes: [
-                .pdf,
-                .png,
-                .jpeg,
-                UTType(filenameExtension: "docx") ?? .data,
-                UTType(filenameExtension: "doc") ?? .data
-            ]
+            isPresented: $isShowingFileImporter,
+            allowedContentTypes: Self.allowedContentTypes,
+            allowsMultipleSelection: false
         ) { result in
-            handleFileSelection(result)
+            handleFileImporterResult(result)
+        }
+        .onChange(of: isShowingFileImporter) { _, newValue in
+            print("[UploadResumeView] fileImporter isPresented changed to: \(newValue)")
         }
     }
-
-    private func handleFileSelection(_ result: Result<URL, Error>) {
-        print("[UploadResumeView] File selection result: \(result)")
-
+    
+    // MARK: - File Importer Result Handler
+    private func handleFileImporterResult(_ result: Result<[URL], Error>) {
+        print("[UploadResumeView] fileImporter completion called")
+        
         switch result {
-        case .success(let fileURL):
-            print("[UploadResumeView] File selected: \(fileURL.lastPathComponent)")
-            uploadFile(fileURL)
-
-        case .failure(let error):
-            print("[UploadResumeView] File selection failed: \(error.localizedDescription)")
-            // Only show error if user didn't cancel
-            if (error as NSError).code != -128 { // User cancelled
-                errorMessage = "Failed to select file. Please try again."
-                showErrorAlert = true
+        case .success(let urls):
+            guard let fileURL = urls.first else {
+                print("[UploadResumeView] fileImporter completion: success but no URL returned")
+                return
             }
+            print("[UploadResumeView] fileImporter completion: success")
+            print("[UploadResumeView] Selected file URL: \(fileURL)")
+            uploadFile(fileURL)
+            
+        case .failure(let error):
+            print("[UploadResumeView] fileImporter completion: failure")
+            print("[UploadResumeView] Error: \(error.localizedDescription)")
+            
+            // Check if user cancelled (error code -128 is user cancellation)
+            let nsError = error as NSError
+            if nsError.domain == NSCocoaErrorDomain && nsError.code == NSUserCancelledError {
+                print("[UploadResumeView] User cancelled file selection")
+                return
+            }
+            
+            // Show error for actual failures
+            errorMessage = "We couldn't open that file. Please try again."
+            showErrorAlert = true
         }
     }
-
+    
+    // MARK: - Upload File
     private func uploadFile(_ fileURL: URL) {
-        print("[UploadResumeView] Starting upload for file: \(fileURL)")
-
+        print("[UploadResumeView] Starting upload for file: \(fileURL.lastPathComponent)")
+        
         guard !isUploading else {
-            print("[UploadResumeView] Upload already in progress")
+            print("[UploadResumeView] Upload already in progress, ignoring")
             return
         }
-
+        
         isUploading = true
-
+        
         Task {
             // Start accessing security-scoped resource
             let didStartAccessing = fileURL.startAccessingSecurityScopedResource()
-            print("[UploadResumeView] Security-scoped access: \(didStartAccessing)")
-
+            print("[UploadResumeView] Security-scoped access started: \(didStartAccessing)")
+            
             defer {
                 if didStartAccessing {
                     fileURL.stopAccessingSecurityScopedResource()
+                    print("[UploadResumeView] Security-scoped access stopped")
                 }
             }
-
+            
             do {
-                // Log file info
-                if let resourceValues = try? fileURL.resourceValues(forKeys: [.contentTypeKey, .fileSizeKey]) {
-                    if let contentType = resourceValues.contentType {
-                        print("[UploadResumeView] Content type: \(contentType.identifier)")
-                        print("[UploadResumeView] MIME type: \(contentType.preferredMIMEType ?? "unknown")")
-                    }
-                    if let fileSize = resourceValues.fileSize {
-                        print("[UploadResumeView] File size: \(fileSize) bytes")
-                    }
-                }
-
-                // Upload to API
-                print("[UploadResumeView] Calling API upload...")
+                // Log detailed file information
+                logFileInfo(for: fileURL)
+                
+                // Upload to API using shared service
+                print("[UploadResumeView] Calling APIService.uploadResume...")
                 let token = try await APIService.shared.uploadResume(fileURL: fileURL)
-
-                print("[UploadResumeView] Upload successful, received token: \(token)")
-
-                // Navigate to pipeline
+                
+                print("[UploadResumeView] Upload successful!")
+                print("[UploadResumeView] Received view_token: \(token)")
+                
+                // Navigate to pipeline on main thread
                 await MainActor.run {
                     viewToken = token
-                    navigateToPipeline = true
                     isUploading = false
+                    print("[UploadResumeView] Navigating to pipeline with viewToken=\(token)")
+                    navigateToPipeline = true
                 }
-
+                
             } catch let error as APIError {
-                print("[UploadResumeView] API error: \(error)")
+                print("[UploadResumeView] API error during upload: \(error)")
                 await MainActor.run {
                     isUploading = false
                     errorMessage = getErrorMessage(for: error)
                     showErrorAlert = true
                 }
             } catch {
-                print("[UploadResumeView] Unexpected error: \(error)")
+                print("[UploadResumeView] Unexpected error during upload: \(error)")
                 await MainActor.run {
                     isUploading = false
                     errorMessage = "We couldn't process your résumé. Please try again."
@@ -205,34 +206,41 @@ struct UploadResumeView: View {
             }
         }
     }
-
-    #if DEBUG
-    private func uploadTestResume() {
-        print("[UploadResumeView - DEBUG] Test button pressed")
-
-        // Try to use bundled sample if available
-        if let sampleURL = Bundle.main.url(forResource: "SampleResume", withExtension: "pdf") {
-            print("[UploadResumeView - DEBUG] Using bundled SampleResume.pdf")
-            uploadFile(sampleURL)
-        } else {
-            // Create a temporary test file if no bundle resource
-            print("[UploadResumeView - DEBUG] No bundled sample, creating test file")
-
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("test-resume.pdf")
-            let testData = Data("Test Resume Content".utf8)
-
-            do {
-                try testData.write(to: tempURL)
-                uploadFile(tempURL)
-            } catch {
-                print("[UploadResumeView - DEBUG] Failed to create test file: \(error)")
-                errorMessage = "Test file creation failed (Dev mode)"
-                showErrorAlert = true
+    
+    // MARK: - Log File Info
+    private func logFileInfo(for fileURL: URL) {
+        print("[UploadResumeView] ---- File Details ----")
+        print("[UploadResumeView] File URL: \(fileURL)")
+        print("[UploadResumeView] File name: \(fileURL.lastPathComponent)")
+        
+        do {
+            let resourceValues = try fileURL.resourceValues(forKeys: [
+                .contentTypeKey,
+                .fileSizeKey,
+                .creationDateKey
+            ])
+            
+            if let fileSize = resourceValues.fileSize {
+                print("[UploadResumeView] File size: \(fileSize) bytes")
             }
+            
+            if let contentType = resourceValues.contentType {
+                print("[UploadResumeView] Content type (UTI): \(contentType.identifier)")
+                if let mimeType = contentType.preferredMIMEType {
+                    print("[UploadResumeView] MIME type: \(mimeType)")
+                }
+            }
+            
+            if let creationDate = resourceValues.creationDate {
+                print("[UploadResumeView] Created: \(creationDate)")
+            }
+        } catch {
+            print("[UploadResumeView] Could not read file attributes: \(error.localizedDescription)")
         }
+        print("[UploadResumeView] ---- End File Details ----")
     }
-    #endif
-
+    
+    // MARK: - Error Message Helper
     private func getErrorMessage(for error: APIError) -> String {
         switch error {
         case .fileNotFound, .fileReadError:
