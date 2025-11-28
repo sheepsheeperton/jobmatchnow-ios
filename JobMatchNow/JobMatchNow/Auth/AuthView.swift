@@ -249,15 +249,22 @@ struct AuthView: View {
     // MARK: - Submit Form
     
     private func submitEmailForm() {
-        Task {
+        print("[AuthView] Submit button tapped, mode: \(authMode)")
+        print("[AuthView] Email: \(email), Password length: \(password.count)")
+        
+        Task { @MainActor in
             do {
                 if authMode == .signIn {
+                    print("[AuthView] Calling signInWithEmail...")
                     try await authManager.signInWithEmail(email: email, password: password)
                 } else {
+                    print("[AuthView] Calling signUpWithEmail...")
                     try await authManager.signUpWithEmail(email: email, password: password)
                 }
+                print("[AuthView] Auth completed successfully")
             } catch {
-                // Error is handled by authManager
+                print("[AuthView] Auth error: \(error)")
+                // Error is displayed via authManager.error
             }
         }
     }
