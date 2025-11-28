@@ -21,7 +21,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>GIDClientID</key>
-	<string>488011201804-9t49erhs0gd49c76vkiobkdgbuccverr.apps.googleusercontent.com</string>
+	<string>488011201804-i55cgjhmhcdfi047erahq92bjh6osvdv.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -41,7 +41,7 @@
 			<string>com.google.GoogleSignIn</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.488011201804-9t49erhs0gd49c76vkiobkdgbuccverr</string>
+				<string>com.googleusercontent.apps.488011201804-i55cgjhmhcdfi047erahq92bjh6osvdv</string>
 			</array>
 		</dict>
 	</array>

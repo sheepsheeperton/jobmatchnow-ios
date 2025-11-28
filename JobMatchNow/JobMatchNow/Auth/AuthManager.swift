@@ -20,7 +20,7 @@ final class AuthManager: ObservableObject {
     private let redirectURL = "jobmatchnow://auth/callback"
     
     // MARK: - Google Sign-In Configuration
-    private let googleClientID = "488011201804-9t49erhs0gd49c76vkiobkdgbuccverr.apps.googleusercontent.com"
+    private let googleClientID = "488011201804-i55cgjhmhcdfi047erahq92bjh6osvdv.apps.googleusercontent.com"
     
     // MARK: - Session Storage Keys
     private let accessTokenKey = "supabase_access_token"
