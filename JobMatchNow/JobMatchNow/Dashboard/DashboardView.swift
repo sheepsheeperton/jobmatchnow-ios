@@ -239,7 +239,7 @@ struct SearchSessionCard: View {
                     StatItem(
                         value: session.adjacentMatches,
                         label: "Adjacent",
-                        color: Color.purple
+                        color: ThemeColors.softComplement  // Replace purple with approved color
                     )
                 }
             }

@@ -233,9 +233,9 @@ struct PipelineStepRow: View {
     private var backgroundColor: Color {
         switch status {
         case .completed:
-            return ThemeColors.primaryComplement  // Success state uses complement blue
+            return ThemeColors.primaryComplement.opacity(0.5)  // Completed: subdued complement
         case .inProgress:
-            return ThemeColors.primaryBrand       // Active state uses brand orange
+            return ThemeColors.primaryBrand                    // Active: brand orange
         case .pending:
             return Color(UIColor.systemGray5)
         }

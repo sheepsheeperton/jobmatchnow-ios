@@ -157,7 +157,7 @@ struct SettingsView: View {
                 Button("Done") {
                     dismiss()
                 }
-                .foregroundColor(ThemeColors.primaryComplement)
+                .foregroundColor(ThemeColors.primaryBrand)  // Dark mode: use brand orange
             }
         }
         .confirmationDialog(

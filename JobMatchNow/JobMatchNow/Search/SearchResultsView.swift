@@ -319,7 +319,7 @@ struct CategoryBadge: View {
         case "direct":
             return ThemeColors.primaryComplement
         case "adjacent":
-            return Color.purple
+            return ThemeColors.softComplement  // Replace purple with approved color
         default:
             return ThemeColors.primaryBrand
         }

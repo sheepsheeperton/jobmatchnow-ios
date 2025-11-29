@@ -143,7 +143,7 @@ struct SearchUploadView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(ThemeColors.primaryComplement)
+                        .foregroundColor(ThemeColors.midnight)  // Light mode: use midnight
                 }
             }
         }

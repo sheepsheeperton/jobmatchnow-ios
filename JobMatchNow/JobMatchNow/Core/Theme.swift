@@ -71,9 +71,9 @@ enum Theme {
     @available(*, deprecated, message: "Use ThemeColors.primaryComplement instead")
     static let directCategory = ThemeColors.primaryComplement
     
-    /// @available(*, deprecated, message: "Use Color.purple or a custom ThemeColors token")
-    @available(*, deprecated, message: "Use Color.purple or a custom ThemeColors token")
-    static let adjacentCategory = Color.purple
+    /// @available(*, deprecated, message: "Use ThemeColors.softComplement instead")
+    @available(*, deprecated, message: "Use ThemeColors.softComplement instead")
+    static let adjacentCategory = ThemeColors.softComplement
     
     // MARK: - Gradients
     
