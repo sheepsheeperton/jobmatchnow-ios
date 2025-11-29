@@ -157,7 +157,7 @@ struct SettingsView: View {
                 Button("Done") {
                     dismiss()
                 }
-                .foregroundColor(Theme.primaryBlue)
+                .foregroundColor(ThemeColors.primaryComplement)
             }
         }
         .confirmationDialog(

@@ -36,8 +36,8 @@ struct JobMatchNowApp: App {
         UINavigationBar.appearance().standardAppearance = navBarAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
         
-        // Set tint color
-        UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = UIColor(Theme.primaryBlue)
+        // Set tint color - using primaryComplement for system alerts
+        UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = UIColor(ThemeColors.primaryComplement)
     }
     
     // MARK: - URL Handling

@@ -35,6 +35,7 @@ struct SearchUploadView: View {
                     Text("Upload Your Résumé")
                         .font(.largeTitle)
                         .fontWeight(.bold)
+                        .foregroundColor(ThemeColors.midnight)
                         .multilineTextAlignment(.center)
                     
                     Text("We'll analyze your skills and match you with relevant job opportunities")
@@ -47,15 +48,15 @@ struct SearchUploadView: View {
                 
                 Spacer()
                 
-                // Upload illustration
+                // Upload illustration - brand orange for identity
                 ZStack {
                     Circle()
-                        .fill(Theme.primaryBlue.opacity(0.1))
+                        .fill(ThemeColors.softComplement.opacity(0.3))
                         .frame(width: 160, height: 160)
                     
                     Image(systemName: "doc.badge.arrow.up.fill")
                         .font(.system(size: 70))
-                        .foregroundColor(Theme.primaryBlue)
+                        .foregroundColor(ThemeColors.primaryBrand)
                 }
                 
                 // Status indicator when uploading
@@ -63,7 +64,7 @@ struct SearchUploadView: View {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.5)
-                            .tint(Theme.primaryBlue)
+                            .tint(ThemeColors.primaryBrand)
                         
                         Text("Analyzing your résumé...")
                             .font(.subheadline)
@@ -89,7 +90,7 @@ struct SearchUploadView: View {
             
             // Bottom button section
             VStack(spacing: 16) {
-                // Primary upload button
+                // Primary upload button - brand orange CTA
                 Button(action: {
                     print("[SearchUploadView] Upload button pressed")
                     isShowingDocumentPicker = true
@@ -100,10 +101,10 @@ struct SearchUploadView: View {
                         Text("Choose Résumé File")
                             .font(.headline)
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(ThemeColors.textOnDark)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(isUploading ? Color.gray : Theme.primaryBlue)
+                    .background(isUploading ? ThemeColors.borderSubtle : ThemeColors.primaryBrand)
                     .cornerRadius(Theme.CornerRadius.medium)
                 }
                 .disabled(isUploading)
@@ -125,7 +126,7 @@ struct SearchUploadView: View {
                             Text("Use Sample Résumé")
                         }
                         .font(.subheadline)
-                        .foregroundColor(Theme.primaryBlue)
+                        .foregroundColor(ThemeColors.primaryComplement)
                     }
                     .disabled(isUploading)
                     .padding(.top, 8)
@@ -135,13 +136,14 @@ struct SearchUploadView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
         }
+        .background(ThemeColors.surfaceLight)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(Theme.primaryBlue)
+                        .foregroundColor(ThemeColors.primaryComplement)
                 }
             }
         }
@@ -295,7 +297,7 @@ struct LastSearchCard: View {
                     
                     Text(lastSearch.label ?? "Recent search")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(ThemeColors.midnight)
                     
                     HStack(spacing: 12) {
                         Label("\(lastSearch.totalMatches) matches", systemImage: "briefcase")
@@ -311,7 +313,7 @@ struct LastSearchCard: View {
                     .foregroundColor(.secondary)
             }
             .padding()
-            .background(Theme.secondaryBackground)
+            .background(ThemeColors.surfaceWhite)
             .cornerRadius(Theme.CornerRadius.medium)
         }
         .buttonStyle(PlainButtonStyle())
@@ -373,4 +375,3 @@ struct DocumentPicker: UIViewControllerRepresentable {
         SearchUploadView()
     }
 }
-

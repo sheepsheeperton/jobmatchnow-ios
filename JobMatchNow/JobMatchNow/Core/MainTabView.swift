@@ -26,7 +26,7 @@ struct MainTabView: View {
             }
             .tag(AppState.Tab.dashboard)
         }
-        .tint(Theme.primaryBlue)
+        .tint(ThemeColors.primaryBrand)  // Brand orange for tab bar accents
     }
 }
 

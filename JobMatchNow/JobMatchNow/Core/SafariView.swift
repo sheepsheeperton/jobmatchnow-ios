@@ -13,7 +13,7 @@ struct SafariView: UIViewControllerRepresentable {
         config.barCollapsingEnabled = true
         
         let safari = SFSafariViewController(url: url, configuration: config)
-        safari.preferredControlTintColor = UIColor(Theme.primaryBlue)
+        safari.preferredControlTintColor = UIColor(ThemeColors.primaryComplement)
         return safari
     }
     

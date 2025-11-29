@@ -29,7 +29,7 @@ struct DashboardView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(Theme.primaryBlue)
+                        .foregroundColor(ThemeColors.primaryComplement)
                 }
             }
         }
@@ -70,18 +70,19 @@ struct DashboardView: View {
             
             ZStack {
                 Circle()
-                    .fill(Theme.primaryBlue.opacity(0.1))
+                    .fill(ThemeColors.softComplement.opacity(0.3))
                     .frame(width: 120, height: 120)
                 
                 Image(systemName: "doc.text.magnifyingglass")
                     .font(.system(size: 50))
-                    .foregroundColor(Theme.primaryBlue)
+                    .foregroundColor(ThemeColors.primaryComplement)
             }
             
             VStack(spacing: 8) {
                 Text("No Search History")
                     .font(.title2)
                     .fontWeight(.semibold)
+                    .foregroundColor(ThemeColors.midnight)
                 
                 Text("Your past job searches will appear here.\nStart by uploading your résumé!")
                     .font(.body)
@@ -95,9 +96,9 @@ struct DashboardView: View {
             }) {
                 Text("Start a Search")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(ThemeColors.textOnDark)
                     .frame(width: 200, height: 50)
-                    .background(Theme.primaryBlue)
+                    .background(ThemeColors.primaryBrand)
                     .cornerRadius(Theme.CornerRadius.medium)
             }
             .padding(.top, 16)
@@ -205,7 +206,7 @@ struct SearchSessionCard: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(session.displayLabel)
                             .font(.headline)
-                            .foregroundColor(.primary)
+                            .foregroundColor(ThemeColors.midnight)
                         
                         Text(session.fullFormattedDate)
                             .font(.caption)
@@ -226,24 +227,24 @@ struct SearchSessionCard: View {
                     StatItem(
                         value: session.totalMatches,
                         label: "Total",
-                        color: Theme.primaryBlue
+                        color: ThemeColors.primaryBrand
                     )
                     
                     StatItem(
                         value: session.directMatches,
                         label: "Direct",
-                        color: Theme.directCategory
+                        color: ThemeColors.primaryComplement
                     )
                     
                     StatItem(
                         value: session.adjacentMatches,
                         label: "Adjacent",
-                        color: Theme.adjacentCategory
+                        color: Color.purple
                     )
                 }
             }
             .padding()
-            .background(Theme.secondaryBackground)
+            .background(ThemeColors.surfaceWhite)
             .cornerRadius(Theme.CornerRadius.medium)
             .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         }
@@ -277,4 +278,3 @@ struct StatItem: View {
         DashboardView()
     }
 }
-

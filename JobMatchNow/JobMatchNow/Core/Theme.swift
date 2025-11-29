@@ -2,65 +2,77 @@
 //  Theme.swift
 //  JobMatchNow
 //
-//  UPDATED: Now references ThemeColors for canonical color values.
-//  This file provides backwards-compatible aliases and additional design tokens
-//  (spacing, corner radius, button styles) that complement ThemeColors.
+//  ⚠️ DEPRECATION NOTICE:
+//  Theme is being phased out as a color source.
+//  All new code MUST use ThemeColors.* directly for colors.
 //
-//  For the canonical color palette, see: ThemeColors.swift and Docs/ColorPalette.md
+//  This file now provides:
+//  - Spacing tokens (Theme.Spacing)
+//  - Corner radius tokens (Theme.CornerRadius)
+//  - Button styles (Theme.PrimaryButtonStyle, etc.)
+//
+//  For the canonical color palette, see:
+//  - ThemeColors.swift (Swift color tokens)
+//  - Docs/ColorPalette.md (usage documentation)
 //
 
 import SwiftUI
 
-// MARK: - JobMatchNow Brand Theme
+// MARK: - JobMatchNow Theme
 
 enum Theme {
     
-    // MARK: - Color Aliases (Backwards Compatibility)
-    // These reference ThemeColors for the canonical values.
-    // New code should prefer using ThemeColors directly.
+    // MARK: - Deprecated Color Aliases
+    // ⚠️ These exist only for backward compatibility.
+    // All usages have been migrated to ThemeColors.* as of Nov 2024.
+    // These will be REMOVED in a future version.
     
-    /// Primary brand color - Atomic Tangerine for CTAs and primary buttons
-    /// Prefer: ThemeColors.primaryBrand
+    /// @available(*, deprecated, message: "Use ThemeColors.primaryBrand instead")
+    @available(*, deprecated, message: "Use ThemeColors.primaryBrand instead")
     static let primaryBrand = ThemeColors.primaryBrand
     
-    /// Primary blue accent - Vibrant Sky Blue for secondary actions
-    /// Legacy alias kept for existing code; prefer ThemeColors.primaryComplement
+    /// @available(*, deprecated, message: "Use ThemeColors.primaryComplement instead")
+    @available(*, deprecated, message: "Use ThemeColors.primaryComplement instead")
     static let primaryBlue = ThemeColors.primaryComplement
     
-    /// Accent color from asset catalog (may differ per platform)
+    /// @available(*, deprecated, message: "Use ThemeColors tokens instead")
+    @available(*, deprecated, message: "Use ThemeColors tokens instead")
     static let primary = Color("AccentColor")
     
-    /// Secondary text color
+    /// @available(*, deprecated, message: "Use Color.secondary or ThemeColors.textOnLight instead")
+    @available(*, deprecated, message: "Use Color.secondary or ThemeColors.textOnLight instead")
     static let secondaryText = Color.secondary
     
-    // MARK: - Background Colors
-    
-    /// Light mode background - prefer ThemeColors.surfaceLight for explicit control
+    /// @available(*, deprecated, message: "Use ThemeColors.surfaceLight or surfaceWhite instead")
+    @available(*, deprecated, message: "Use ThemeColors.surfaceLight or surfaceWhite instead")
     static let background = Color(UIColor.systemBackground)
     
-    /// Card/elevated background - prefer ThemeColors.surfaceWhite
+    /// @available(*, deprecated, message: "Use ThemeColors.surfaceWhite instead")
+    @available(*, deprecated, message: "Use ThemeColors.surfaceWhite instead")
     static let secondaryBackground = Color(UIColor.secondarySystemBackground)
     
-    /// Tertiary background layer
+    /// @available(*, deprecated, message: "Use ThemeColors.surfaceLight instead")
+    @available(*, deprecated, message: "Use ThemeColors.surfaceLight instead")
     static let tertiaryBackground = Color(UIColor.tertiarySystemBackground)
     
-    // MARK: - Semantic Colors
-    
-    /// Success color for completed states
+    /// @available(*, deprecated, message: "Use ThemeColors.primaryComplement for success states")
+    @available(*, deprecated, message: "Use ThemeColors.primaryComplement for success states")
     static let success = Color.green
     
-    /// Warning/caution color - prefer ThemeColors.warmAccent for brand consistency
+    /// @available(*, deprecated, message: "Use ThemeColors.warmAccent instead")
+    @available(*, deprecated, message: "Use ThemeColors.warmAccent instead")
     static let warning = ThemeColors.warmAccent
     
-    /// Error color - prefer ThemeColors.errorRed for brand consistency
+    /// @available(*, deprecated, message: "Use ThemeColors.errorRed instead")
+    @available(*, deprecated, message: "Use ThemeColors.errorRed instead")
     static let error = ThemeColors.errorRed
     
-    // MARK: - Category Colors (Job Matching)
-    
-    /// "Direct" job matches - using primaryComplement for brand alignment
+    /// @available(*, deprecated, message: "Use ThemeColors.primaryComplement instead")
+    @available(*, deprecated, message: "Use ThemeColors.primaryComplement instead")
     static let directCategory = ThemeColors.primaryComplement
     
-    /// "Adjacent" job matches - keeping purple for differentiation
+    /// @available(*, deprecated, message: "Use Color.purple or a custom ThemeColors token")
+    @available(*, deprecated, message: "Use Color.purple or a custom ThemeColors token")
     static let adjacentCategory = Color.purple
     
     // MARK: - Gradients

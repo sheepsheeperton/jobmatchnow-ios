@@ -28,17 +28,17 @@ struct AuthView: View {
     
     var body: some View {
         ZStack {
-            // Background
-            Color(red: 0.05, green: 0.1, blue: 0.2)
+            // Background - using midnight for dark auth screen
+            ThemeColors.midnight
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
                 Spacer()
                 
-                // Logo
+                // Logo - brand orange for visual identity
                 Image(systemName: "briefcase.fill")
                     .font(.system(size: 60))
-                    .foregroundColor(Theme.primaryBlue)
+                    .foregroundColor(ThemeColors.primaryBrand)
                     .padding(.bottom, 20)
                 
                 Text("Welcome to JobMatchNow")
@@ -106,7 +106,7 @@ struct AuthView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(canSubmit ? Theme.primaryBlue : Color.gray)
+                .background(canSubmit ? ThemeColors.primaryBrand : ThemeColors.borderSubtle)
                 .cornerRadius(10)
                 .padding(.horizontal, 40)
                 .disabled(!canSubmit)
