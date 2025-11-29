@@ -1,6 +1,21 @@
 import Foundation
 import UniformTypeIdentifiers
 
+// MARK: - Location Scope
+
+/// Location scope for job search results
+enum LocationScope: String, CaseIterable {
+    case local = "local"
+    case national = "national"
+    
+    var displayName: String {
+        switch self {
+        case .local: return "Local"
+        case .national: return "National"
+        }
+    }
+}
+
 // MARK: - Models
 
 struct SessionStatus: Decodable {
@@ -402,12 +417,23 @@ class APIService {
 
     // MARK: - 3. Get Jobs
 
-    func getJobs(viewToken: String) async throws -> [Job] {
+    /// Fetches jobs for a search session
+    /// - Parameters:
+    ///   - viewToken: The session view token
+    ///   - scope: Optional location scope filter (.local or .national)
+    func getJobs(viewToken: String, scope: LocationScope? = nil) async throws -> [Job] {
         guard var urlComponents = URLComponents(string: "\(baseURL)/api/public/jobs") else {
             throw APIError.invalidURL
         }
 
-        urlComponents.queryItems = [URLQueryItem(name: "token", value: viewToken)]
+        var queryItems = [URLQueryItem(name: "token", value: viewToken)]
+        
+        // Add scope parameter if specified
+        if let scope = scope {
+            queryItems.append(URLQueryItem(name: "scope", value: scope.rawValue))
+        }
+        
+        urlComponents.queryItems = queryItems
 
         guard let url = urlComponents.url else {
             throw APIError.invalidURL
@@ -416,7 +442,7 @@ class APIService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
-        print("DEBUG: Fetching jobs from:", url)
+        print("[APIService] Fetching jobs from:", url, "scope:", scope?.rawValue ?? "default")
 
         // Perform request
         let (data, response): (Data, URLResponse)

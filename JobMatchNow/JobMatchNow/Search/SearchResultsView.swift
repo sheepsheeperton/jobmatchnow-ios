@@ -18,10 +18,10 @@ enum ResultsSource {
 
 /// Displays job matches with filtering and actions
 struct SearchResultsView: View {
-    let jobs: [Job]
     let viewToken: String
     var source: ResultsSource = .currentSearch
     
+    @StateObject private var viewModel: ResultsViewModel
     @StateObject private var appState = AppState.shared
     @StateObject private var explanationManager: ExplanationManager
     @State private var selectedFilter: JobFilter = .all
@@ -33,21 +33,21 @@ struct SearchResultsView: View {
     @State private var showSavePrompt = true
     @Environment(\.dismiss) private var dismiss
     
-    // Custom initializer to create ExplanationManager with viewToken
-    init(jobs: [Job], viewToken: String, source: ResultsSource = .currentSearch) {
-        self.jobs = jobs
+    // Custom initializer to create ViewModels with viewToken
+    init(jobs: [Job], viewToken: String, source: ResultsSource = .currentSearch, hasLocalJobs: Bool = true) {
         self.viewToken = viewToken
         self.source = source
+        self._viewModel = StateObject(wrappedValue: ResultsViewModel(jobs: jobs, viewToken: viewToken, hasLocalJobs: hasLocalJobs))
         self._explanationManager = StateObject(wrappedValue: ExplanationManager(viewToken: viewToken))
     }
     
-    // Computed counts
+    // Computed counts based on viewModel.jobs
     var remoteCount: Int {
-        jobs.filter { $0.isRemote }.count
+        viewModel.jobs.filter { $0.isRemote }.count
     }
     
     var filteredJobs: [Job] {
-        var result = jobs
+        var result = viewModel.jobs
         
         // Apply remote filter
         switch selectedFilter {
@@ -70,103 +70,152 @@ struct SearchResultsView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            VStack(spacing: 8) {
-                Text("Your Job Matches")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(ThemeColors.textOnLight)
+        ZStack {
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 8) {
+                    Text("Your Job Matches")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(ThemeColors.textOnLight)
+                    
+                    Text("Found \(viewModel.jobs.count) matches based on your résumé")
+                        .font(.subheadline)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                }
+                .padding(.top, 20)
+                .padding(.bottom, 16)
                 
-                Text("Found \(jobs.count) matches based on your résumé")
-                    .font(.subheadline)
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
-            }
-            .padding(.top, 20)
-            .padding(.bottom, 16)
-            
-            // Search bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
-                TextField("Search jobs...", text: $searchText)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .foregroundColor(ThemeColors.textOnLight)
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                // Search bar
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                    TextField("Search jobs...", text: $searchText)
+                        .textFieldStyle(PlainTextFieldStyle())
+                        .foregroundColor(ThemeColors.textOnLight)
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                        }
                     }
                 }
-            }
-            .padding(12)
-            .background(ThemeColors.surfaceWhite)
-            .cornerRadius(Theme.CornerRadius.small)
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
-                    .stroke(ThemeColors.borderSubtle, lineWidth: 1)
-            )
-            .padding(.horizontal)
-            .padding(.bottom, 12)
-            
-            // Filter segmented control with counts
-            Picker("Filter", selection: $selectedFilter) {
-                Text("All (\(jobs.count))").tag(JobFilter.all)
-                Text("Remote (\(remoteCount))").tag(JobFilter.remote)
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal)
-            .padding(.bottom, 12)
-            
-            // Save prompt for new searches
-            if case .currentSearch = source, showSavePrompt {
-                SaveSearchPromptView {
-                    // Already saved via AppState
-                    withAnimation {
-                        showSavePrompt = false
-                    }
-                }
+                .padding(12)
+                .background(ThemeColors.surfaceWhite)
+                .cornerRadius(Theme.CornerRadius.small)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
+                        .stroke(ThemeColors.borderSubtle, lineWidth: 1)
+                )
                 .padding(.horizontal)
                 .padding(.bottom, 12)
-            }
-            
-            // Results count
-            if !searchText.isEmpty || selectedFilter != .all {
-                Text("\(filteredJobs.count) results")
-                    .font(.caption)
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
-                    .padding(.bottom, 8)
-            }
-            
-            // Job cards list
-            ScrollView {
-                LazyVStack(spacing: 16) {
-                    ForEach(filteredJobs) { job in
-                        JobCardView(
-                            job: job,
-                            explanationState: explanationManager.state(for: job.job_id),
-                            isExpanded: explanationManager.isExpanded(job.job_id),
-                            onToggleExpand: {
-                                withAnimation(.easeInOut(duration: 0.25)) {
-                                    explanationManager.toggleExpanded(job.job_id)
-                                }
-                            },
-                            onRetryExplanation: {
-                                explanationManager.retryExplanation(for: job.job_id)
-                            },
-                            onViewDetails: { url in
-                                selectedJobURL = url
-                                showSafari = true
-                            }
-                        )
-                    }
-                }
+                
+                // Location Scope Toggle
+                LocationScopeToggle(
+                    selectedScope: $viewModel.locationScope,
+                    isLoading: viewModel.isRefreshing
+                )
                 .padding(.horizontal)
-                .padding(.bottom, 20)
+                .padding(.bottom, 12)
+                
+                // Filter segmented control with counts
+                Picker("Filter", selection: $selectedFilter) {
+                    Text("All (\(viewModel.jobs.count))").tag(JobFilter.all)
+                    Text("Remote (\(remoteCount))").tag(JobFilter.remote)
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal)
+                .padding(.bottom, 12)
+                
+                // Save prompt for new searches
+                if case .currentSearch = source, showSavePrompt {
+                    SaveSearchPromptView {
+                        // Already saved via AppState
+                        withAnimation {
+                            showSavePrompt = false
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+                }
+                
+                // Error message if present
+                if let errorMessage = viewModel.errorMessage {
+                    Button(action: { viewModel.retry() }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .foregroundColor(ThemeColors.warmAccent)
+                            Text(errorMessage)
+                                .font(.subheadline)
+                                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity)
+                        .background(ThemeColors.warmAccent.opacity(0.1))
+                        .cornerRadius(Theme.CornerRadius.small)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+                }
+                
+                // Results count
+                if !searchText.isEmpty || selectedFilter != .all {
+                    Text("\(filteredJobs.count) results")
+                        .font(.caption)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                        .padding(.bottom, 8)
+                }
+                
+                // Job cards list
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        ForEach(filteredJobs) { job in
+                            JobCardView(
+                                job: job,
+                                explanationState: explanationManager.state(for: job.job_id),
+                                isExpanded: explanationManager.isExpanded(job.job_id),
+                                onToggleExpand: {
+                                    withAnimation(.easeInOut(duration: 0.25)) {
+                                        explanationManager.toggleExpanded(job.job_id)
+                                    }
+                                },
+                                onRetryExplanation: {
+                                    explanationManager.retryExplanation(for: job.job_id)
+                                },
+                                onViewDetails: { url in
+                                    selectedJobURL = url
+                                    showSafari = true
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+            // Loading overlay when refreshing
+            if viewModel.isRefreshing {
+                Color.black.opacity(0.1)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                        .tint(ThemeColors.primaryBrand)
+                    Text("Loading \(viewModel.locationScope.displayName) jobs...")
+                        .font(.subheadline)
+                        .foregroundColor(ThemeColors.textOnLight)
+                }
+                .padding(24)
+                .background(ThemeColors.surfaceWhite)
+                .cornerRadius(Theme.CornerRadius.medium)
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(ThemeColors.surfaceLight)
         .statusBarDarkContent()  // Light background → dark status bar
         .navigationBarTitleDisplayMode(.inline)
@@ -228,6 +277,50 @@ struct SearchResultsView: View {
         Task {
             await AuthManager.shared.signOut()
         }
+    }
+}
+
+// MARK: - Location Scope Toggle
+
+struct LocationScopeToggle: View {
+    @Binding var selectedScope: LocationScope
+    let isLoading: Bool
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(LocationScope.allCases, id: \.self) { scope in
+                Button(action: {
+                    if !isLoading {
+                        selectedScope = scope
+                    }
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: scope == .local ? "mappin.circle.fill" : "globe.americas.fill")
+                            .font(.caption)
+                        Text(scope.displayName)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(selectedScope == scope ? ThemeColors.textOnDark : ThemeColors.textOnLight)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        selectedScope == scope
+                            ? ThemeColors.primaryComplement
+                            : Color.clear
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+                .disabled(isLoading)
+            }
+        }
+        .background(ThemeColors.surfaceWhite)
+        .cornerRadius(Theme.CornerRadius.small)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
+                .stroke(ThemeColors.borderSubtle, lineWidth: 1)
+        )
+        .opacity(isLoading ? 0.6 : 1.0)
     }
 }
 
