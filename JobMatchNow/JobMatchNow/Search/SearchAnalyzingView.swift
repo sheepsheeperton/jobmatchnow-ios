@@ -29,11 +29,12 @@ struct SearchAnalyzingView: View {
                 Text("Analyzing Your Profile")
                     .font(.largeTitle)
                     .fontWeight(.bold)
+                    .foregroundColor(ThemeColors.textOnDark)
                     .multilineTextAlignment(.center)
                 
                 Text("This will only take a moment")
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeColors.textOnDark.opacity(0.7))
             }
             .padding(.top, 60)
             
@@ -52,6 +53,15 @@ struct SearchAnalyzingView: View {
             
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            LinearGradient(
+                colors: [ThemeColors.midnight, ThemeColors.deepComplement],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .statusBarLightContent()  // Dark background → light status bar
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $navigateToResults) {
             SearchResultsView(jobs: jobs, viewToken: viewToken)
@@ -210,21 +220,21 @@ struct PipelineStepRow: View {
                     Image(systemName: "checkmark")
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeColors.textOnDark)
                 } else if status == .inProgress {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.textOnDark))
                         .scaleEffect(0.8)
                 } else {
                     Image(systemName: step.icon)
                         .font(.title3)
-                        .foregroundColor(.gray)
+                        .foregroundColor(ThemeColors.textOnDark.opacity(0.4))
                 }
             }
             
             Text(step.title)
                 .font(.headline)
-                .foregroundColor(status == .pending ? .secondary : .primary)
+                .foregroundColor(status == .pending ? ThemeColors.textOnDark.opacity(0.5) : ThemeColors.textOnDark)
             
             Spacer()
         }
@@ -233,11 +243,11 @@ struct PipelineStepRow: View {
     private var backgroundColor: Color {
         switch status {
         case .completed:
-            return ThemeColors.primaryComplement.opacity(0.5)  // Completed: subdued complement
+            return ThemeColors.primaryComplement.opacity(0.6)
         case .inProgress:
-            return ThemeColors.primaryBrand                    // Active: brand orange
+            return ThemeColors.primaryBrand
         case .pending:
-            return Color(UIColor.systemGray5)
+            return ThemeColors.textOnDark.opacity(0.15)
         }
     }
 }
@@ -247,4 +257,3 @@ struct PipelineStepRow: View {
         SearchAnalyzingView(viewToken: "sample_token")
     }
 }
-

@@ -24,12 +24,14 @@ struct DashboardView: View {
                 sessionListView
             }
         }
+        .background(ThemeColors.surfaceLight)
+        .statusBarDarkContent()  // Light background → dark status bar
         .navigationTitle("Dashboard")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(ThemeColors.primaryComplement)
+                        .foregroundColor(ThemeColors.midnight)
                 }
             }
         }
@@ -57,7 +59,7 @@ struct DashboardView: View {
                 .scaleEffect(1.2)
             Text("Loading your search history...")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -82,11 +84,11 @@ struct DashboardView: View {
                 Text("No Search History")
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .foregroundColor(ThemeColors.midnight)
+                    .foregroundColor(ThemeColors.textOnLight)
                 
                 Text("Your past job searches will appear here.\nStart by uploading your résumé!")
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
             }
@@ -206,18 +208,18 @@ struct SearchSessionCard: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(session.displayLabel)
                             .font(.headline)
-                            .foregroundColor(ThemeColors.midnight)
+                            .foregroundColor(ThemeColors.textOnLight)
                         
                         Text(session.fullFormattedDate)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.65))
                     }
                     
                     Spacer()
                     
                     Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
                 }
                 
                 Divider()
@@ -239,7 +241,7 @@ struct SearchSessionCard: View {
                     StatItem(
                         value: session.adjacentMatches,
                         label: "Adjacent",
-                        color: ThemeColors.softComplement  // Replace purple with approved color
+                        color: ThemeColors.deepComplement
                     )
                 }
             }
@@ -268,7 +270,7 @@ struct StatItem: View {
             
             Text(label)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
         }
     }
 }

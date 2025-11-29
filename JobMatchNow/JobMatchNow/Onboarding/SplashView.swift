@@ -57,6 +57,7 @@ struct SplashView: View {
                 }
             }
         }
+        .statusBarLightContent()  // Dark background → light status bar
         .onAppear {
             isAnimating = true
             checkSession()

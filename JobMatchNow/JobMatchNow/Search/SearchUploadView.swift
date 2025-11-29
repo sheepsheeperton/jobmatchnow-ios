@@ -35,12 +35,12 @@ struct SearchUploadView: View {
                     Text("Upload Your Résumé")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundColor(ThemeColors.midnight)
+                        .foregroundColor(ThemeColors.textOnLight)
                         .multilineTextAlignment(.center)
                     
                     Text("We'll analyze your skills and match you with relevant job opportunities")
                         .font(.body)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
@@ -68,7 +68,7 @@ struct SearchUploadView: View {
                         
                         Text("Analyzing your résumé...")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
                     }
                     .padding(.vertical, 40)
                 }
@@ -112,7 +112,7 @@ struct SearchUploadView: View {
                 // Supported formats hint
                 Text("Supports PDF, Word, and image files")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
                 
                 #if DEBUG
                 // Simulator workaround
@@ -137,13 +137,14 @@ struct SearchUploadView: View {
             .padding(.bottom, 40)
         }
         .background(ThemeColors.surfaceLight)
+        .statusBarDarkContent()  // Light background → dark status bar
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(ThemeColors.midnight)  // Light mode: use midnight
+                        .foregroundColor(ThemeColors.midnight)
                 }
             }
         }
@@ -293,28 +294,33 @@ struct LastSearchCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Last Search")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .fontWeight(.medium)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
                     
                     Text(lastSearch.label ?? "Recent search")
                         .font(.headline)
-                        .foregroundColor(ThemeColors.midnight)
+                        .foregroundColor(ThemeColors.textOnLight)
                     
                     HStack(spacing: 12) {
                         Label("\(lastSearch.totalMatches) matches", systemImage: "briefcase")
                         Label(formattedDate, systemImage: "clock")
                     }
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.65))
                 }
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
             }
             .padding()
             .background(ThemeColors.surfaceWhite)
             .cornerRadius(Theme.CornerRadius.medium)
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                    .stroke(ThemeColors.borderSubtle, lineWidth: 1)
+            )
         }
         .buttonStyle(PlainButtonStyle())
     }

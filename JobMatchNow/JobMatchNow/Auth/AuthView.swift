@@ -43,7 +43,7 @@ struct AuthView: View {
                 
                 Text("Welcome to JobMatchNow")
                     .font(.title2.bold())
-                    .foregroundColor(.white)
+                    .foregroundColor(ThemeColors.textOnDark)
                 
                 // Mode toggle
                 Picker("Mode", selection: $authMode) {
@@ -63,9 +63,9 @@ struct AuthView: View {
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
                     .padding()
-                    .background(Color.white.opacity(0.15))
+                    .background(ThemeColors.textOnDark.opacity(0.15))
                     .cornerRadius(10)
-                    .foregroundColor(.white)
+                    .foregroundColor(ThemeColors.textOnDark)
                     .frame(height: 50)
                     .padding(.horizontal, 40)
                 
@@ -73,9 +73,9 @@ struct AuthView: View {
                 SecureField("Password", text: $password)
                     .focused($focusedField, equals: .password)
                     .padding()
-                    .background(Color.white.opacity(0.15))
+                    .background(ThemeColors.textOnDark.opacity(0.15))
                     .cornerRadius(10)
-                    .foregroundColor(.white)
+                    .foregroundColor(ThemeColors.textOnDark)
                     .frame(height: 50)
                     .padding(.horizontal, 40)
                 
@@ -84,9 +84,9 @@ struct AuthView: View {
                     SecureField("Confirm Password", text: $confirmPassword)
                         .focused($focusedField, equals: .confirmPassword)
                         .padding()
-                        .background(Color.white.opacity(0.15))
+                        .background(ThemeColors.textOnDark.opacity(0.15))
                         .cornerRadius(10)
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeColors.textOnDark)
                         .frame(height: 50)
                         .padding(.horizontal, 40)
                 }
@@ -97,11 +97,11 @@ struct AuthView: View {
                 } label: {
                     if isSubmitting {
                         ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.textOnDark))
                     } else {
                         Text(authMode == .signIn ? "Sign In" : "Create Account")
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(ThemeColors.textOnDark)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -113,9 +113,9 @@ struct AuthView: View {
                 
                 // Divider
                 HStack {
-                    Rectangle().fill(Color.white.opacity(0.3)).frame(height: 1)
-                    Text("or").foregroundColor(.white.opacity(0.5))
-                    Rectangle().fill(Color.white.opacity(0.3)).frame(height: 1)
+                    Rectangle().fill(ThemeColors.textOnDark.opacity(0.3)).frame(height: 1)
+                    Text("or").foregroundColor(ThemeColors.textOnDark.opacity(0.5))
+                    Rectangle().fill(ThemeColors.textOnDark.opacity(0.3)).frame(height: 1)
                 }
                 .padding(.horizontal, 40)
                 
@@ -130,10 +130,10 @@ struct AuthView: View {
                         Text("Continue with LinkedIn")
                     }
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(ThemeColors.textOnDark)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(Color(red: 0.0, green: 0.47, blue: 0.71))
+                    .background(ThemeColors.primaryComplement)
                     .cornerRadius(10)
                 }
                 .padding(.horizontal, 40)
@@ -148,7 +148,7 @@ struct AuthView: View {
                     ))
                 } label: {
                     Text("Skip for Demo")
-                        .foregroundColor(.orange)
+                        .foregroundColor(ThemeColors.warmAccent)
                 }
                 #endif
                 
@@ -156,7 +156,7 @@ struct AuthView: View {
                 if let error = authManager.error {
                     Text(error.localizedDescription)
                         .font(.caption)
-                        .foregroundColor(.red)
+                        .foregroundColor(ThemeColors.errorRed)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                 }
@@ -164,6 +164,7 @@ struct AuthView: View {
                 Spacer()
             }
         }
+        .statusBarLightContent()  // Dark background → light status bar
         .onTapGesture {
             // Dismiss keyboard when tapping outside
             focusedField = nil

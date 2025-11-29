@@ -131,6 +131,7 @@ struct OnboardingCarouselView: View {
                 .padding(.bottom, 40)
             }
         }
+        .statusBarLightContent()  // Dark background → light status bar
     }
 }
 

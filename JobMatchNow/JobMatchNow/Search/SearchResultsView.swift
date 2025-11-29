@@ -74,11 +74,11 @@ struct SearchResultsView: View {
                 Text("Your Job Matches")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .foregroundColor(ThemeColors.midnight)
+                    .foregroundColor(ThemeColors.textOnLight)
                 
                 Text("Found \(jobs.count) matches based on your résumé")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
             }
             .padding(.top, 20)
             .padding(.bottom, 16)
@@ -86,19 +86,24 @@ struct SearchResultsView: View {
             // Search bar
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
                 TextField("Search jobs...", text: $searchText)
                     .textFieldStyle(PlainTextFieldStyle())
+                    .foregroundColor(ThemeColors.textOnLight)
                 if !searchText.isEmpty {
                     Button(action: { searchText = "" }) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
                     }
                 }
             }
             .padding(12)
             .background(ThemeColors.surfaceWhite)
             .cornerRadius(Theme.CornerRadius.small)
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
+                    .stroke(ThemeColors.borderSubtle, lineWidth: 1)
+            )
             .padding(.horizontal)
             .padding(.bottom, 12)
             
@@ -128,7 +133,7 @@ struct SearchResultsView: View {
             if !searchText.isEmpty || selectedFilter != .all {
                 Text("\(filteredJobs.count) results")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
                     .padding(.bottom, 8)
             }
             
@@ -149,6 +154,7 @@ struct SearchResultsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(ThemeColors.surfaceLight)
+        .statusBarDarkContent()  // Light background → dark status bar
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -176,7 +182,7 @@ struct SearchResultsView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                         .font(.title3)
-                        .foregroundColor(ThemeColors.primaryComplement)
+                        .foregroundColor(ThemeColors.midnight)
                 }
             }
         }
@@ -234,7 +240,7 @@ struct JobCardView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(job.title)
                             .font(.headline)
-                            .foregroundColor(ThemeColors.midnight)
+                            .foregroundColor(ThemeColors.textOnLight)
                             .multilineTextAlignment(.leading)
                         
                         Text(job.company_name)
@@ -254,10 +260,10 @@ struct JobCardView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "location.fill")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
                     Text(job.location)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
                 }
                 
                 // Posted date
@@ -265,10 +271,10 @@ struct JobCardView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "calendar")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
                         Text(postedAt)
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
                     }
                 }
                 
@@ -285,7 +291,7 @@ struct JobCardView: View {
                     
                     Image(systemName: "arrow.up.right")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
                 }
             }
             .padding()
@@ -310,7 +316,7 @@ struct CategoryBadge: View {
             .foregroundColor(badgeColor)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(badgeColor.opacity(0.1))
+            .background(badgeColor.opacity(0.15))
             .cornerRadius(Theme.CornerRadius.small)
     }
     
@@ -319,7 +325,7 @@ struct CategoryBadge: View {
         case "direct":
             return ThemeColors.primaryComplement
         case "adjacent":
-            return ThemeColors.softComplement  // Replace purple with approved color
+            return ThemeColors.deepComplement
         default:
             return ThemeColors.primaryBrand
         }
@@ -333,12 +339,12 @@ struct SaveSearchPromptView: View {
     
     var body: some View {
         HStack {
-            Image(systemName: "bookmark")
+            Image(systemName: "bookmark.fill")
                 .foregroundColor(ThemeColors.primaryBrand)
             
-            Text("Save this search to revisit later")
+            Text("Search saved to dashboard")
                 .font(.subheadline)
-                .foregroundColor(ThemeColors.midnight)
+                .foregroundColor(ThemeColors.textOnLight)
             
             Spacer()
             
@@ -350,7 +356,7 @@ struct SaveSearchPromptView: View {
             .foregroundColor(ThemeColors.primaryBrand)
         }
         .padding(12)
-        .background(ThemeColors.softComplement.opacity(0.3))
+        .background(ThemeColors.softComplement.opacity(0.2))
         .cornerRadius(Theme.CornerRadius.small)
     }
 }
