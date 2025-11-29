@@ -473,4 +473,71 @@ class APIService {
         
         return summary
     }
+    
+    // MARK: - 5. Get Job Explanation
+    
+    /// Fetches an AI-generated explanation of why a job matches the user's résumé
+    /// Endpoint: POST /api/jobs/explanation
+    func getJobExplanation(jobId: String, viewToken: String) async throws -> JobExplanation {
+        guard let url = URL(string: "\(baseURL)/api/jobs/explanation") else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        
+        // Encode request body
+        let requestBody = ExplanationRequest(jobId: jobId, viewToken: viewToken)
+        do {
+            request.httpBody = try JSONEncoder().encode(requestBody)
+        } catch {
+            print("[APIService] Failed to encode explanation request:", error)
+            throw APIError.decodingError(error)
+        }
+        
+        print("[APIService] Fetching explanation for job \(jobId) with token \(viewToken.prefix(8))...")
+        
+        // Perform request
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            print("[APIService] Explanation network error:", error)
+            throw APIError.networkError(error)
+        }
+        
+        // Check HTTP response
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        print("[APIService] Explanation response - Status code:", httpResponse.statusCode)
+        
+        // Log raw response body for debugging
+        if let responseBody = String(data: data, encoding: .utf8) {
+            let preview = responseBody.prefix(300)
+            print("[APIService] Explanation raw response:", preview)
+        }
+        
+        // Handle error status codes
+        if httpResponse.statusCode != 200 {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
+        }
+        
+        // Decode response
+        let explanation: JobExplanation
+        do {
+            explanation = try JSONDecoder().decode(JobExplanation.self, from: data)
+        } catch {
+            print("[APIService] Failed to decode explanation:", error)
+            throw APIError.decodingError(error)
+        }
+        
+        print("[APIService] Explanation decoded - \(explanation.bullets.count) bullet points")
+        
+        return explanation
+    }
 }

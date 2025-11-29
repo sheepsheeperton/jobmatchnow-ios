@@ -24,6 +24,7 @@ struct SearchResultsView: View {
     var source: ResultsSource = .currentSearch
     
     @StateObject private var appState = AppState.shared
+    @StateObject private var explanationManager: ExplanationManager
     @State private var selectedFilter: JobFilter = .all
     @State private var searchText = ""
     @State private var showActionMenu = false
@@ -32,6 +33,14 @@ struct SearchResultsView: View {
     @State private var showSafari = false
     @State private var showSavePrompt = true
     @Environment(\.dismiss) private var dismiss
+    
+    // Custom initializer to create ExplanationManager with viewToken
+    init(jobs: [Job], viewToken: String, source: ResultsSource = .currentSearch) {
+        self.jobs = jobs
+        self.viewToken = viewToken
+        self.source = source
+        self._explanationManager = StateObject(wrappedValue: ExplanationManager(viewToken: viewToken))
+    }
     
     // Computed counts
     var directCount: Int {
@@ -141,10 +150,23 @@ struct SearchResultsView: View {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     ForEach(filteredJobs) { job in
-                        JobCardView(job: job) { url in
-                            selectedJobURL = url
-                            showSafari = true
-                        }
+                        JobCardView(
+                            job: job,
+                            explanationState: explanationManager.state(for: job.job_id),
+                            isExpanded: explanationManager.isExpanded(job.job_id),
+                            onToggleExpand: {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    explanationManager.toggleExpanded(job.job_id)
+                                }
+                            },
+                            onRetryExplanation: {
+                                explanationManager.retryExplanation(for: job.job_id)
+                            },
+                            onViewDetails: { url in
+                                selectedJobURL = url
+                                showSafari = true
+                            }
+                        )
                     }
                 }
                 .padding(.horizontal)
@@ -221,6 +243,10 @@ struct SearchResultsView: View {
 
 struct JobCardView: View {
     let job: Job
+    let explanationState: ExplanationState
+    let isExpanded: Bool
+    let onToggleExpand: () -> Void
+    let onRetryExplanation: () -> Void
     let onViewDetails: (URL) -> Void
     
     private var jobURL: URL? {
@@ -229,78 +255,235 @@ struct JobCardView: View {
     }
     
     var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Main card content (always visible)
+            mainCardContent
+            
+            // "Why this matches you" row
+            whyThisMatchesRow
+            
+            // Expanded explanation section
+            if isExpanded {
+                explanationSection
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+            
+            // Action button - primary CTA
+            actionButton
+        }
+        .padding()
+        .background(ThemeColors.surfaceWhite)
+        .cornerRadius(Theme.CornerRadius.medium)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+    
+    // MARK: - Main Card Content
+    
+    private var mainCardContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(job.title)
+                        .font(.headline)
+                        .foregroundColor(ThemeColors.textOnLight)
+                        .multilineTextAlignment(.leading)
+                    
+                    Text(job.company_name)
+                        .font(.subheadline)
+                        .foregroundColor(ThemeColors.primaryComplement)
+                }
+                
+                Spacer()
+                
+                // Category badge
+                if let category = job.category {
+                    CategoryBadge(category: category)
+                }
+            }
+            
+            // Location
+            HStack(spacing: 6) {
+                Image(systemName: "location.fill")
+                    .font(.caption)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
+                Text(job.location)
+                    .font(.subheadline)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+            }
+            
+            // Posted date
+            if let postedAt = job.posted_at {
+                HStack(spacing: 6) {
+                    Image(systemName: "calendar")
+                        .font(.caption)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
+                    Text(postedAt)
+                        .font(.subheadline)
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                }
+            }
+        }
+    }
+    
+    // MARK: - Why This Matches Row
+    
+    private var whyThisMatchesRow: some View {
+        Button(action: onToggleExpand) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .font(.caption)
+                    .foregroundColor(ThemeColors.primaryBrand)
+                
+                Text("Why this matches you")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(ThemeColors.primaryBrand)
+                
+                Spacer()
+                
+                if explanationState.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                        .tint(ThemeColors.primaryBrand)
+                } else {
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(ThemeColors.primaryBrand.opacity(0.7))
+                }
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 12)
+            .background(ThemeColors.primaryBrand.opacity(0.08))
+            .cornerRadius(Theme.CornerRadius.small)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .padding(.top, 12)
+    }
+    
+    // MARK: - Explanation Section
+    
+    @ViewBuilder
+    private var explanationSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            switch explanationState {
+            case .idle, .loading:
+                loadingExplanationView
+                
+            case .loaded(let explanation):
+                loadedExplanationView(explanation)
+                
+            case .error(let message):
+                errorExplanationView(message)
+            }
+        }
+        .padding(.top, 12)
+    }
+    
+    private var loadingExplanationView: some View {
+        HStack(spacing: 12) {
+            ProgressView()
+                .scaleEffect(0.8)
+                .tint(ThemeColors.primaryComplement)
+            
+            Text("Analyzing your résumé match…")
+                .font(.subheadline)
+                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                .italic()
+            
+            Spacer()
+        }
+        .padding(12)
+        .background(ThemeColors.softComplement.opacity(0.15))
+        .cornerRadius(Theme.CornerRadius.small)
+    }
+    
+    private func loadedExplanationView(_ explanation: JobExplanation) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Summary paragraph
+            if !explanation.explanationSummary.isEmpty {
+                Text(explanation.explanationSummary)
+                    .font(.subheadline)
+                    .foregroundColor(ThemeColors.textOnLight)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            // Bullet points
+            if !explanation.bullets.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(explanation.bullets, id: \.self) { bullet in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(ThemeColors.primaryComplement)
+                                .padding(.top, 2)
+                            
+                            Text(bullet)
+                                .font(.subheadline)
+                                .foregroundColor(ThemeColors.textOnLight.opacity(0.85))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .background(ThemeColors.softComplement.opacity(0.1))
+        .cornerRadius(Theme.CornerRadius.small)
+    }
+    
+    private func errorExplanationView(_ message: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.caption)
+                    .foregroundColor(ThemeColors.warmAccent)
+                
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                
+                Spacer()
+            }
+            
+            Button(action: onRetryExplanation) {
+                Text("Try Again")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(ThemeColors.primaryComplement)
+            }
+        }
+        .padding(12)
+        .background(ThemeColors.warmAccent.opacity(0.1))
+        .cornerRadius(Theme.CornerRadius.small)
+    }
+    
+    // MARK: - Action Button
+    
+    private var actionButton: some View {
         Button(action: {
             if let url = jobURL {
                 onViewDetails(url)
             }
         }) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Header
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(job.title)
-                            .font(.headline)
-                            .foregroundColor(ThemeColors.textOnLight)
-                            .multilineTextAlignment(.leading)
-                        
-                        Text(job.company_name)
-                            .font(.subheadline)
-                            .foregroundColor(ThemeColors.primaryComplement)
-                    }
-                    
-                    Spacer()
-                    
-                    // Category badge
-                    if let category = job.category {
-                        CategoryBadge(category: category)
-                    }
-                }
+            HStack {
+                Text("View Details")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeColors.textOnDark)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(jobURL != nil ? ThemeColors.primaryBrand : ThemeColors.borderSubtle)
+                    .cornerRadius(Theme.CornerRadius.small)
                 
-                // Location
-                HStack(spacing: 6) {
-                    Image(systemName: "location.fill")
-                        .font(.caption)
-                        .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
-                    Text(job.location)
-                        .font(.subheadline)
-                        .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
-                }
-                
-                // Posted date
-                if let postedAt = job.posted_at {
-                    HStack(spacing: 6) {
-                        Image(systemName: "calendar")
-                            .font(.caption)
-                            .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
-                        Text(postedAt)
-                            .font(.subheadline)
-                            .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
-                    }
-                }
-                
-                // Action button - primary CTA uses brand orange
-                HStack {
-                    Text("View Details")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(ThemeColors.textOnDark)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(jobURL != nil ? ThemeColors.primaryBrand : ThemeColors.borderSubtle)
-                        .cornerRadius(Theme.CornerRadius.small)
-                    
-                    Image(systemName: "arrow.up.right")
-                        .font(.caption)
-                        .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
-                }
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
             }
-            .padding()
-            .background(ThemeColors.surfaceWhite)
-            .cornerRadius(Theme.CornerRadius.medium)
-            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(jobURL == nil)
+        .padding(.top, 12)
     }
 }
 
