@@ -8,7 +8,10 @@ struct SearchUploadView: View {
     @StateObject private var appState = AppState.shared
     @State private var isShowingDocumentPicker = false
     @State private var navigateToPipeline = false
+    @State private var navigateToLastSearch = false
     @State private var viewToken: String? = nil
+    @State private var lastSearchJobs: [Job] = []
+    @State private var isLoadingLastSearch = false
     @State private var isUploading = false
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
@@ -78,11 +81,11 @@ struct SearchUploadView: View {
             
             // Last search card (if available)
             if let lastSearch = appState.lastSearch {
-                LastSearchCard(lastSearch: lastSearch) {
-                    // Navigate to last results
-                    viewToken = lastSearch.viewToken
-                    navigateToPipeline = false
-                    // Direct navigation to results would need additional state
+                LastSearchCard(
+                    lastSearch: lastSearch,
+                    isLoading: isLoadingLastSearch
+                ) {
+                    loadLastSearchResults(lastSearch)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
@@ -153,6 +156,15 @@ struct SearchUploadView: View {
                 SearchAnalyzingView(viewToken: token)
             }
         }
+        .navigationDestination(isPresented: $navigateToLastSearch) {
+            if let lastSearch = appState.lastSearch {
+                SearchResultsView(
+                    jobs: lastSearchJobs,
+                    viewToken: lastSearch.viewToken,
+                    source: .historical(sessionId: lastSearch.viewToken)
+                )
+            }
+        }
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 SettingsView()
@@ -177,6 +189,40 @@ struct SearchUploadView: View {
                 }
             )
             .ignoresSafeArea()
+        }
+    }
+    
+    // MARK: - Load Last Search Results
+    
+    private func loadLastSearchResults(_ lastSearch: AppState.LastSearchInfo) {
+        guard !isLoadingLastSearch else {
+            print("[SearchUploadView] Already loading last search, ignoring duplicate tap")
+            return
+        }
+        
+        print("[SearchUploadView] Loading last search results for viewToken: \(lastSearch.viewToken)")
+        isLoadingLastSearch = true
+        
+        Task {
+            do {
+                let jobs = try await APIService.shared.getJobs(viewToken: lastSearch.viewToken)
+                
+                print("[SearchUploadView] Loaded \(jobs.count) jobs from last search")
+                
+                await MainActor.run {
+                    lastSearchJobs = jobs
+                    isLoadingLastSearch = false
+                    navigateToLastSearch = true
+                }
+            } catch {
+                print("[SearchUploadView] Failed to load last search results: \(error)")
+                
+                await MainActor.run {
+                    isLoadingLastSearch = false
+                    errorMessage = "Could not load your last search. Please try again."
+                    showErrorAlert = true
+                }
+            }
         }
     }
     
@@ -286,6 +332,7 @@ struct SearchUploadView: View {
 
 struct LastSearchCard: View {
     let lastSearch: AppState.LastSearchInfo
+    let isLoading: Bool
     let onTap: () -> Void
     
     var body: some View {
@@ -311,8 +358,14 @@ struct LastSearchCard: View {
                 
                 Spacer()
                 
-                Image(systemName: "chevron.right")
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                if isLoading {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                        .tint(ThemeColors.primaryComplement)
+                } else {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                }
             }
             .padding()
             .background(ThemeColors.surfaceWhite)
@@ -323,6 +376,7 @@ struct LastSearchCard: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .disabled(isLoading)
     }
     
     private var formattedDate: String {
