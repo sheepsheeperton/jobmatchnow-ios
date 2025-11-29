@@ -27,6 +27,8 @@ struct DashboardView: View {
         .background(ThemeColors.surfaceLight)
         .statusBarDarkContent()  // Light background → dark status bar
         .navigationTitle("Dashboard")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbarColorScheme(.light, for: .navigationBar)  // Dark text on light background
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
