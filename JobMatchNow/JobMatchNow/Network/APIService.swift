@@ -19,6 +19,48 @@ struct Job: Decodable, Identifiable {
     let job_url: String?
     let source_query: String?
     let category: String?
+    let isRemote: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case job_id
+        case title
+        case company_name
+        case location
+        case posted_at
+        case job_url
+        case source_query
+        case category
+        case isRemote = "is_remote"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        job_id = try container.decode(String.self, forKey: .job_id)
+        title = try container.decode(String.self, forKey: .title)
+        company_name = try container.decode(String.self, forKey: .company_name)
+        location = try container.decode(String.self, forKey: .location)
+        posted_at = try container.decodeIfPresent(String.self, forKey: .posted_at)
+        job_url = try container.decodeIfPresent(String.self, forKey: .job_url)
+        source_query = try container.decodeIfPresent(String.self, forKey: .source_query)
+        category = try container.decodeIfPresent(String.self, forKey: .category)
+        isRemote = try container.decodeIfPresent(Bool.self, forKey: .isRemote) ?? false
+    }
+    
+    // Initializer for previews/testing
+    init(id: String, job_id: String, title: String, company_name: String, location: String, posted_at: String?, job_url: String?, source_query: String?, category: String?, isRemote: Bool = false) {
+        self.id = id
+        self.job_id = job_id
+        self.title = title
+        self.company_name = company_name
+        self.location = location
+        self.posted_at = posted_at
+        self.job_url = job_url
+        self.source_query = source_query
+        self.category = category
+        self.isRemote = isRemote
+    }
 }
 
 // MARK: - API Errors

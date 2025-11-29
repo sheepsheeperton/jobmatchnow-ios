@@ -4,8 +4,7 @@ import SwiftUI
 
 enum JobFilter: String, CaseIterable {
     case all = "All"
-    case direct = "Direct"
-    case adjacent = "Adjacent"
+    case remote = "Remote"
 }
 
 // MARK: - Results Source
@@ -43,25 +42,19 @@ struct SearchResultsView: View {
     }
     
     // Computed counts
-    var directCount: Int {
-        jobs.filter { $0.category?.lowercased() == "direct" }.count
-    }
-    
-    var adjacentCount: Int {
-        jobs.filter { $0.category?.lowercased() == "adjacent" }.count
+    var remoteCount: Int {
+        jobs.filter { $0.isRemote }.count
     }
     
     var filteredJobs: [Job] {
         var result = jobs
         
-        // Apply category filter
+        // Apply remote filter
         switch selectedFilter {
         case .all:
             break
-        case .direct:
-            result = result.filter { $0.category?.lowercased() == "direct" }
-        case .adjacent:
-            result = result.filter { $0.category?.lowercased() == "adjacent" }
+        case .remote:
+            result = result.filter { $0.isRemote }
         }
         
         // Apply search text filter
@@ -119,8 +112,7 @@ struct SearchResultsView: View {
             // Filter segmented control with counts
             Picker("Filter", selection: $selectedFilter) {
                 Text("All (\(jobs.count))").tag(JobFilter.all)
-                Text("Direct (\(directCount))").tag(JobFilter.direct)
-                Text("Adjacent (\(adjacentCount))").tag(JobFilter.adjacent)
+                Text("Remote (\(remoteCount))").tag(JobFilter.remote)
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding(.horizontal)
@@ -296,15 +288,15 @@ struct JobCardView: View {
                 
                 Spacer()
                 
-                // Category badge
-                if let category = job.category {
-                    CategoryBadge(category: category)
+                // Remote badge
+                if job.isRemote {
+                    RemoteBadge()
                 }
             }
             
             // Location
             HStack(spacing: 6) {
-                Image(systemName: "location.fill")
+                Image(systemName: job.isRemote ? "globe" : "location.fill")
                     .font(.caption)
                     .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
                 Text(job.location)
@@ -487,31 +479,22 @@ struct JobCardView: View {
     }
 }
 
-// MARK: - Category Badge
+// MARK: - Remote Badge
 
-struct CategoryBadge: View {
-    let category: String
-    
+struct RemoteBadge: View {
     var body: some View {
-        Text(category)
-            .font(.caption)
-            .fontWeight(.medium)
-            .foregroundColor(badgeColor)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(badgeColor.opacity(0.15))
-            .cornerRadius(Theme.CornerRadius.small)
-    }
-    
-    private var badgeColor: Color {
-        switch category.lowercased() {
-        case "direct":
-            return ThemeColors.primaryComplement
-        case "adjacent":
-            return ThemeColors.deepComplement
-        default:
-            return ThemeColors.primaryBrand
+        HStack(spacing: 4) {
+            Image(systemName: "wifi")
+                .font(.caption2)
+            Text("Remote")
         }
+        .font(.caption)
+        .fontWeight(.medium)
+        .foregroundColor(ThemeColors.primaryComplement)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(ThemeColors.primaryComplement.opacity(0.15))
+        .cornerRadius(Theme.CornerRadius.small)
     }
 }
 
@@ -546,9 +529,10 @@ struct SaveSearchPromptView: View {
 
 #Preview {
     let sampleJobs = [
-        Job(id: "1", job_id: "job1", title: "iOS Developer", company_name: "Tech Corp", location: "Remote", posted_at: "2 days ago", job_url: "https://example.com", source_query: "iOS developer", category: "direct"),
-        Job(id: "2", job_id: "job2", title: "Senior Swift Engineer", company_name: "StartupXYZ", location: "San Francisco, CA", posted_at: "1 week ago", job_url: "https://example.com", source_query: "Swift developer", category: "direct"),
-        Job(id: "3", job_id: "job3", title: "Product Manager", company_name: "Innovation Labs", location: "Austin, TX", posted_at: "3 days ago", job_url: "https://example.com", source_query: "product manager", category: "adjacent")
+        Job(id: "1", job_id: "job1", title: "iOS Developer", company_name: "Tech Corp", location: "Remote - Worldwide", posted_at: "2 days ago", job_url: "https://example.com", source_query: "iOS developer", category: "direct", isRemote: true),
+        Job(id: "2", job_id: "job2", title: "Senior Swift Engineer", company_name: "StartupXYZ", location: "San Francisco, CA", posted_at: "1 week ago", job_url: "https://example.com", source_query: "Swift developer", category: "direct", isRemote: false),
+        Job(id: "3", job_id: "job3", title: "Product Manager", company_name: "Innovation Labs", location: "Remote - US Only", posted_at: "3 days ago", job_url: "https://example.com", source_query: "product manager", category: "adjacent", isRemote: true),
+        Job(id: "4", job_id: "job4", title: "Backend Engineer", company_name: "DataFlow Inc", location: "New York, NY", posted_at: "5 days ago", job_url: "https://example.com", source_query: "backend engineer", category: "direct", isRemote: false)
     ]
     
     return NavigationStack {
