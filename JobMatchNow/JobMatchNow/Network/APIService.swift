@@ -416,4 +416,61 @@ class APIService {
 
         return jobs
     }
+    
+    // MARK: - 4. Get Dashboard Summary
+    
+    /// Fetches the user's dashboard summary including metrics and recent sessions
+    /// Endpoint: GET /api/me/dashboard
+    func getDashboard() async throws -> DashboardSummary {
+        guard let url = URL(string: "\(baseURL)/api/me/dashboard") else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        
+        print("[APIService] Fetching dashboard from:", url)
+        
+        // Perform request
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            print("[APIService] Dashboard network error:", error)
+            throw APIError.networkError(error)
+        }
+        
+        // Check HTTP response
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        print("[APIService] Dashboard response - Status code:", httpResponse.statusCode)
+        
+        // Log raw response body for debugging
+        if let responseBody = String(data: data, encoding: .utf8) {
+            let preview = responseBody.prefix(500)
+            print("[APIService] Dashboard raw response:", preview)
+        }
+        
+        // Handle error status codes
+        if httpResponse.statusCode != 200 {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
+        }
+        
+        // Decode response
+        let summary: DashboardSummary
+        do {
+            summary = try JSONDecoder().decode(DashboardSummary.self, from: data)
+        } catch {
+            print("[APIService] Failed to decode dashboard:", error)
+            throw APIError.decodingError(error)
+        }
+        
+        print("[APIService] Dashboard decoded - \(summary.totalSearches) searches, \(summary.totalJobsFound) jobs, \(summary.recentSessions.count) recent sessions")
+        
+        return summary
+    }
 }

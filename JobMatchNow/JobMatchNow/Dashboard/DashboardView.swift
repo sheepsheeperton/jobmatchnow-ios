@@ -2,33 +2,30 @@ import SwiftUI
 
 // MARK: - Dashboard View
 
-/// Shows search history and allows navigation to past results
+/// Shows search history and metrics, allowing navigation to past results
 struct DashboardView: View {
+    @StateObject private var viewModel = DashboardViewModel()
     @StateObject private var appState = AppState.shared
-    @State private var searchSessions: [SearchSession] = []
-    @State private var isLoading = true
-    @State private var errorMessage: String?
     @State private var showSettings = false
-    @State private var selectedSession: SearchSession?
-    @State private var navigateToResults = false
-    @State private var resultsJobs: [Job] = []
-    @State private var resultsViewToken: String = ""
     
     var body: some View {
         Group {
-            if isLoading {
+            switch viewModel.viewState {
+            case .loading:
                 loadingView
-            } else if searchSessions.isEmpty {
+            case .empty:
                 emptyStateView
-            } else {
-                sessionListView
+            case .error(let message):
+                errorView(message: message)
+            case .loaded:
+                dashboardContent
             }
         }
         .background(ThemeColors.surfaceLight)
-        .statusBarDarkContent()  // Light background → dark status bar
+        .statusBarDarkContent()
         .navigationTitle("Dashboard")
         .navigationBarTitleDisplayMode(.large)
-        .toolbarColorScheme(.light, for: .navigationBar)  // Dark text on light background
+        .toolbarColorScheme(.light, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
@@ -42,14 +39,20 @@ struct DashboardView: View {
                 SettingsView()
             }
         }
-        .navigationDestination(isPresented: $navigateToResults) {
-            SearchResultsView(jobs: resultsJobs, viewToken: resultsViewToken, source: .historical(sessionId: resultsViewToken))
+        .navigationDestination(isPresented: $viewModel.navigateToResults) {
+            SearchResultsView(
+                jobs: viewModel.loadedJobs,
+                viewToken: viewModel.selectedViewToken,
+                source: .historical(sessionId: viewModel.selectedViewToken)
+            )
         }
         .onAppear {
-            loadSearchHistory()
+            Task {
+                await viewModel.loadDashboard()
+            }
         }
         .refreshable {
-            await refreshSearchHistory()
+            await viewModel.refreshDashboard()
         }
     }
     
@@ -59,11 +62,57 @@ struct DashboardView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
-            Text("Loading your search history...")
+            Text("Loading your dashboard...")
                 .font(.subheadline)
                 .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // MARK: - Error View
+    
+    private func errorView(message: String) -> some View {
+        VStack(spacing: 24) {
+            Spacer()
+            
+            ZStack {
+                Circle()
+                    .fill(ThemeColors.errorRed.opacity(0.1))
+                    .frame(width: 100, height: 100)
+                
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 40))
+                    .foregroundColor(ThemeColors.errorRed)
+            }
+            
+            VStack(spacing: 8) {
+                Text("Something Went Wrong")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeColors.textOnLight)
+                
+                Text(message)
+                    .font(.body)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            Button(action: { viewModel.retry() }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.clockwise")
+                    Text("Try Again")
+                }
+                .font(.headline)
+                .foregroundColor(ThemeColors.textOnDark)
+                .frame(width: 160, height: 50)
+                .background(ThemeColors.primaryBrand)
+                .cornerRadius(Theme.CornerRadius.medium)
+            }
+            .padding(.top, 8)
+            
+            Spacer()
+        }
     }
     
     // MARK: - Empty State View
@@ -111,95 +160,121 @@ struct DashboardView: View {
         }
     }
     
-    // MARK: - Session List View
+    // MARK: - Dashboard Content
     
-    private var sessionListView: some View {
+    private var dashboardContent: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(searchSessions) { session in
-                    SearchSessionCard(session: session) {
-                        loadSessionResults(session)
-                    }
+            VStack(spacing: 20) {
+                // Summary Strip Card
+                summaryStripCard
+                
+                // Recent Searches Section
+                if !viewModel.recentSessions.isEmpty {
+                    recentSearchesSection
                 }
             }
             .padding()
         }
     }
     
-    // MARK: - Data Loading
+    // MARK: - Summary Strip Card
     
-    private func loadSearchHistory() {
-        Task {
-            // Simulate loading from Supabase
-            // In production, this would call the API
-            try? await Task.sleep(nanoseconds: 500_000_000)
-            
-            await MainActor.run {
-                // Check if we have a last search to show
-                if let lastSearch = appState.lastSearch {
-                    searchSessions = [
-                        SearchSession(
-                            id: UUID().uuidString,
-                            viewToken: lastSearch.viewToken,
-                            createdAt: lastSearch.date,
-                            label: lastSearch.label,
-                            totalMatches: lastSearch.totalMatches,
-                            directMatches: lastSearch.directMatches,
-                            adjacentMatches: lastSearch.adjacentMatches,
-                            status: "completed"
-                        )
-                    ]
-                } else {
-                    searchSessions = []
-                }
-                isLoading = false
-            }
-        }
-    }
-    
-    private func refreshSearchHistory() async {
-        // Re-fetch from server
-        try? await Task.sleep(nanoseconds: 500_000_000)
-        
-        await MainActor.run {
-            if let lastSearch = appState.lastSearch {
-                searchSessions = [
-                    SearchSession(
-                        id: UUID().uuidString,
-                        viewToken: lastSearch.viewToken,
-                        createdAt: lastSearch.date,
-                        label: lastSearch.label,
-                        totalMatches: lastSearch.totalMatches,
-                        directMatches: lastSearch.directMatches,
-                        adjacentMatches: lastSearch.adjacentMatches,
-                        status: "completed"
-                    )
-                ]
-            }
-        }
-    }
-    
-    private func loadSessionResults(_ session: SearchSession) {
-        Task {
-            do {
-                let jobs = try await APIService.shared.getJobs(viewToken: session.viewToken)
+    private var summaryStripCard: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                // Total Searches
+                SummaryMetricItem(
+                    value: "\(viewModel.totalSearches)",
+                    label: "Total Searches",
+                    icon: "magnifyingglass",
+                    color: ThemeColors.primaryBrand
+                )
                 
-                await MainActor.run {
-                    resultsJobs = jobs
-                    resultsViewToken = session.viewToken
-                    navigateToResults = true
+                Divider()
+                    .frame(height: 50)
+                
+                // Jobs Found
+                SummaryMetricItem(
+                    value: "\(viewModel.totalJobsFound)",
+                    label: "Jobs Found",
+                    icon: "briefcase.fill",
+                    color: ThemeColors.primaryComplement
+                )
+                
+                Divider()
+                    .frame(height: 50)
+                
+                // Avg Matches
+                SummaryMetricItem(
+                    value: viewModel.avgJobsPerSearch,
+                    label: "Avg per Search",
+                    icon: "chart.bar.fill",
+                    color: ThemeColors.deepComplement
+                )
+            }
+            .padding(.vertical, 20)
+        }
+        .background(ThemeColors.surfaceWhite)
+        .cornerRadius(Theme.CornerRadius.medium)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+    
+    // MARK: - Recent Searches Section
+    
+    private var recentSearchesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Recent Searches")
+                .font(.headline)
+                .foregroundColor(ThemeColors.textOnLight)
+                .padding(.horizontal, 4)
+            
+            ForEach(viewModel.recentSessions) { session in
+                RecentSessionCard(
+                    session: session,
+                    isLoading: viewModel.isLoadingSession && viewModel.selectedViewToken == session.viewToken
+                ) {
+                    viewModel.loadSessionResults(session)
                 }
-            } catch {
-                print("Failed to load session results: \(error)")
             }
         }
     }
 }
 
-// MARK: - Search Session Card
+// MARK: - Summary Metric Item
 
-struct SearchSessionCard: View {
-    let session: SearchSession
+struct SummaryMetricItem: View {
+    let value: String
+    let label: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundColor(color)
+                
+                Text(value)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(color)
+            }
+            
+            Text(label)
+                .font(.caption)
+                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Recent Session Card
+
+struct RecentSessionCard: View {
+    let session: DashboardSessionSummary
+    let isLoading: Bool
     let onTap: () -> Void
     
     var body: some View {
@@ -208,7 +283,7 @@ struct SearchSessionCard: View {
                 // Header
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(session.displayLabel)
+                        Text(session.displayTitle)
                             .font(.headline)
                             .foregroundColor(ThemeColors.textOnLight)
                         
@@ -219,29 +294,35 @@ struct SearchSessionCard: View {
                     
                     Spacer()
                     
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                    if isLoading {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .tint(ThemeColors.primaryComplement)
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                    }
                 }
                 
                 Divider()
                 
                 // Stats
                 HStack(spacing: 24) {
-                    StatItem(
-                        value: session.totalMatches,
+                    SessionStatItem(
+                        value: session.totalJobs,
                         label: "Total",
                         color: ThemeColors.primaryBrand
                     )
                     
-                    StatItem(
-                        value: session.directMatches,
+                    SessionStatItem(
+                        value: session.directCount,
                         label: "Direct",
                         color: ThemeColors.primaryComplement
                     )
                     
-                    StatItem(
-                        value: session.adjacentMatches,
+                    SessionStatItem(
+                        value: session.adjacentCount,
                         label: "Adjacent",
                         color: ThemeColors.deepComplement
                     )
@@ -253,12 +334,13 @@ struct SearchSessionCard: View {
             .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
+        .disabled(isLoading || session.viewToken == nil)
     }
 }
 
-// MARK: - Stat Item
+// MARK: - Session Stat Item
 
-struct StatItem: View {
+struct SessionStatItem: View {
     let value: Int
     let label: String
     let color: Color
@@ -277,7 +359,15 @@ struct StatItem: View {
     }
 }
 
-#Preview {
+// MARK: - Previews
+
+#Preview("Dashboard - Loaded") {
+    NavigationStack {
+        DashboardView()
+    }
+}
+
+#Preview("Dashboard - Empty") {
     NavigationStack {
         DashboardView()
     }
