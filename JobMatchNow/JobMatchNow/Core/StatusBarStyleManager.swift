@@ -3,7 +3,7 @@
 //  JobMatchNow
 //
 //  Manages status bar style (light/dark) across SwiftUI views.
-//  Views can request their preferred style using .preferredStatusBarStyle() modifier.
+//  Uses a custom UIHostingController that reads from this manager.
 //
 
 import SwiftUI
@@ -12,30 +12,33 @@ import Combine
 // MARK: - Status Bar Style Manager
 
 /// Observable manager that controls status bar appearance
+/// This is the single source of truth for status bar style.
 final class StatusBarStyleManager: ObservableObject {
     static let shared = StatusBarStyleManager()
     
-    @Published var statusBarStyle: UIStatusBarStyle = .default
+    @Published var statusBarStyle: UIStatusBarStyle = .darkContent
     
     private init() {}
     
     func setStyle(_ style: UIStatusBarStyle) {
+        guard statusBarStyle != style else { return }
         DispatchQueue.main.async {
             self.statusBarStyle = style
         }
     }
 }
 
-// MARK: - Status Bar Hosting Controller
+// MARK: - Root Hosting Controller
 
-/// Custom hosting controller that respects StatusBarStyleManager
-class StatusBarHostingController<Content: View>: UIHostingController<Content> {
+/// Custom UIHostingController that respects StatusBarStyleManager.
+/// This controller must be used as the root view controller for status bar control to work.
+final class RootHostingController<Content: View>: UIHostingController<Content> {
     private var cancellable: AnyCancellable?
     
     override init(rootView: Content) {
         super.init(rootView: rootView)
         
-        // Subscribe to status bar style changes
+        // Subscribe to status bar style changes and trigger updates
         cancellable = StatusBarStyleManager.shared.$statusBarStyle
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -51,15 +54,9 @@ class StatusBarHostingController<Content: View>: UIHostingController<Content> {
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return StatusBarStyleManager.shared.statusBarStyle
     }
-}
-
-// MARK: - Status Bar Style Preference Key
-
-struct StatusBarStylePreferenceKey: PreferenceKey {
-    static var defaultValue: UIStatusBarStyle = .default
     
-    static func reduce(value: inout UIStatusBarStyle, nextValue: () -> UIStatusBarStyle) {
-        value = nextValue()
+    override var prefersStatusBarHidden: Bool {
+        return false
     }
 }
 
@@ -69,11 +66,9 @@ extension View {
     /// Sets the preferred status bar style for this view hierarchy
     /// - Parameter style: .lightContent for dark backgrounds, .darkContent for light backgrounds
     func preferredStatusBarStyle(_ style: UIStatusBarStyle) -> some View {
-        self
-            .preference(key: StatusBarStylePreferenceKey.self, value: style)
-            .onAppear {
-                StatusBarStyleManager.shared.setStyle(style)
-            }
+        self.onAppear {
+            StatusBarStyleManager.shared.setStyle(style)
+        }
     }
     
     /// Convenience: Use dark status bar icons (for light backgrounds)
@@ -86,4 +81,3 @@ extension View {
         self.preferredStatusBarStyle(.lightContent)
     }
 }
-
