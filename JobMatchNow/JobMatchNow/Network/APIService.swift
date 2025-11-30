@@ -89,6 +89,7 @@ enum APIError: LocalizedError {
     case fileReadError
     case networkError(Error)
     case missingViewToken
+    case unauthorized
 
     var errorDescription: String? {
         switch self {
@@ -108,6 +109,8 @@ enum APIError: LocalizedError {
             return "Network error: \(error.localizedDescription)"
         case .missingViewToken:
             return "Missing view token in response"
+        case .unauthorized:
+            return "Please sign in to access your dashboard"
         }
     }
 }
@@ -496,7 +499,15 @@ class APIService {
     
     /// Fetches the user's dashboard summary including metrics and recent sessions
     /// Endpoint: GET /api/me/dashboard
+    /// Requires authentication - sends Authorization header with Supabase access token
     func getDashboard() async throws -> DashboardSummary {
+        // Get access token from UserDefaults (same key as AuthManager uses)
+        guard let accessToken = UserDefaults.standard.string(forKey: "supabase_access_token"),
+              !accessToken.isEmpty else {
+            print("[APIService] ⚠️ Dashboard request BLOCKED: No access token in UserDefaults")
+            throw APIError.unauthorized
+        }
+        
         guard let url = URL(string: "\(baseURL)/api/me/dashboard") else {
             throw APIError.invalidURL
         }
@@ -505,7 +516,14 @@ class APIService {
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
-        print("[APIService] Fetching dashboard from:", url)
+        // Add Authorization header with Supabase access token
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("[APIService] 📊 GET DASHBOARD REQUEST")
+        print("  URL: \(url)")
+        print("  Authorization: Bearer \(accessToken.prefix(20))...")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         
         // Perform request
         let (data, response): (Data, URLResponse)
@@ -521,7 +539,13 @@ class APIService {
             throw APIError.invalidResponse
         }
         
-        print("[APIService] Dashboard response - Status code:", httpResponse.statusCode)
+        print("[APIService] 📥 Dashboard response - Status code:", httpResponse.statusCode)
+        
+        // Handle 401/403 as unauthorized (token missing or expired)
+        if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+            print("[APIService] ⚠️ Dashboard UNAUTHORIZED (401/403) - token may be invalid or expired")
+            throw APIError.unauthorized
+        }
         
         // Log raw response body for debugging
         if let responseBody = String(data: data, encoding: .utf8) {
@@ -529,7 +553,7 @@ class APIService {
             print("[APIService] Dashboard raw response:", preview)
         }
         
-        // Handle error status codes
+        // Handle other error status codes
         if httpResponse.statusCode != 200 {
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
@@ -540,11 +564,12 @@ class APIService {
         do {
             summary = try JSONDecoder().decode(DashboardSummary.self, from: data)
         } catch {
-            print("[APIService] Failed to decode dashboard:", error)
+            print("[APIService] ❌ Failed to decode dashboard:", error)
             throw APIError.decodingError(error)
         }
         
-        print("[APIService] Dashboard decoded - \(summary.totalSearches) searches, \(summary.totalJobsFound) jobs, \(summary.recentSessions.count) recent sessions")
+        print("[APIService] ✅ Dashboard decoded - \(summary.totalSearches) searches, \(summary.totalJobsFound) jobs, \(summary.recentSessions.count) recent sessions")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
         
         return summary
     }
