@@ -54,6 +54,17 @@ struct DashboardSummary: Decodable {
 // MARK: - Dashboard Session Summary
 
 /// Summary of a single search session from the dashboard API
+/// Backend JSON format:
+/// {
+///   "search_session_id": "uuid",
+///   "created_at": "2025-11-29T18:52:17.621835+00:00",
+///   "title_or_inferred_role": "Scheduler",
+///   "total_jobs": 81,
+///   "direct_count": 31,
+///   "adjacent_count": 50,
+///   "status": "completed",
+///   "view_token": "HKWiNZBSwLAmSzLeo0eZ0Ych"
+/// }
 struct DashboardSessionSummary: Identifiable, Decodable {
     let id: String
     let title: String?
@@ -61,15 +72,17 @@ struct DashboardSessionSummary: Identifiable, Decodable {
     let totalJobs: Int
     let directCount: Int
     let adjacentCount: Int
+    let status: String?
     let viewToken: String?
     
     enum CodingKeys: String, CodingKey {
-        case id
-        case title
+        case id = "search_session_id"
+        case title = "title_or_inferred_role"
         case createdAt = "created_at"
         case totalJobs = "total_jobs"
         case directCount = "direct_count"
         case adjacentCount = "adjacent_count"
+        case status
         case viewToken = "view_token"
     }
     
@@ -81,6 +94,7 @@ struct DashboardSessionSummary: Identifiable, Decodable {
         totalJobs = try container.decodeIfPresent(Int.self, forKey: .totalJobs) ?? 0
         directCount = try container.decodeIfPresent(Int.self, forKey: .directCount) ?? 0
         adjacentCount = try container.decodeIfPresent(Int.self, forKey: .adjacentCount) ?? 0
+        status = try container.decodeIfPresent(String.self, forKey: .status)
         viewToken = try container.decodeIfPresent(String.self, forKey: .viewToken)
         
         // Parse date from ISO8601 string
@@ -119,15 +133,20 @@ struct DashboardSessionSummary: Identifiable, Decodable {
         return formatter.string(from: createdAt)
     }
     
+    var isCompleted: Bool {
+        status?.lowercased() == "completed"
+    }
+    
     // MARK: - Initializer for previews/testing
     
-    init(id: String, title: String?, createdAt: Date, totalJobs: Int, directCount: Int, adjacentCount: Int, viewToken: String?) {
+    init(id: String, title: String?, createdAt: Date, totalJobs: Int, directCount: Int, adjacentCount: Int, status: String? = "completed", viewToken: String?) {
         self.id = id
         self.title = title
         self.createdAt = createdAt
         self.totalJobs = totalJobs
         self.directCount = directCount
         self.adjacentCount = adjacentCount
+        self.status = status
         self.viewToken = viewToken
     }
 }
