@@ -378,6 +378,37 @@ final class AuthManager: ObservableObject {
         return httpResponse.statusCode == 200
     }
     
+    // MARK: - Public Token Refresh
+    
+    /// Attempts to refresh the access token using the stored refresh token.
+    /// Call this when an API returns 401 to try to recover the session.
+    /// Returns true if refresh succeeded, false if user needs to sign in again.
+    func refreshTokenIfNeeded() async -> Bool {
+        guard let refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey) else {
+            print("[AuthManager] No refresh token available")
+            return false
+        }
+        
+        print("[AuthManager] Attempting to refresh expired token...")
+        
+        do {
+            let success = try await refreshSession(refreshToken)
+            if success {
+                print("[AuthManager] ✅ Token refreshed successfully")
+                return true
+            }
+        } catch {
+            print("[AuthManager] ❌ Token refresh failed: \(error)")
+        }
+        
+        // Clear invalid session
+        clearSession()
+        await MainActor.run {
+            AppState.shared.signOut()
+        }
+        return false
+    }
+    
     private func refreshSession(_ refreshToken: String) async throws -> Bool {
         guard let url = URL(string: "\(supabaseURL)/auth/v1/token?grant_type=refresh_token") else {
             return false

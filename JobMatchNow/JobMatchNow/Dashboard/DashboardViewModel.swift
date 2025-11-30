@@ -89,6 +89,7 @@ final class DashboardViewModel: ObservableObject {
     // MARK: - Public Methods
     
     /// Load dashboard data from the API
+    /// Automatically attempts to refresh expired tokens
     func loadDashboard() async {
         viewState = .loading
         
@@ -109,9 +110,20 @@ final class DashboardViewModel: ObservableObject {
             // Handle specific API errors
             switch error {
             case .unauthorized:
-                // User not signed in or token expired
-                viewState = .error("Please sign in to view your dashboard.")
-                print("[DashboardViewModel] ⚠️ Unauthorized - user needs to sign in")
+                // Token might be expired - try to refresh
+                print("[DashboardViewModel] ⚠️ Unauthorized - attempting token refresh...")
+                
+                let refreshed = await AuthManager.shared.refreshTokenIfNeeded()
+                
+                if refreshed {
+                    // Retry the dashboard load with new token
+                    print("[DashboardViewModel] Token refreshed, retrying dashboard load...")
+                    await retryLoadDashboard()
+                } else {
+                    // Refresh failed - user needs to sign in again
+                    viewState = .error("Session expired. Please sign in again.")
+                    print("[DashboardViewModel] ⚠️ Token refresh failed - user needs to sign in")
+                }
                 
             case .httpError(let code, _) where code == 404:
                 // No dashboard data yet - show empty state
@@ -127,6 +139,27 @@ final class DashboardViewModel: ObservableObject {
         } catch {
             viewState = .error("Unable to load your dashboard. Please try again.")
             print("[DashboardViewModel] ❌ Error loading dashboard: \(error)")
+        }
+    }
+    
+    /// Retry loading dashboard after token refresh (without triggering another refresh loop)
+    private func retryLoadDashboard() async {
+        do {
+            let response = try await apiService.getDashboard()
+            
+            dashboardData = response
+            
+            if response.summary.totalSearches == 0 && response.recentSessions.isEmpty {
+                viewState = .empty
+            } else {
+                viewState = .loaded
+            }
+            
+            print("[DashboardViewModel] ✅ Dashboard loaded after token refresh")
+            
+        } catch {
+            viewState = .error("Session expired. Please sign in again.")
+            print("[DashboardViewModel] ❌ Dashboard load failed after refresh: \(error)")
         }
     }
     
