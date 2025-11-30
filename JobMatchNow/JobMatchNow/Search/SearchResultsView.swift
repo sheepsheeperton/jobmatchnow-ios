@@ -177,7 +177,7 @@ struct SearchResultsView: View {
                     ProgressView()
                         .scaleEffect(1.2)
                         .tint(ThemeColors.primaryBrand)
-                    Text("Loading \(viewModel.locationScope.displayName) jobs...")
+                    Text("Loading \(viewModel.selectedBucket.displayName) jobs...")
                         .font(.subheadline)
                         .foregroundColor(ThemeColors.textOnLight)
                 }
