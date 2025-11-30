@@ -245,6 +245,16 @@ class APIService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        // Add Authorization header if user is authenticated
+        // This associates the upload with the user's account so it appears on their dashboard
+        if let accessToken = UserDefaults.standard.string(forKey: "supabase_access_token"),
+           !accessToken.isEmpty {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            print("[APIService] ✅ Authorization header added (token: \(accessToken.prefix(20))...)")
+        } else {
+            print("[APIService] ⚠️ No auth token - upload will be anonymous (won't appear on dashboard)")
+        }
 
         var body = Data()
 
@@ -263,6 +273,7 @@ class APIService {
         print("[APIService] URL:", url.absoluteString)
         print("[APIService] Method:", request.httpMethod ?? "nil")
         print("[APIService] Content-Type: multipart/form-data; boundary=\(boundary)")
+        print("[APIService] Authorization:", request.value(forHTTPHeaderField: "Authorization") != nil ? "Bearer ****" : "NONE")
         print("[APIService] Body size:", body.count, "bytes")
         print("[APIService] File MIME type in multipart:", mimeType)
         print("[APIService] Timeout interval:", request.timeoutInterval, "seconds")
