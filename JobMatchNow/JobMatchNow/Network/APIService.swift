@@ -80,7 +80,7 @@ struct Job: Decodable, Identifiable {
 
 // MARK: - API Errors
 
-enum APIError: LocalizedError {
+enum APIError: LocalizedError, Equatable {
     case invalidURL
     case invalidResponse
     case httpError(statusCode: Int, message: String)
@@ -89,6 +89,7 @@ enum APIError: LocalizedError {
     case fileReadError
     case networkError(Error)
     case missingViewToken
+    case unauthorized
 
     var errorDescription: String? {
         switch self {
@@ -108,6 +109,29 @@ enum APIError: LocalizedError {
             return "Network error: \(error.localizedDescription)"
         case .missingViewToken:
             return "Missing view token in response"
+        case .unauthorized:
+            return "Please sign in to access this feature"
+        }
+    }
+    
+    // Implement Equatable manually due to associated Error types
+    static func == (lhs: APIError, rhs: APIError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidURL, .invalidURL),
+             (.invalidResponse, .invalidResponse),
+             (.fileNotFound, .fileNotFound),
+             (.fileReadError, .fileReadError),
+             (.missingViewToken, .missingViewToken),
+             (.unauthorized, .unauthorized):
+            return true
+        case (.httpError(let lhsCode, let lhsMsg), .httpError(let rhsCode, let rhsMsg)):
+            return lhsCode == rhsCode && lhsMsg == rhsMsg
+        case (.decodingError, .decodingError),
+             (.networkError, .networkError):
+            // Can't easily compare Error types, so just check case match
+            return true
+        default:
+            return false
         }
     }
 }
@@ -489,7 +513,15 @@ class APIService {
     
     /// Fetches the user's dashboard summary including metrics and recent sessions
     /// Endpoint: GET /api/me/dashboard
+    /// Requires authentication - sends Authorization header with Supabase access token
     func getDashboard() async throws -> DashboardSummary {
+        // Get access token from UserDefaults (same key as AuthManager)
+        guard let accessToken = UserDefaults.standard.string(forKey: "supabase_access_token"),
+              !accessToken.isEmpty else {
+            print("[APIService] Dashboard request failed: No access token available")
+            throw APIError.unauthorized
+        }
+        
         guard let url = URL(string: "\(baseURL)/api/me/dashboard") else {
             throw APIError.invalidURL
         }
@@ -498,7 +530,11 @@ class APIService {
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
+        // Add Authorization header with Supabase access token
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
         print("[APIService] Fetching dashboard from:", url)
+        print("[APIService] Authorization header set with token: \(accessToken.prefix(20))...")
         
         // Perform request
         let (data, response): (Data, URLResponse)
@@ -516,13 +552,19 @@ class APIService {
         
         print("[APIService] Dashboard response - Status code:", httpResponse.statusCode)
         
+        // Handle 401/403 as unauthorized
+        if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+            print("[APIService] Dashboard request unauthorized - token may be expired")
+            throw APIError.unauthorized
+        }
+        
         // Log raw response body for debugging
         if let responseBody = String(data: data, encoding: .utf8) {
             let preview = responseBody.prefix(500)
             print("[APIService] Dashboard raw response:", preview)
         }
         
-        // Handle error status codes
+        // Handle other error status codes
         if httpResponse.statusCode != 200 {
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)

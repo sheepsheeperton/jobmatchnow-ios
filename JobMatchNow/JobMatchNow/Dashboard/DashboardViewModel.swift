@@ -105,15 +105,23 @@ final class DashboardViewModel: ObservableObject {
             print("[DashboardViewModel] Loaded dashboard: \(dashboardSummary.totalSearches) searches, \(dashboardSummary.recentSessions.count) recent sessions")
             
         } catch let error as APIError {
-            // Check if it's a 401/403 (not authenticated) or 404 (no data yet)
-            if case .httpError(let code, _) = error, code == 404 {
+            // Handle specific API errors
+            switch error {
+            case .unauthorized:
+                // User not signed in or session expired
+                viewState = .error("Please sign in to view your dashboard.")
+                print("[DashboardViewModel] Unauthorized - user needs to sign in")
+                
+            case .httpError(let code, _) where code == 404:
                 // No dashboard data yet - show empty state
                 summary = .empty
                 viewState = .empty
-            } else {
+                print("[DashboardViewModel] No dashboard data yet (404)")
+                
+            default:
                 viewState = .error(error.localizedDescription ?? "Failed to load dashboard")
+                print("[DashboardViewModel] API error: \(error)")
             }
-            print("[DashboardViewModel] API error: \(error)")
             
         } catch {
             viewState = .error("Unable to load your dashboard. Please try again.")
