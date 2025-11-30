@@ -7,32 +7,83 @@
 
 import Foundation
 
-// MARK: - Dashboard Summary Response
+// MARK: - Dashboard API Response
 
-/// Response from GET /api/me/dashboard endpoint
-struct DashboardSummary: Decodable {
-    let totalSearches: Int
-    let totalJobsFound: Int
-    let avgJobsPerSearch: Double
+/// Top-level response from GET /api/me/dashboard endpoint
+/// Backend returns: { "summary": {...}, "recent_sessions": [...] }
+struct DashboardAPIResponse: Decodable {
+    let summary: DashboardSummaryMetrics
     let recentSessions: [DashboardSessionSummary]
     
     enum CodingKeys: String, CodingKey {
-        case totalSearches = "total_searches"
-        case totalJobsFound = "total_jobs_found"
-        case avgJobsPerSearch = "avg_jobs_per_search"
+        case summary
         case recentSessions = "recent_sessions"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        summary = try container.decodeIfPresent(DashboardSummaryMetrics.self, forKey: .summary) ?? DashboardSummaryMetrics()
+        recentSessions = try container.decodeIfPresent([DashboardSessionSummary].self, forKey: .recentSessions) ?? []
+    }
+    
+    // For previews/testing
+    init(summary: DashboardSummaryMetrics, recentSessions: [DashboardSessionSummary]) {
+        self.summary = summary
+        self.recentSessions = recentSessions
+    }
+}
+
+// MARK: - Dashboard Summary Metrics
+
+/// Metrics from the "summary" object in the API response
+/// Backend format:
+/// {
+///   "total_searches": 1,
+///   "unique_jobs_found": 81,
+///   "local_jobs_count": 0,
+///   "national_jobs_count": 54,
+///   "remote_jobs_count": 27,
+///   "avg_jobs_per_search": 81,
+///   "viewed_jobs_count": 0,
+///   "starred_jobs_count": 0
+/// }
+struct DashboardSummaryMetrics: Decodable {
+    let totalSearches: Int
+    let uniqueJobsFound: Int
+    let localJobsCount: Int
+    let nationalJobsCount: Int
+    let remoteJobsCount: Int
+    let avgJobsPerSearch: Double
+    let viewedJobsCount: Int
+    let starredJobsCount: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case totalSearches = "total_searches"
+        case uniqueJobsFound = "unique_jobs_found"
+        case localJobsCount = "local_jobs_count"
+        case nationalJobsCount = "national_jobs_count"
+        case remoteJobsCount = "remote_jobs_count"
+        case avgJobsPerSearch = "avg_jobs_per_search"
+        case viewedJobsCount = "viewed_jobs_count"
+        case starredJobsCount = "starred_jobs_count"
     }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         totalSearches = try container.decodeIfPresent(Int.self, forKey: .totalSearches) ?? 0
-        totalJobsFound = try container.decodeIfPresent(Int.self, forKey: .totalJobsFound) ?? 0
-        recentSessions = try container.decodeIfPresent([DashboardSessionSummary].self, forKey: .recentSessions) ?? []
+        uniqueJobsFound = try container.decodeIfPresent(Int.self, forKey: .uniqueJobsFound) ?? 0
+        localJobsCount = try container.decodeIfPresent(Int.self, forKey: .localJobsCount) ?? 0
+        nationalJobsCount = try container.decodeIfPresent(Int.self, forKey: .nationalJobsCount) ?? 0
+        remoteJobsCount = try container.decodeIfPresent(Int.self, forKey: .remoteJobsCount) ?? 0
+        viewedJobsCount = try container.decodeIfPresent(Int.self, forKey: .viewedJobsCount) ?? 0
+        starredJobsCount = try container.decodeIfPresent(Int.self, forKey: .starredJobsCount) ?? 0
         
-        // Handle avgJobsPerSearch as either Double or String
+        // Handle avgJobsPerSearch as either Double, Int, or String
         if let doubleValue = try? container.decode(Double.self, forKey: .avgJobsPerSearch) {
             avgJobsPerSearch = doubleValue
+        } else if let intValue = try? container.decode(Int.self, forKey: .avgJobsPerSearch) {
+            avgJobsPerSearch = Double(intValue)
         } else if let stringValue = try? container.decode(String.self, forKey: .avgJobsPerSearch),
                   let parsed = Double(stringValue) {
             avgJobsPerSearch = parsed
@@ -41,13 +92,28 @@ struct DashboardSummary: Decodable {
         }
     }
     
-    // MARK: - Initializer for previews/testing
+    // Default empty initializer
+    init() {
+        self.totalSearches = 0
+        self.uniqueJobsFound = 0
+        self.localJobsCount = 0
+        self.nationalJobsCount = 0
+        self.remoteJobsCount = 0
+        self.avgJobsPerSearch = 0.0
+        self.viewedJobsCount = 0
+        self.starredJobsCount = 0
+    }
     
-    init(totalSearches: Int, totalJobsFound: Int, avgJobsPerSearch: Double, recentSessions: [DashboardSessionSummary]) {
+    // For previews/testing
+    init(totalSearches: Int, uniqueJobsFound: Int, localJobsCount: Int, nationalJobsCount: Int, remoteJobsCount: Int, avgJobsPerSearch: Double, viewedJobsCount: Int, starredJobsCount: Int) {
         self.totalSearches = totalSearches
-        self.totalJobsFound = totalJobsFound
+        self.uniqueJobsFound = uniqueJobsFound
+        self.localJobsCount = localJobsCount
+        self.nationalJobsCount = nationalJobsCount
+        self.remoteJobsCount = remoteJobsCount
         self.avgJobsPerSearch = avgJobsPerSearch
-        self.recentSessions = recentSessions
+        self.viewedJobsCount = viewedJobsCount
+        self.starredJobsCount = starredJobsCount
     }
 }
 
@@ -158,18 +224,23 @@ struct DashboardSessionSummary: Identifiable, Decodable {
 
 // MARK: - Sample Data
 
-extension DashboardSummary {
-    static let sample = DashboardSummary(
-        totalSearches: 12,
-        totalJobsFound: 487,
-        avgJobsPerSearch: 40.6,
+extension DashboardAPIResponse {
+    static let sample = DashboardAPIResponse(
+        summary: DashboardSummaryMetrics(
+            totalSearches: 12,
+            uniqueJobsFound: 487,
+            localJobsCount: 45,
+            nationalJobsCount: 320,
+            remoteJobsCount: 122,
+            avgJobsPerSearch: 40.6,
+            viewedJobsCount: 28,
+            starredJobsCount: 5
+        ),
         recentSessions: DashboardSessionSummary.samples
     )
     
-    static let empty = DashboardSummary(
-        totalSearches: 0,
-        totalJobsFound: 0,
-        avgJobsPerSearch: 0.0,
+    static let empty = DashboardAPIResponse(
+        summary: DashboardSummaryMetrics(),
         recentSessions: []
     )
 }

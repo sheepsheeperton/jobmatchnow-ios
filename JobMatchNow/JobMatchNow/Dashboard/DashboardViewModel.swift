@@ -28,8 +28,8 @@ final class DashboardViewModel: ObservableObject {
     /// Current view state
     @Published private(set) var viewState: DashboardViewState = .loading
     
-    /// Dashboard summary metrics
-    @Published private(set) var summary: DashboardSummary?
+    /// Dashboard API response (contains summary metrics and recent sessions)
+    @Published private(set) var dashboardData: DashboardAPIResponse?
     
     /// Whether we're currently loading session results for navigation
     @Published var isLoadingSession = false
@@ -46,26 +46,27 @@ final class DashboardViewModel: ObservableObject {
     // MARK: - Computed Properties
     
     var totalSearches: Int {
-        summary?.totalSearches ?? 0
+        dashboardData?.summary.totalSearches ?? 0
     }
     
     var totalJobsFound: Int {
-        summary?.totalJobsFound ?? 0
+        dashboardData?.summary.uniqueJobsFound ?? 0
     }
     
     var avgJobsPerSearch: String {
-        guard let avg = summary?.avgJobsPerSearch, avg > 0 else {
+        guard let avg = dashboardData?.summary.avgJobsPerSearch, avg > 0 else {
             return "—"
         }
         return String(format: "%.1f", avg)
     }
     
     var recentSessions: [DashboardSessionSummary] {
-        summary?.recentSessions ?? []
+        dashboardData?.recentSessions ?? []
     }
     
     var hasData: Bool {
-        summary != nil && (summary!.totalSearches > 0 || !summary!.recentSessions.isEmpty)
+        guard let data = dashboardData else { return false }
+        return data.summary.totalSearches > 0 || !data.recentSessions.isEmpty
     }
     
     var errorMessage: String? {
@@ -92,17 +93,17 @@ final class DashboardViewModel: ObservableObject {
         viewState = .loading
         
         do {
-            let dashboardSummary = try await apiService.getDashboard()
+            let response = try await apiService.getDashboard()
             
-            summary = dashboardSummary
+            dashboardData = response
             
-            if dashboardSummary.totalSearches == 0 && dashboardSummary.recentSessions.isEmpty {
+            if response.summary.totalSearches == 0 && response.recentSessions.isEmpty {
                 viewState = .empty
             } else {
                 viewState = .loaded
             }
             
-            print("[DashboardViewModel] Loaded dashboard: \(dashboardSummary.totalSearches) searches, \(dashboardSummary.recentSessions.count) recent sessions")
+            print("[DashboardViewModel] Loaded dashboard: \(response.summary.totalSearches) searches, \(response.recentSessions.count) recent sessions")
             
         } catch let error as APIError {
             // Handle specific API errors
@@ -114,7 +115,7 @@ final class DashboardViewModel: ObservableObject {
                 
             case .httpError(let code, _) where code == 404:
                 // No dashboard data yet - show empty state
-                summary = .empty
+                dashboardData = .empty
                 viewState = .empty
                 print("[DashboardViewModel] No dashboard data yet (404)")
                 
@@ -179,13 +180,15 @@ final class DashboardViewModel: ObservableObject {
 extension DashboardViewModel {
     static var preview: DashboardViewModel {
         let vm = DashboardViewModel()
-        vm.summary = .sample
+        vm.dashboardData = .sample
+        vm.viewState = .loaded
         return vm
     }
     
     static var emptyPreview: DashboardViewModel {
         let vm = DashboardViewModel()
-        vm.summary = .empty
+        vm.dashboardData = .empty
+        vm.viewState = .empty
         return vm
     }
 }

@@ -529,7 +529,7 @@ class APIService {
     /// Fetches the user's dashboard summary including metrics and recent sessions
     /// Endpoint: GET /api/me/dashboard
     /// Requires authentication - sends Authorization header with Supabase access token
-    func getDashboard() async throws -> DashboardSummary {
+    func getDashboard() async throws -> DashboardAPIResponse {
         // Get access token from UserDefaults (same key as AuthManager uses)
         guard let accessToken = UserDefaults.standard.string(forKey: "supabase_access_token"),
               !accessToken.isEmpty else {
@@ -589,18 +589,18 @@ class APIService {
         }
         
         // Decode response
-        let summary: DashboardSummary
+        let dashboardResponse: DashboardAPIResponse
         do {
-            summary = try JSONDecoder().decode(DashboardSummary.self, from: data)
+            dashboardResponse = try JSONDecoder().decode(DashboardAPIResponse.self, from: data)
         } catch {
             print("[APIService] ❌ Failed to decode dashboard:", error)
             throw APIError.decodingError(error)
         }
         
-        print("[APIService] ✅ Dashboard decoded - \(summary.totalSearches) searches, \(summary.totalJobsFound) jobs, \(summary.recentSessions.count) recent sessions")
+        print("[APIService] ✅ Dashboard decoded - \(dashboardResponse.summary.totalSearches) searches, \(dashboardResponse.summary.uniqueJobsFound) jobs, \(dashboardResponse.recentSessions.count) recent sessions")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
         
-        return summary
+        return dashboardResponse
     }
     
     // MARK: - 5. Get Job Explanation
