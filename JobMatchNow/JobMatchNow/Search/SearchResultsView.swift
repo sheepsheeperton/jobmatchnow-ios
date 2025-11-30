@@ -184,6 +184,9 @@ struct SearchResultsView: View {
                                     explanationManager.retryExplanation(for: job.job_id)
                                 },
                                 onViewDetails: { url in
+                                    // Log the view interaction (fire-and-forget)
+                                    logJobView(jobId: job.job_id)
+                                    
                                     selectedJobURL = url
                                     showSafari = true
                                 }
@@ -271,6 +274,18 @@ struct SearchResultsView: View {
     
     private func openDashboard() {
         appState.switchToTab(.dashboard)
+    }
+    
+    /// Log a job view interaction (fire-and-forget)
+    private func logJobView(jobId: String) {
+        Task {
+            await APIService.shared.logJobInteraction(
+                jobId: jobId,
+                viewToken: viewToken,
+                userSearchId: nil, // Could pass user_search_id if available
+                type: "view"
+            )
+        }
     }
     
     private func logOut() {

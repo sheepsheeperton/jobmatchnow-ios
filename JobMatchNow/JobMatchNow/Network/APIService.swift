@@ -509,12 +509,12 @@ class APIService {
         return jobs
     }
     
-    // MARK: - 4. Get Dashboard Summary
+    // MARK: - 4. Get Dashboard
     
-    /// Fetches the user's dashboard summary including metrics and recent sessions
+    /// Fetches the user's dashboard including summary, recent sessions, and viewed jobs
     /// Endpoint: GET /api/me/dashboard
     /// Requires authentication - sends Authorization header with Supabase access token
-    func getDashboard() async throws -> DashboardSummary {
+    func getDashboard() async throws -> DashboardAPIResponse {
         // Get access token from UserDefaults (same key as AuthManager)
         guard let accessToken = UserDefaults.standard.string(forKey: "supabase_access_token"),
               !accessToken.isEmpty else {
@@ -560,7 +560,7 @@ class APIService {
         
         // Log raw response body for debugging
         if let responseBody = String(data: data, encoding: .utf8) {
-            let preview = responseBody.prefix(500)
+            let preview = responseBody.prefix(800)
             print("[APIService] Dashboard raw response:", preview)
         }
         
@@ -571,17 +571,82 @@ class APIService {
         }
         
         // Decode response
-        let summary: DashboardSummary
+        let dashboardResponse: DashboardAPIResponse
         do {
-            summary = try JSONDecoder().decode(DashboardSummary.self, from: data)
+            dashboardResponse = try JSONDecoder().decode(DashboardAPIResponse.self, from: data)
         } catch {
             print("[APIService] Failed to decode dashboard:", error)
             throw APIError.decodingError(error)
         }
         
-        print("[APIService] Dashboard decoded - \(summary.totalSearches) searches, \(summary.totalJobsFound) jobs, \(summary.recentSessions.count) recent sessions")
+        print("[APIService] Dashboard decoded - \(dashboardResponse.summary.totalSearches) searches, \(dashboardResponse.summary.uniqueJobsFound) unique jobs, \(dashboardResponse.recentSessions.count) recent sessions, \(dashboardResponse.recentViewedJobs.count) viewed jobs")
         
-        return summary
+        return dashboardResponse
+    }
+    
+    // MARK: - 5. Log Job Interaction
+    
+    /// Logs a user interaction with a job (e.g., view, star)
+    /// Endpoint: POST /api/jobs/interaction
+    /// Requires authentication - sends Authorization header with Supabase access token
+    /// This is a fire-and-forget operation; errors are logged but don't block the UI
+    func logJobInteraction(jobId: String, viewToken: String, userSearchId: String?, type: String) async {
+        // Get access token from UserDefaults
+        guard let accessToken = UserDefaults.standard.string(forKey: "supabase_access_token"),
+              !accessToken.isEmpty else {
+            print("[APIService] logJobInteraction skipped: No access token available")
+            return
+        }
+        
+        guard let url = URL(string: "\(baseURL)/api/jobs/interaction") else {
+            print("[APIService] logJobInteraction failed: Invalid URL")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        // Build request body
+        var body: [String: Any] = [
+            "job_id": jobId,
+            "view_token": viewToken,
+            "interaction_type": type
+        ]
+        
+        if let userSearchId = userSearchId {
+            body["user_search_id"] = userSearchId
+        }
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        } catch {
+            print("[APIService] logJobInteraction failed to encode body:", error)
+            return
+        }
+        
+        print("[APIService] Logging job interaction: \(type) for job \(jobId)")
+        
+        // Perform request (fire-and-forget)
+        do {
+            let (data, response) = try await session.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("[APIService] logJobInteraction: Invalid response")
+                return
+            }
+            
+            if httpResponse.statusCode == 200 || httpResponse.statusCode == 201 {
+                print("[APIService] logJobInteraction success: \(type) for job \(jobId)")
+            } else {
+                let errorMsg = String(data: data, encoding: .utf8) ?? "Unknown error"
+                print("[APIService] logJobInteraction failed (\(httpResponse.statusCode)): \(errorMsg)")
+            }
+        } catch {
+            print("[APIService] logJobInteraction network error:", error)
+        }
     }
     
     // MARK: - 5. Get Job Explanation

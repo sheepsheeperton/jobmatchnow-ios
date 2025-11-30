@@ -2,11 +2,13 @@ import SwiftUI
 
 // MARK: - Dashboard View
 
-/// Shows search history and metrics, allowing navigation to past results
+/// Shows search history, metrics, and recently viewed jobs
 struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     @StateObject private var appState = AppState.shared
     @State private var showSettings = false
+    @State private var selectedJobURL: URL?
+    @State private var showSafari = false
     
     var body: some View {
         Group {
@@ -37,6 +39,12 @@ struct DashboardView: View {
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 SettingsView()
+            }
+        }
+        .sheet(isPresented: $showSafari) {
+            if let url = selectedJobURL {
+                SafariView(url: url)
+                    .ignoresSafeArea()
             }
         }
         .navigationDestination(isPresented: $viewModel.navigateToResults) {
@@ -165,58 +173,114 @@ struct DashboardView: View {
     private var dashboardContent: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Summary Strip Card
-                summaryStripCard
+                // Main Summary Card
+                summaryCard
+                
+                // Location Breakdown Row
+                locationBreakdownRow
+                
+                // Activity Stats Row
+                activityStatsRow
                 
                 // Recent Searches Section
                 if !viewModel.recentSessions.isEmpty {
                     recentSearchesSection
+                }
+                
+                // Recently Viewed Jobs Section
+                if !viewModel.recentViewedJobs.isEmpty {
+                    recentlyViewedJobsSection
                 }
             }
             .padding()
         }
     }
     
-    // MARK: - Summary Strip Card
+    // MARK: - Summary Card
     
-    private var summaryStripCard: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                // Total Searches
-                SummaryMetricItem(
-                    value: "\(viewModel.totalSearches)",
-                    label: "Total Searches",
-                    icon: "magnifyingglass",
-                    color: ThemeColors.primaryBrand
-                )
-                
-                Divider()
-                    .frame(height: 50)
-                
-                // Jobs Found
-                SummaryMetricItem(
-                    value: "\(viewModel.totalJobsFound)",
-                    label: "Jobs Found",
-                    icon: "briefcase.fill",
-                    color: ThemeColors.primaryComplement
-                )
-                
-                Divider()
-                    .frame(height: 50)
-                
-                // Avg Matches
-                SummaryMetricItem(
-                    value: viewModel.avgJobsPerSearch,
-                    label: "Avg per Search",
-                    icon: "chart.bar.fill",
-                    color: ThemeColors.deepComplement
-                )
-            }
-            .padding(.vertical, 20)
+    private var summaryCard: some View {
+        HStack(spacing: 0) {
+            // Total Searches
+            SummaryMetricItem(
+                value: "\(viewModel.totalSearches)",
+                label: "Total Searches",
+                icon: "magnifyingglass",
+                color: ThemeColors.primaryBrand
+            )
+            
+            Divider()
+                .frame(height: 50)
+            
+            // Unique Jobs Found
+            SummaryMetricItem(
+                value: "\(viewModel.uniqueJobsFound)",
+                label: "Unique Jobs",
+                icon: "briefcase.fill",
+                color: ThemeColors.primaryComplement
+            )
+            
+            Divider()
+                .frame(height: 50)
+            
+            // Avg per Search
+            SummaryMetricItem(
+                value: viewModel.avgJobsPerSearch,
+                label: "Avg per Search",
+                icon: "chart.bar.fill",
+                color: ThemeColors.deepComplement
+            )
         }
+        .padding(.vertical, 20)
         .background(ThemeColors.surfaceWhite)
         .cornerRadius(Theme.CornerRadius.medium)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+    
+    // MARK: - Location Breakdown Row
+    
+    private var locationBreakdownRow: some View {
+        HStack(spacing: 12) {
+            LocationMetricCard(
+                value: viewModel.localJobsCount,
+                label: "Local",
+                icon: "mappin.circle.fill",
+                color: ThemeColors.primaryBrand
+            )
+            
+            LocationMetricCard(
+                value: viewModel.nationalJobsCount,
+                label: "National",
+                icon: "globe.americas.fill",
+                color: ThemeColors.primaryComplement
+            )
+            
+            LocationMetricCard(
+                value: viewModel.remoteJobsCount,
+                label: "Remote",
+                icon: "wifi",
+                color: ThemeColors.deepComplement
+            )
+        }
+    }
+    
+    // MARK: - Activity Stats Row
+    
+    private var activityStatsRow: some View {
+        HStack(spacing: 12) {
+            ActivityStatCard(
+                value: viewModel.viewedJobsCount,
+                label: "Jobs Viewed",
+                icon: "eye.fill",
+                color: ThemeColors.warmAccent
+            )
+            
+            ActivityStatCard(
+                value: viewModel.starredJobsCount,
+                label: "Jobs Starred",
+                icon: "star.fill",
+                color: ThemeColors.primaryBrand
+            )
+        }
     }
     
     // MARK: - Recent Searches Section
@@ -234,6 +298,26 @@ struct DashboardView: View {
                     isLoading: viewModel.isLoadingSession && viewModel.selectedViewToken == session.viewToken
                 ) {
                     viewModel.loadSessionResults(session)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Recently Viewed Jobs Section
+    
+    private var recentlyViewedJobsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Recently Viewed Jobs")
+                .font(.headline)
+                .foregroundColor(ThemeColors.textOnLight)
+                .padding(.horizontal, 4)
+            
+            ForEach(viewModel.recentViewedJobs) { job in
+                ViewedJobCard(job: job) {
+                    if let url = job.url {
+                        selectedJobURL = url
+                        showSafari = true
+                    }
                 }
             }
         }
@@ -267,6 +351,75 @@ struct SummaryMetricItem: View {
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Location Metric Card
+
+struct LocationMetricCard: View {
+    let value: Int
+    let label: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2)
+                    .foregroundColor(color)
+                
+                Text("\(value)")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundColor(color)
+            }
+            
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(ThemeColors.surfaceWhite)
+        .cornerRadius(Theme.CornerRadius.small)
+        .shadow(color: Color.black.opacity(0.03), radius: 3, x: 0, y: 1)
+    }
+}
+
+// MARK: - Activity Stat Card
+
+struct ActivityStatCard: View {
+    let value: Int
+    let label: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.subheadline)
+                .foregroundColor(color)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(value)")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundColor(ThemeColors.textOnLight)
+                
+                Text(label)
+                    .font(.caption)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .background(ThemeColors.surfaceWhite)
+        .cornerRadius(Theme.CornerRadius.small)
+        .shadow(color: Color.black.opacity(0.03), radius: 3, x: 0, y: 1)
     }
 }
 
@@ -307,8 +460,8 @@ struct RecentSessionCard: View {
                 
                 Divider()
                 
-                // Stats
-                HStack(spacing: 24) {
+                // Stats - Updated to show Local/National/Remote
+                HStack(spacing: 16) {
                     SessionStatItem(
                         value: session.totalJobs,
                         label: "Total",
@@ -316,14 +469,20 @@ struct RecentSessionCard: View {
                     )
                     
                     SessionStatItem(
-                        value: session.directCount,
-                        label: "Direct",
+                        value: session.localCount,
+                        label: "Local",
+                        color: ThemeColors.warmAccent
+                    )
+                    
+                    SessionStatItem(
+                        value: session.nationalCount,
+                        label: "National",
                         color: ThemeColors.primaryComplement
                     )
                     
                     SessionStatItem(
-                        value: session.adjacentCount,
-                        label: "Adjacent",
+                        value: session.remoteCount,
+                        label: "Remote",
                         color: ThemeColors.deepComplement
                     )
                 }
@@ -348,14 +507,69 @@ struct SessionStatItem: View {
     var body: some View {
         VStack(spacing: 4) {
             Text("\(value)")
-                .font(.title2)
+                .font(.subheadline)
                 .fontWeight(.bold)
                 .foregroundColor(color)
             
             Text(label)
-                .font(.caption)
+                .font(.caption2)
                 .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
         }
+    }
+}
+
+// MARK: - Viewed Job Card
+
+struct ViewedJobCard: View {
+    let job: DashboardViewedJob
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Job Info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(job.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(ThemeColors.textOnLight)
+                        .lineLimit(1)
+                    
+                    Text(job.companyName)
+                        .font(.caption)
+                        .foregroundColor(ThemeColors.primaryComplement)
+                        .lineLimit(1)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.caption2)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                        
+                        Text(job.location)
+                            .font(.caption)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
+                            .lineLimit(1)
+                        
+                        Spacer()
+                        
+                        Text(job.formattedViewedAt)
+                            .font(.caption2)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                    }
+                }
+                
+                // Chevron
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.4))
+            }
+            .padding(12)
+            .background(ThemeColors.surfaceWhite)
+            .cornerRadius(Theme.CornerRadius.small)
+            .shadow(color: Color.black.opacity(0.03), radius: 3, x: 0, y: 1)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .disabled(job.url == nil)
     }
 }
 
