@@ -308,7 +308,7 @@ struct RecentSessionCard: View {
                 Divider()
                 
                 // Stats
-                HStack(spacing: 24) {
+                HStack(spacing: 16) {
                     SessionStatItem(
                         value: session.totalJobs,
                         label: "Total",
@@ -316,14 +316,20 @@ struct RecentSessionCard: View {
                     )
                     
                     SessionStatItem(
-                        value: session.directCount,
-                        label: "Direct",
+                        value: session.localCount,
+                        label: "Local",
+                        color: ThemeColors.warmAccent
+                    )
+                    
+                    SessionStatItem(
+                        value: session.nationalCount,
+                        label: "National",
                         color: ThemeColors.primaryComplement
                     )
                     
                     SessionStatItem(
-                        value: session.adjacentCount,
-                        label: "Adjacent",
+                        value: session.remoteCount,
+                        label: "Remote",
                         color: ThemeColors.deepComplement
                     )
                 }
