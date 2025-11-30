@@ -244,17 +244,17 @@ AuthView
 @MainActor
 final class ResultsViewModel: ObservableObject {
     @Published var jobs: [Job] = []
-    @Published var locationScope: LocationScope = .national
+    @Published var selectedBucket: JobBucket = .all
     
     func refreshJobs() async
     func retry()
 }
 ```
 
-**Location Scope Logic:**
-- Default: `.national` (matches initial API behavior)
-- When toggled: Triggers `APIService.getJobs(viewToken:scope:)`
-- API parameter: `?scope=local` or `?scope=national`
+**Job Bucket Logic:**
+- Default: `.all` (matches initial API behavior - no query params)
+- 4-button control: **All | Remote | Local | National**
+- Each bucket triggers `APIService.getJobs(viewToken:bucket:)` with appropriate query params
 
 ---
 
@@ -582,21 +582,36 @@ struct SearchSession: Identifiable, Codable {
 }
 ```
 
-### LocationScope (`Network/APIService.swift`)
+### JobBucket (`Network/APIService.swift`)
 
 ```swift
-enum LocationScope: String, CaseIterable {
-    case local = "local"
-    case national = "national"
+enum JobBucket: String, CaseIterable {
+    case all = "all"           // No query params (all jobs)
+    case remote = "remote"     // &remote=true
+    case local = "local"       // &scope=local&remote=false
+    case national = "national" // &scope=national&remote=false
     
     var displayName: String {
         switch self {
+        case .all: return "All"
+        case .remote: return "Remote"
         case .local: return "Local"
         case .national: return "National"
         }
     }
+    
+    /// Returns appropriate query parameters for this bucket
+    func queryParameters(viewToken: String) -> [String: String]
 }
 ```
+
+**Bucket → API Query Mapping:**
+| Bucket   | API Call |
+|----------|----------|
+| All      | `?token=X` (no filters) |
+| Remote   | `?token=X&remote=true` |
+| Local    | `?token=X&scope=local&remote=false` |
+| National | `?token=X&scope=national&remote=false` |
 
 ---
 
@@ -643,6 +658,20 @@ RootView()
 ## Recent Changes
 
 ### November 30, 2025
+
+#### 0. **Job Bucket Filter Refactor** (Latest)
+- **Change:** Replaced dual-control filtering with single 4-button bucket control
+- **Old:** Local/National scope toggle + All/Remote filter (2 separate controls)
+- **New:** All | Remote | Local | National (single mutually-exclusive control)
+- **API Mapping:**
+  - All: `?token=X` (no filters)
+  - Remote: `?token=X&remote=true`
+  - Local: `?token=X&scope=local&remote=false`
+  - National: `?token=X&scope=national&remote=false`
+- **Files Changed:**
+  - `APIService.swift` - Added `JobBucket` enum, updated `getJobs(viewToken:bucket:)`
+  - `ResultsViewModel.swift` - Replaced `locationScope` with `selectedBucket`
+  - `SearchResultsView.swift` - Replaced `LocationScopeToggle` and `JobFilter` with `JobBucketPicker`
 
 #### 1. **Dashboard Authentication Fix** (Commit: `e665d36`)
 - **Problem:** `GET /api/me/dashboard` returned 401 Unauthorized

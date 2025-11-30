@@ -3,7 +3,7 @@
 //  JobMatchNow
 //
 //  ViewModel for the Search Results screen.
-//  Manages jobs fetching, location scope, and loading states.
+//  Manages jobs fetching with bucket filtering (All, Remote, Local, National).
 //
 
 import SwiftUI
@@ -22,17 +22,17 @@ final class ResultsViewModel: ObservableObject {
     /// Whether we're currently loading jobs
     @Published private(set) var isLoading = false
     
-    /// Whether we're refreshing (scope change) vs initial load
+    /// Whether we're refreshing (bucket change) vs initial load
     @Published private(set) var isRefreshing = false
     
     /// Error message if fetch failed
     @Published private(set) var errorMessage: String?
     
-    /// Current location scope
-    /// Defaults to .national to match initial load (which doesn't specify scope)
-    @Published var locationScope: LocationScope = .national {
+    /// Current job bucket filter
+    /// Defaults to .all to match initial load (no query params = all jobs)
+    @Published var selectedBucket: JobBucket = .all {
         didSet {
-            if oldValue != locationScope {
+            if oldValue != selectedBucket {
                 Task {
                     await refreshJobs()
                 }
@@ -51,9 +51,9 @@ final class ResultsViewModel: ObservableObject {
     
     /// Initialize with pre-loaded jobs and viewToken
     /// - Parameters:
-    ///   - jobs: Initial jobs already loaded (from upload flow, fetched without scope = national/all)
+    ///   - jobs: Initial jobs already loaded (from upload flow, fetched with bucket = .all)
     ///   - viewToken: The session view token for API calls
-    ///   - hasLocalJobs: Whether the user has a known location (affects UI but defaults to national)
+    ///   - hasLocalJobs: Whether the user has a known location (affects default bucket UI hint)
     init(jobs: [Job], viewToken: String, hasLocalJobs: Bool = true, apiService: APIService = .shared) {
         self.initialJobs = jobs
         self.jobs = jobs
@@ -61,28 +61,28 @@ final class ResultsViewModel: ObservableObject {
         self.hasLocalJobs = hasLocalJobs
         self.apiService = apiService
         
-        // Default to national to match initial load (which was fetched without scope parameter)
+        // Default to .all to match initial load (no query params = all jobs)
         // This ensures UI state matches the data being displayed
-        self.locationScope = .national
+        self.selectedBucket = .all
         
-        print("[ResultsViewModel] Initialized with \(jobs.count) jobs, default scope: \(self.locationScope.rawValue)")
+        print("[ResultsViewModel] Initialized with \(jobs.count) jobs, default bucket: \(self.selectedBucket.rawValue)")
     }
     
     // MARK: - Public Methods
     
-    /// Refresh jobs with current scope
+    /// Refresh jobs with current bucket filter
     func refreshJobs() async {
         isRefreshing = true
         errorMessage = nil
         
-        print("[ResultsViewModel] Fetching jobs with scope: \(locationScope.rawValue)")
+        print("[ResultsViewModel] Fetching jobs with bucket: \(selectedBucket.rawValue)")
         
         do {
-            let fetchedJobs = try await apiService.getJobs(viewToken: viewToken, scope: locationScope)
+            let fetchedJobs = try await apiService.getJobs(viewToken: viewToken, bucket: selectedBucket)
             jobs = fetchedJobs
             isRefreshing = false
             
-            print("[ResultsViewModel] ✅ Refreshed jobs with scope \(locationScope.rawValue): \(fetchedJobs.count) jobs")
+            print("[ResultsViewModel] ✅ Refreshed jobs with bucket \(selectedBucket.rawValue): \(fetchedJobs.count) jobs")
             
         } catch {
             isRefreshing = false
@@ -98,11 +98,11 @@ final class ResultsViewModel: ObservableObject {
         }
     }
     
-    /// Reset to initial jobs (e.g., if user wants to undo scope change)
+    /// Reset to initial jobs (e.g., if user wants to undo bucket change)
     func resetToInitialJobs() {
         jobs = initialJobs
-        locationScope = .national // Match the initial load default
-        print("[ResultsViewModel] Reset to initial jobs (\(initialJobs.count) jobs), scope: \(locationScope.rawValue)")
+        selectedBucket = .all // Match the initial load default
+        print("[ResultsViewModel] Reset to initial jobs (\(initialJobs.count) jobs), bucket: \(selectedBucket.rawValue)")
     }
 }
 

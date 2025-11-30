@@ -1,18 +1,52 @@
 import Foundation
 import UniformTypeIdentifiers
 
-// MARK: - Location Scope
+// MARK: - Job Bucket
 
-/// Location scope for job search results
-enum LocationScope: String, CaseIterable {
+/// Job bucket for filtering results by location and remote status
+/// Maps to specific query parameter combinations for /api/public/jobs
+enum JobBucket: String, CaseIterable {
+    case all = "all"
+    case remote = "remote"
     case local = "local"
     case national = "national"
     
     var displayName: String {
         switch self {
+        case .all: return "All"
+        case .remote: return "Remote"
         case .local: return "Local"
         case .national: return "National"
         }
+    }
+    
+    /// Returns the appropriate query parameters for this bucket
+    /// - Parameter viewToken: The session view token
+    /// - Returns: Dictionary of query parameters
+    func queryParameters(viewToken: String) -> [String: String] {
+        var params: [String: String] = ["token": viewToken]
+        
+        switch self {
+        case .all:
+            // All jobs: no scope, no remote filter
+            break
+            
+        case .remote:
+            // Only remote jobs (anywhere)
+            params["remote"] = "true"
+            
+        case .local:
+            // Non-remote jobs in user's city
+            params["scope"] = "local"
+            params["remote"] = "false"
+            
+        case .national:
+            // Non-remote jobs outside user's city
+            params["scope"] = "national"
+            params["remote"] = "false"
+        }
+        
+        return params
     }
 }
 
@@ -423,20 +457,15 @@ class APIService {
     /// Fetches jobs for a search session
     /// - Parameters:
     ///   - viewToken: The session view token
-    ///   - scope: Optional location scope filter (.local or .national)
-    func getJobs(viewToken: String, scope: LocationScope? = nil) async throws -> [Job] {
+    ///   - bucket: Job bucket filter (all, remote, local, national)
+    func getJobs(viewToken: String, bucket: JobBucket = .all) async throws -> [Job] {
         guard var urlComponents = URLComponents(string: "\(baseURL)/api/public/jobs") else {
             throw APIError.invalidURL
         }
 
-        var queryItems = [URLQueryItem(name: "token", value: viewToken)]
-        
-        // Add scope parameter if specified
-        if let scope = scope {
-            queryItems.append(URLQueryItem(name: "scope", value: scope.rawValue))
-        }
-        
-        urlComponents.queryItems = queryItems
+        // Get bucket-specific query parameters
+        let params = bucket.queryParameters(viewToken: viewToken)
+        urlComponents.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value) }
 
         guard let url = urlComponents.url else {
             throw APIError.invalidURL
@@ -448,7 +477,7 @@ class APIService {
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         print("[APIService] 🔍 GET JOBS REQUEST")
         print("  URL: \(url)")
-        print("  Scope: \(scope?.rawValue ?? "none (returns all/national jobs)")")
+        print("  Bucket: \(bucket.displayName) (\(bucket.rawValue))")
         print("  Token: \(viewToken.prefix(12))...")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
@@ -489,7 +518,7 @@ class APIService {
             throw APIError.decodingError(error)
         }
 
-        print("[APIService] ✅ Successfully decoded \(jobs.count) jobs (scope: \(scope?.rawValue ?? "none"))")
+        print("[APIService] ✅ Successfully decoded \(jobs.count) jobs (bucket: \(bucket.rawValue))")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
         return jobs

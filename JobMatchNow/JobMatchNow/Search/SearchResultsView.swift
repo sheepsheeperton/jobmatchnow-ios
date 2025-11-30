@@ -1,12 +1,5 @@
 import SwiftUI
 
-// MARK: - Job Filter Enum
-
-enum JobFilter: String, CaseIterable {
-    case all = "All"
-    case remote = "Remote"
-}
-
 // MARK: - Results Source
 
 enum ResultsSource {
@@ -24,7 +17,6 @@ struct SearchResultsView: View {
     @StateObject private var viewModel: ResultsViewModel
     @StateObject private var appState = AppState.shared
     @StateObject private var explanationManager: ExplanationManager
-    @State private var selectedFilter: JobFilter = .all
     @State private var searchText = ""
     @State private var showActionMenu = false
     @State private var showSettings = false
@@ -41,21 +33,8 @@ struct SearchResultsView: View {
         self._explanationManager = StateObject(wrappedValue: ExplanationManager(viewToken: viewToken))
     }
     
-    // Computed counts based on viewModel.jobs
-    var remoteCount: Int {
-        viewModel.jobs.filter { $0.isRemote }.count
-    }
-    
     var filteredJobs: [Job] {
         var result = viewModel.jobs
-        
-        // Apply remote filter
-        switch selectedFilter {
-        case .all:
-            break
-        case .remote:
-            result = result.filter { $0.isRemote }
-        }
         
         // Apply search text filter
         if !searchText.isEmpty {
@@ -110,20 +89,12 @@ struct SearchResultsView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 12)
                 
-                // Location Scope Toggle
-                LocationScopeToggle(
-                    selectedScope: $viewModel.locationScope,
-                    isLoading: viewModel.isRefreshing
+                // Job Bucket Filter (All | Remote | Local | National)
+                JobBucketPicker(
+                    selectedBucket: $viewModel.selectedBucket,
+                    isLoading: viewModel.isRefreshing,
+                    totalCount: viewModel.jobs.count
                 )
-                .padding(.horizontal)
-                .padding(.bottom, 12)
-                
-                // Filter segmented control with counts
-                Picker("Filter", selection: $selectedFilter) {
-                    Text("All (\(viewModel.jobs.count))").tag(JobFilter.all)
-                    Text("Remote (\(remoteCount))").tag(JobFilter.remote)
-                }
-                .pickerStyle(SegmentedPickerStyle())
                 .padding(.horizontal)
                 .padding(.bottom, 12)
                 
@@ -159,8 +130,8 @@ struct SearchResultsView: View {
                     .padding(.bottom, 12)
                 }
                 
-                // Results count
-                if !searchText.isEmpty || selectedFilter != .all {
+                // Results count (show when filtered by search text)
+                if !searchText.isEmpty {
                     Text("\(filteredJobs.count) results")
                         .font(.caption)
                         .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
@@ -280,32 +251,45 @@ struct SearchResultsView: View {
     }
 }
 
-// MARK: - Location Scope Toggle
+// MARK: - Job Bucket Picker
+// 4-button segmented control: All | Remote | Local | National
 
-struct LocationScopeToggle: View {
-    @Binding var selectedScope: LocationScope
+struct JobBucketPicker: View {
+    @Binding var selectedBucket: JobBucket
     let isLoading: Bool
+    let totalCount: Int
+    
+    private var bucketIcon: (JobBucket) -> String {
+        return { bucket in
+            switch bucket {
+            case .all: return "square.grid.2x2.fill"
+            case .remote: return "wifi"
+            case .local: return "mappin.circle.fill"
+            case .national: return "globe.americas.fill"
+            }
+        }
+    }
     
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(LocationScope.allCases, id: \.self) { scope in
+            ForEach(JobBucket.allCases, id: \.self) { bucket in
                 Button(action: {
                     if !isLoading {
-                        selectedScope = scope
+                        selectedBucket = bucket
                     }
                 }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: scope == .local ? "mappin.circle.fill" : "globe.americas.fill")
+                    VStack(spacing: 4) {
+                        Image(systemName: bucketIcon(bucket))
                             .font(.caption)
-                        Text(scope.displayName)
-                            .font(.subheadline)
+                        Text(bucket.displayName)
+                            .font(.caption2)
                             .fontWeight(.medium)
                     }
-                    .foregroundColor(selectedScope == scope ? ThemeColors.textOnDark : ThemeColors.textOnLight)
+                    .foregroundColor(selectedBucket == bucket ? ThemeColors.textOnDark : ThemeColors.textOnLight)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(
-                        selectedScope == scope
+                        selectedBucket == bucket
                             ? ThemeColors.primaryComplement
                             : Color.clear
                     )
@@ -320,7 +304,23 @@ struct LocationScopeToggle: View {
             RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
                 .stroke(ThemeColors.borderSubtle, lineWidth: 1)
         )
-        .opacity(isLoading ? 0.6 : 1.0)
+        .overlay(
+            // Loading indicator overlay
+            Group {
+                if isLoading {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                        Text("Loading...")
+                            .font(.caption2)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(ThemeColors.surfaceWhite.opacity(0.8))
+                    .cornerRadius(Theme.CornerRadius.small)
+                }
+            }
+        )
     }
 }
 
