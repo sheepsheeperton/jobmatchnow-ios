@@ -614,7 +614,64 @@ class APIService {
         return dashboardResponse
     }
     
-    // MARK: - 5. Get Job Explanation
+    // MARK: - 5. Delete Search Session
+    
+    /// Deletes a search session from the user's history
+    /// Endpoint: DELETE /api/me/sessions/:sessionId
+    func deleteSession(sessionId: String) async throws {
+        // Get access token from UserDefaults
+        guard let accessToken = UserDefaults.standard.string(forKey: "supabase_access_token"),
+              !accessToken.isEmpty else {
+            print("[APIService] ⚠️ Delete session BLOCKED: No access token")
+            throw APIError.unauthorized
+        }
+        
+        guard let url = URL(string: "\(baseURL)/api/me/sessions/\(sessionId)") else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("[APIService] 🗑️ DELETE SESSION REQUEST")
+        print("  URL: \(url)")
+        print("  Session ID: \(sessionId)")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            print("[APIService] ❌ Delete session network error:", error)
+            throw APIError.networkError(error)
+        }
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        print("[APIService] 📥 Delete response - Status code:", httpResponse.statusCode)
+        
+        // Handle auth errors
+        if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+            print("[APIService] ⚠️ Delete UNAUTHORIZED")
+            throw APIError.unauthorized
+        }
+        
+        // Accept 200, 204 (No Content), or 404 (already deleted) as success
+        if httpResponse.statusCode != 200 && httpResponse.statusCode != 204 && httpResponse.statusCode != 404 {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+            print("[APIService] ❌ Delete failed:", errorMessage)
+            throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
+        }
+        
+        print("[APIService] ✅ Session deleted successfully")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+    }
+    
+    // MARK: - 6. Get Job Explanation
     
     /// Fetches an AI-generated explanation of why a job matches the user's résumé
     /// Endpoint: POST /api/jobs/explanation

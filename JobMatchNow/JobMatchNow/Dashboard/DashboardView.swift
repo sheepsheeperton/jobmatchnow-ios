@@ -7,6 +7,8 @@ struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     @StateObject private var appState = AppState.shared
     @State private var showSettings = false
+    @State private var sessionToDelete: DashboardSessionSummary?
+    @State private var showDeleteConfirmation = false
     
     var body: some View {
         Group {
@@ -53,6 +55,21 @@ struct DashboardView: View {
         }
         .refreshable {
             await viewModel.refreshDashboard()
+        }
+        .alert("Delete Search?", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                sessionToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let session = sessionToDelete {
+                    viewModel.deleteSession(session)
+                    sessionToDelete = nil
+                }
+            }
+        } message: {
+            if let session = sessionToDelete {
+                Text("This will permanently delete \"\(session.displayTitle)\" from your search history.")
+            }
         }
     }
     
@@ -223,18 +240,31 @@ struct DashboardView: View {
     
     private var recentSearchesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recent Searches")
-                .font(.headline)
-                .foregroundColor(ThemeColors.textOnLight)
-                .padding(.horizontal, 4)
+            HStack {
+                Text("Recent Searches")
+                    .font(.headline)
+                    .foregroundColor(ThemeColors.textOnLight)
+                
+                Spacer()
+                
+                Text("Swipe to delete")
+                    .font(.caption)
+                    .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+            }
+            .padding(.horizontal, 4)
             
             ForEach(viewModel.recentSessions) { session in
                 RecentSessionCard(
                     session: session,
-                    isLoading: viewModel.isLoadingSession && viewModel.selectedViewToken == session.viewToken
-                ) {
-                    viewModel.loadSessionResults(session)
-                }
+                    isLoading: viewModel.isLoadingSession && viewModel.selectedViewToken == session.viewToken,
+                    onTap: {
+                        viewModel.loadSessionResults(session)
+                    },
+                    onDelete: {
+                        sessionToDelete = session
+                        showDeleteConfirmation = true
+                    }
+                )
             }
         }
     }
@@ -276,71 +306,129 @@ struct RecentSessionCard: View {
     let session: DashboardSessionSummary
     let isLoading: Bool
     let onTap: () -> Void
+    let onDelete: () -> Void
+    
+    @State private var offset: CGFloat = 0
+    @State private var showingDeleteButton = false
+    private let deleteButtonWidth: CGFloat = 80
     
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Header
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(session.displayTitle)
-                            .font(.headline)
-                            .foregroundColor(ThemeColors.textOnLight)
-                        
-                        Text(session.fullFormattedDate)
+        ZStack(alignment: .trailing) {
+            // Delete button background
+            HStack {
+                Spacer()
+                Button(action: onDelete) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "trash.fill")
+                            .font(.title3)
+                        Text("Delete")
                             .font(.caption)
-                            .foregroundColor(ThemeColors.textOnLight.opacity(0.65))
                     }
-                    
-                    Spacer()
-                    
-                    if isLoading {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                            .tint(ThemeColors.primaryComplement)
-                    } else {
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
-                    }
+                    .foregroundColor(.white)
+                    .frame(width: deleteButtonWidth, height: .infinity)
                 }
-                
-                Divider()
-                
-                // Stats
-                HStack(spacing: 16) {
-                    SessionStatItem(
-                        value: session.totalJobs,
-                        label: "Total",
-                        color: ThemeColors.primaryBrand
-                    )
-                    
-                    SessionStatItem(
-                        value: session.localCount,
-                        label: "Local",
-                        color: ThemeColors.warmAccent
-                    )
-                    
-                    SessionStatItem(
-                        value: session.nationalCount,
-                        label: "National",
-                        color: ThemeColors.primaryComplement
-                    )
-                    
-                    SessionStatItem(
-                        value: session.remoteCount,
-                        label: "Remote",
-                        color: ThemeColors.deepComplement
-                    )
-                }
+                .frame(width: deleteButtonWidth)
+                .background(ThemeColors.errorRed)
+                .cornerRadius(Theme.CornerRadius.medium)
             }
-            .padding()
-            .background(ThemeColors.surfaceWhite)
-            .cornerRadius(Theme.CornerRadius.medium)
-            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+            
+            // Card content
+            Button(action: {
+                if showingDeleteButton {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        offset = 0
+                        showingDeleteButton = false
+                    }
+                } else {
+                    onTap()
+                }
+            }) {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Header
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(session.displayTitle)
+                                .font(.headline)
+                                .foregroundColor(ThemeColors.textOnLight)
+                            
+                            Text(session.fullFormattedDate)
+                                .font(.caption)
+                                .foregroundColor(ThemeColors.textOnLight.opacity(0.65))
+                        }
+                        
+                        Spacer()
+                        
+                        if isLoading {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .tint(ThemeColors.primaryComplement)
+                        } else {
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // Stats
+                    HStack(spacing: 16) {
+                        SessionStatItem(
+                            value: session.totalJobs,
+                            label: "Total",
+                            color: ThemeColors.primaryBrand
+                        )
+                        
+                        SessionStatItem(
+                            value: session.localCount,
+                            label: "Local",
+                            color: ThemeColors.warmAccent
+                        )
+                        
+                        SessionStatItem(
+                            value: session.nationalCount,
+                            label: "National",
+                            color: ThemeColors.primaryComplement
+                        )
+                        
+                        SessionStatItem(
+                            value: session.remoteCount,
+                            label: "Remote",
+                            color: ThemeColors.deepComplement
+                        )
+                    }
+                }
+                .padding()
+                .background(ThemeColors.surfaceWhite)
+                .cornerRadius(Theme.CornerRadius.medium)
+                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .disabled(isLoading || session.viewToken == nil)
+            .offset(x: offset)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if value.translation.width < 0 {
+                            offset = max(value.translation.width, -deleteButtonWidth - 10)
+                        } else if showingDeleteButton {
+                            offset = min(-deleteButtonWidth + value.translation.width, 0)
+                        }
+                    }
+                    .onEnded { value in
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            if value.translation.width < -deleteButtonWidth / 2 {
+                                offset = -deleteButtonWidth
+                                showingDeleteButton = true
+                            } else {
+                                offset = 0
+                                showingDeleteButton = false
+                            }
+                        }
+                    }
+            )
         }
-        .buttonStyle(PlainButtonStyle())
-        .disabled(isLoading || session.viewToken == nil)
+        .clipped()
     }
 }
 

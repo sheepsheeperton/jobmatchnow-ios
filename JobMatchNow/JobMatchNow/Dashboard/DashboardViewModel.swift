@@ -142,6 +142,35 @@ final class DashboardViewModel: ObservableObject {
         }
     }
     
+    /// Delete a search session
+    func deleteSession(_ session: DashboardSessionSummary) {
+        Task {
+            do {
+                try await apiService.deleteSession(sessionId: session.id)
+                
+                // Remove from local data
+                if var data = dashboardData {
+                    data = DashboardAPIResponse(
+                        summary: data.summary,
+                        recentSessions: data.recentSessions.filter { $0.id != session.id }
+                    )
+                    dashboardData = data
+                }
+                
+                print("[DashboardViewModel] ✅ Deleted session: \(session.id)")
+                
+                // If no more sessions, show empty state
+                if dashboardData?.recentSessions.isEmpty == true {
+                    viewState = .empty
+                }
+                
+            } catch {
+                print("[DashboardViewModel] ❌ Failed to delete session: \(error)")
+                // Optionally show an error to the user
+            }
+        }
+    }
+    
     /// Load jobs for a session and prepare for navigation
     func loadSessionResults(_ session: DashboardSessionSummary) {
         guard let viewToken = session.viewToken, !viewToken.isEmpty else {
