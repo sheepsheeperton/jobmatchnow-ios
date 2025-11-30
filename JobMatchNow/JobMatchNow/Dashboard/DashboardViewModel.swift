@@ -31,12 +31,6 @@ final class DashboardViewModel: ObservableObject {
     /// Dashboard summary metrics
     @Published private(set) var summary: DashboardSummary?
     
-    /// Recent search sessions
-    @Published private(set) var recentSessions: [DashboardSessionSummary] = []
-    
-    /// Recently viewed jobs
-    @Published private(set) var recentViewedJobs: [DashboardViewedJob] = []
-    
     /// Whether we're currently loading session results for navigation
     @Published var isLoadingSession = false
     
@@ -55,39 +49,23 @@ final class DashboardViewModel: ObservableObject {
         summary?.totalSearches ?? 0
     }
     
-    var uniqueJobsFound: Int {
-        summary?.uniqueJobsFound ?? 0
-    }
-    
-    var localJobsCount: Int {
-        summary?.localJobsCount ?? 0
-    }
-    
-    var nationalJobsCount: Int {
-        summary?.nationalJobsCount ?? 0
-    }
-    
-    var remoteJobsCount: Int {
-        summary?.remoteJobsCount ?? 0
+    var totalJobsFound: Int {
+        summary?.totalJobsFound ?? 0
     }
     
     var avgJobsPerSearch: String {
         guard let avg = summary?.avgJobsPerSearch, avg > 0 else {
             return "—"
         }
-        return String(format: "%.0f", avg)
+        return String(format: "%.1f", avg)
     }
     
-    var viewedJobsCount: Int {
-        summary?.viewedJobsCount ?? 0
-    }
-    
-    var starredJobsCount: Int {
-        summary?.starredJobsCount ?? 0
+    var recentSessions: [DashboardSessionSummary] {
+        summary?.recentSessions ?? []
     }
     
     var hasData: Bool {
-        summary != nil && (summary!.totalSearches > 0 || !recentSessions.isEmpty)
+        summary != nil && (summary!.totalSearches > 0 || !summary!.recentSessions.isEmpty)
     }
     
     var errorMessage: String? {
@@ -114,40 +92,28 @@ final class DashboardViewModel: ObservableObject {
         viewState = .loading
         
         do {
-            let dashboardResponse = try await apiService.getDashboard()
+            let dashboardSummary = try await apiService.getDashboard()
             
-            summary = dashboardResponse.summary
-            recentSessions = dashboardResponse.recentSessions
-            recentViewedJobs = dashboardResponse.recentViewedJobs
+            summary = dashboardSummary
             
-            if dashboardResponse.summary.totalSearches == 0 && dashboardResponse.recentSessions.isEmpty {
+            if dashboardSummary.totalSearches == 0 && dashboardSummary.recentSessions.isEmpty {
                 viewState = .empty
             } else {
                 viewState = .loaded
             }
             
-            print("[DashboardViewModel] Loaded dashboard: \(dashboardResponse.summary.totalSearches) searches, \(dashboardResponse.recentSessions.count) sessions, \(dashboardResponse.recentViewedJobs.count) viewed jobs")
+            print("[DashboardViewModel] Loaded dashboard: \(dashboardSummary.totalSearches) searches, \(dashboardSummary.recentSessions.count) recent sessions")
             
         } catch let error as APIError {
-            // Handle specific API errors
-            switch error {
-            case .unauthorized:
-                // User not signed in or session expired
-                viewState = .error("Please sign in to view your dashboard.")
-                print("[DashboardViewModel] Unauthorized - user needs to sign in")
-                
-            case .httpError(let code, _) where code == 404:
+            // Check if it's a 401/403 (not authenticated) or 404 (no data yet)
+            if case .httpError(let code, _) = error, code == 404 {
                 // No dashboard data yet - show empty state
                 summary = .empty
-                recentSessions = []
-                recentViewedJobs = []
                 viewState = .empty
-                print("[DashboardViewModel] No dashboard data yet (404)")
-                
-            default:
+            } else {
                 viewState = .error(error.localizedDescription ?? "Failed to load dashboard")
-                print("[DashboardViewModel] API error: \(error)")
             }
+            print("[DashboardViewModel] API error: \(error)")
             
         } catch {
             viewState = .error("Unable to load your dashboard. Please try again.")
@@ -206,16 +172,13 @@ extension DashboardViewModel {
     static var preview: DashboardViewModel {
         let vm = DashboardViewModel()
         vm.summary = .sample
-        vm.recentSessions = DashboardSessionSummary.samples
-        vm.recentViewedJobs = DashboardViewedJob.samples
         return vm
     }
     
     static var emptyPreview: DashboardViewModel {
         let vm = DashboardViewModel()
         vm.summary = .empty
-        vm.recentSessions = []
-        vm.recentViewedJobs = []
         return vm
     }
 }
+
