@@ -25,29 +25,29 @@ struct OnboardingCarouselView: View {
             icon: "doc.text.magnifyingglass",
             title: "Upload Your Résumé",
             subtitle: "Simply upload your résumé in PDF, Word, or image format. Our AI will analyze your skills, experience, and career goals.",
-            color: ThemeColors.primaryBrand
+            color: ThemeColors.wealthStrong
         ),
         OnboardingPage(
             icon: "cpu",
             title: "AI-Powered Matching",
             subtitle: "Our intelligent pipeline generates targeted search queries and matches you with real, live job postings that fit your profile.",
-            color: ThemeColors.primaryComplement
+            color: ThemeColors.wealthBright
         ),
         OnboardingPage(
             icon: "lock.shield.fill",
             title: "Your Data is Secure",
             subtitle: "We treat your résumé with care. Your data is encrypted and never shared with third parties without your consent.",
-            color: ThemeColors.deepComplement
+            color: ThemeColors.accentPurple
         )
     ]
     
     var body: some View {
         ZStack {
-            // Background - midnight gradient
+            // Background - dark wealth gradient
             LinearGradient(
                 colors: [
-                    ThemeColors.midnight,
-                    ThemeColors.deepComplement
+                    ThemeColors.wealthDark,
+                    ThemeColors.wealthDeep
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -122,7 +122,7 @@ struct OnboardingCarouselView: View {
                                 .foregroundColor(ThemeColors.textOnDark)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
-                                .background(ThemeColors.primaryComplement)
+                                .background(ThemeColors.wealthBright)
                                 .cornerRadius(Theme.CornerRadius.medium)
                         }
                     }

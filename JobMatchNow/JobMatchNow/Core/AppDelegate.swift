@@ -55,7 +55,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
         
         // Set tint color for alerts
-        UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = UIColor(ThemeColors.primaryComplement)
+        UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = UIColor(ThemeColors.wealthStrong)
     }
 }
 

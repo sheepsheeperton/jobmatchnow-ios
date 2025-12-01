@@ -56,7 +56,7 @@ struct SearchAnalyzingView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
             LinearGradient(
-                colors: [ThemeColors.midnight, ThemeColors.deepComplement],
+                colors: [ThemeColors.wealthDark, ThemeColors.wealthDeep],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -243,7 +243,7 @@ struct PipelineStepRow: View {
     private var backgroundColor: Color {
         switch status {
         case .completed:
-            return ThemeColors.primaryComplement.opacity(0.6)
+            return ThemeColors.wealthBright.opacity(0.6)
         case .inProgress:
             return ThemeColors.primaryBrand
         case .pending:

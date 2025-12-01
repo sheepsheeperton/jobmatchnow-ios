@@ -80,7 +80,7 @@ struct SearchResultsView: View {
                     }
                 }
                 .padding(12)
-                .background(ThemeColors.surfaceWhite)
+                .background(ThemeColors.cardLight)
                 .cornerRadius(Theme.CornerRadius.small)
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
@@ -115,14 +115,14 @@ struct SearchResultsView: View {
                     Button(action: { viewModel.retry() }) {
                         HStack(spacing: 8) {
                             Image(systemName: "exclamationmark.triangle")
-                                .foregroundColor(ThemeColors.warmAccent)
+                                .foregroundColor(ThemeColors.warningAmber)
                             Text(errorMessage)
                                 .font(.subheadline)
                                 .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
                         }
                         .padding(12)
                         .frame(maxWidth: .infinity)
-                        .background(ThemeColors.warmAccent.opacity(0.1))
+                        .background(ThemeColors.warningAmber.opacity(0.1))
                         .cornerRadius(Theme.CornerRadius.small)
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -182,7 +182,7 @@ struct SearchResultsView: View {
                         .foregroundColor(ThemeColors.textOnLight)
                 }
                 .padding(24)
-                .background(ThemeColors.surfaceWhite)
+                .background(ThemeColors.cardLight)
                 .cornerRadius(Theme.CornerRadius.medium)
                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
             }
@@ -216,7 +216,7 @@ struct SearchResultsView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                         .font(.title3)
-                        .foregroundColor(ThemeColors.midnight)
+                        .foregroundColor(ThemeColors.wealthDark)
                 }
             }
         }
@@ -290,7 +290,7 @@ struct JobBucketPicker: View {
                     .padding(.vertical, 10)
                     .background(
                         selectedBucket == bucket
-                            ? ThemeColors.primaryComplement
+                            ? ThemeColors.accentPurple
                             : Color.clear
                     )
                 }
@@ -298,7 +298,7 @@ struct JobBucketPicker: View {
                 .disabled(isLoading)
             }
         }
-        .background(ThemeColors.surfaceWhite)
+        .background(ThemeColors.cardLight)
         .cornerRadius(Theme.CornerRadius.small)
         .overlay(
             RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
@@ -316,7 +316,7 @@ struct JobBucketPicker: View {
                             .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(ThemeColors.surfaceWhite.opacity(0.8))
+                    .background(ThemeColors.cardLight.opacity(0.8))
                     .cornerRadius(Theme.CornerRadius.small)
                 }
             }
@@ -357,7 +357,7 @@ struct JobCardView: View {
             actionButton
         }
         .padding()
-        .background(ThemeColors.surfaceWhite)
+        .background(ThemeColors.cardLight)
         .cornerRadius(Theme.CornerRadius.medium)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
@@ -376,7 +376,7 @@ struct JobCardView: View {
                     
                     Text(job.company_name)
                         .font(.subheadline)
-                        .foregroundColor(ThemeColors.primaryComplement)
+                        .foregroundColor(ThemeColors.accentPurple)
                 }
                 
                 Spacer()
@@ -469,7 +469,7 @@ struct JobCardView: View {
         HStack(spacing: 12) {
             ProgressView()
                 .scaleEffect(0.8)
-                .tint(ThemeColors.primaryComplement)
+                .tint(ThemeColors.accentPurple)
             
             Text("Analyzing your résumé match…")
                 .font(.subheadline)
@@ -479,7 +479,7 @@ struct JobCardView: View {
             Spacer()
         }
         .padding(12)
-        .background(ThemeColors.softComplement.opacity(0.15))
+        .background(ThemeColors.wealthBright.opacity(0.15))
         .cornerRadius(Theme.CornerRadius.small)
     }
     
@@ -500,7 +500,7 @@ struct JobCardView: View {
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
-                                .foregroundColor(ThemeColors.primaryComplement)
+                                .foregroundColor(ThemeColors.accentPurple)
                                 .padding(.top, 2)
                             
                             Text(bullet)
@@ -513,7 +513,7 @@ struct JobCardView: View {
             }
         }
         .padding(12)
-        .background(ThemeColors.softComplement.opacity(0.1))
+        .background(ThemeColors.wealthBright.opacity(0.1))
         .cornerRadius(Theme.CornerRadius.small)
     }
     
@@ -522,7 +522,7 @@ struct JobCardView: View {
             HStack(spacing: 8) {
                 Image(systemName: "exclamationmark.triangle")
                     .font(.caption)
-                    .foregroundColor(ThemeColors.warmAccent)
+                    .foregroundColor(ThemeColors.warningAmber)
                 
                 Text(message)
                     .font(.subheadline)
@@ -535,11 +535,11 @@ struct JobCardView: View {
                 Text("Try Again")
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(ThemeColors.primaryComplement)
+                    .foregroundColor(ThemeColors.accentPurple)
             }
         }
         .padding(12)
-        .background(ThemeColors.warmAccent.opacity(0.1))
+        .background(ThemeColors.warningAmber.opacity(0.1))
         .cornerRadius(Theme.CornerRadius.small)
     }
     
@@ -583,10 +583,10 @@ struct RemoteBadge: View {
         }
         .font(.caption)
         .fontWeight(.medium)
-        .foregroundColor(ThemeColors.primaryComplement)
+        .foregroundColor(ThemeColors.accentPurple)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(ThemeColors.primaryComplement.opacity(0.15))
+        .background(ThemeColors.accentPurple.opacity(0.15))
         .cornerRadius(Theme.CornerRadius.small)
     }
 }
@@ -615,7 +615,7 @@ struct SaveSearchPromptView: View {
             .foregroundColor(ThemeColors.primaryBrand)
         }
         .padding(12)
-        .background(ThemeColors.softComplement.opacity(0.2))
+        .background(ThemeColors.wealthBright.opacity(0.2))
         .cornerRadius(Theme.CornerRadius.small)
     }
 }

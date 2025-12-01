@@ -11,11 +11,11 @@ struct SplashView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient - midnight theme
+            // Background gradient - wealth dark theme
             LinearGradient(
                 colors: [
-                    ThemeColors.midnight,
-                    ThemeColors.deepComplement
+                    ThemeColors.wealthDark,
+                    ThemeColors.wealthDeep
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing

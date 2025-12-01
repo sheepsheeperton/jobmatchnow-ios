@@ -53,10 +53,10 @@ struct SearchUploadView: View {
                 
                 Spacer()
                 
-                // Upload illustration - brand orange for identity
+                // Upload illustration - brand green for identity
                 ZStack {
                     Circle()
-                        .fill(ThemeColors.softComplement.opacity(0.3))
+                        .fill(ThemeColors.wealthBright.opacity(0.3))
                         .frame(width: 160, height: 160)
                     
                     Image(systemName: "doc.badge.arrow.up.fill")
@@ -126,14 +126,14 @@ struct SearchUploadView: View {
                             Text("Scan with Camera")
                                 .font(.headline)
                         }
-                        .foregroundColor(ThemeColors.primaryComplement)
+                        .foregroundColor(ThemeColors.accentPurple)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
-                        .background(ThemeColors.surfaceWhite)
+                        .background(ThemeColors.cardLight)
                         .cornerRadius(Theme.CornerRadius.medium)
                         .overlay(
                             RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
-                                .stroke(ThemeColors.primaryComplement, lineWidth: 1.5)
+                                .stroke(ThemeColors.accentPurple, lineWidth: 1.5)
                         )
                     }
                     .disabled(isUploading)
@@ -156,7 +156,7 @@ struct SearchUploadView: View {
                             Text("Use Sample Résumé")
                         }
                         .font(.subheadline)
-                        .foregroundColor(ThemeColors.primaryComplement)
+                        .foregroundColor(ThemeColors.accentPurple)
                     }
                     .disabled(isUploading)
                     .padding(.top, 8)
@@ -174,7 +174,7 @@ struct SearchUploadView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(ThemeColors.midnight)
+                        .foregroundColor(ThemeColors.wealthDark)
                 }
             }
         }
@@ -441,14 +441,14 @@ struct LastSearchCard: View {
                 if isLoading {
                     ProgressView()
                         .scaleEffect(0.8)
-                        .tint(ThemeColors.primaryComplement)
+                        .tint(ThemeColors.wealthBright)
                 } else {
                     Image(systemName: "chevron.right")
                         .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
                 }
             }
             .padding()
-            .background(ThemeColors.surfaceWhite)
+            .background(ThemeColors.cardLight)
             .cornerRadius(Theme.CornerRadius.medium)
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)

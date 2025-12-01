@@ -28,8 +28,8 @@ struct AuthView: View {
     
     var body: some View {
         ZStack {
-            // Background - using midnight for dark auth screen
-            ThemeColors.midnight
+            // Background - using wealthDark for dark auth screen
+            ThemeColors.wealthDark
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
@@ -133,7 +133,7 @@ struct AuthView: View {
                     .foregroundColor(ThemeColors.textOnDark)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(ThemeColors.primaryComplement)
+                    .background(ThemeColors.accentPurple)
                     .cornerRadius(10)
                 }
                 .padding(.horizontal, 40)
@@ -148,7 +148,7 @@ struct AuthView: View {
                     ))
                 } label: {
                     Text("Skip for Demo")
-                        .foregroundColor(ThemeColors.warmAccent)
+                        .foregroundColor(ThemeColors.wealthBright)
                 }
                 #endif
                 

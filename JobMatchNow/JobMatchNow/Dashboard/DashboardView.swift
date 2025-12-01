@@ -32,7 +32,7 @@ struct DashboardView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(ThemeColors.midnight)
+                        .foregroundColor(ThemeColors.wealthDark)
                 }
             }
         }
@@ -140,12 +140,12 @@ struct DashboardView: View {
             
             ZStack {
                 Circle()
-                    .fill(ThemeColors.softComplement.opacity(0.3))
+                    .fill(ThemeColors.wealthBright.opacity(0.3))
                     .frame(width: 120, height: 120)
                 
                 Image(systemName: "doc.text.magnifyingglass")
                     .font(.system(size: 50))
-                    .foregroundColor(ThemeColors.primaryComplement)
+                    .foregroundColor(ThemeColors.wealthStrong)
             }
             
             VStack(spacing: 8) {
@@ -215,7 +215,7 @@ struct DashboardView: View {
                     value: "\(viewModel.totalJobsFound)",
                     label: "Jobs Found",
                     icon: "briefcase.fill",
-                    color: ThemeColors.primaryComplement
+                    color: ThemeColors.wealthBright
                 )
                 
                 Divider()
@@ -226,12 +226,12 @@ struct DashboardView: View {
                     value: viewModel.avgJobsPerSearch,
                     label: "Avg per Search",
                     icon: "chart.bar.fill",
-                    color: ThemeColors.deepComplement
+                    color: ThemeColors.accentPurple
                 )
             }
             .padding(.vertical, 20)
         }
-        .background(ThemeColors.surfaceWhite)
+        .background(ThemeColors.cardLight)
         .cornerRadius(Theme.CornerRadius.medium)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
@@ -331,7 +331,7 @@ struct RecentSessionCard: View {
                     if isLoading {
                         ProgressView()
                             .scaleEffect(0.8)
-                            .tint(ThemeColors.primaryComplement)
+                            .tint(ThemeColors.wealthBright)
                     } else {
                         Image(systemName: "chevron.right")
                             .font(.caption)
@@ -352,24 +352,24 @@ struct RecentSessionCard: View {
                     SessionStatItem(
                         value: session.localCount,
                         label: "Local",
-                        color: ThemeColors.warmAccent
+                        color: ThemeColors.wealthBright
                     )
                     
                     SessionStatItem(
                         value: session.nationalCount,
                         label: "National",
-                        color: ThemeColors.primaryComplement
+                        color: ThemeColors.accentPurple
                     )
                     
                     SessionStatItem(
                         value: session.remoteCount,
                         label: "Remote",
-                        color: ThemeColors.deepComplement
+                        color: ThemeColors.wealthDeep
                     )
                 }
             }
             .padding()
-            .background(ThemeColors.surfaceWhite)
+            .background(ThemeColors.cardLight)
             .cornerRadius(Theme.CornerRadius.medium)
             .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         }
