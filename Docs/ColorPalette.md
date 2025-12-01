@@ -1,144 +1,151 @@
 # JobMatchNow Color Palette
 
-> **Last Updated:** November 2025  
-> **Swift Reference:** `JobMatchNow/Core/ThemeColors.swift`
+> **Last Updated:** December 2025  
+> **Swift Reference:** `JobMatchNow/Core/ThemeColors.swift`  
+> **System:** Green Wealth + Complementary Purple
 
-This document describes the official JobMatchNow brand color palette. All UI development should reference these tokens to ensure visual consistency across the app.
-
----
-
-## 🎨 Palette Overview
-
-Our palette follows a **60-30-10 rule** for visual balance:
-
-| Proportion | Category | Purpose |
-|------------|----------|---------|
-| **~60%** | Neutrals | `surfaceLight`, `surfaceWhite`, `borderSubtle` – backgrounds and containers |
-| **~30%** | Structural Blues | `primaryComplement`, `deepComplement`, `midnight` – hierarchy and structure |
-| **~10%** | Brand Orange + Warm Accent | `primaryBrand`, `warmAccent` – CTAs, highlights, and emphasis |
+This document describes the official JobMatchNow brand color palette. Our green-based system evokes **wealth, growth, and professional trust**, with complementary purple for visual variety.
 
 ---
 
-## 🟠 Brand / CTA
+## 🌱 Palette Philosophy
 
-### `primaryBrand` – Atomic Tangerine
+**Why Green?**  
+Green symbolizes **growth, prosperity, and stability** – perfect for a career advancement platform. Our palette ranges from deep forest greens (professionalism) to bright spring greens (optimism and opportunity).
+
+**60-30-10 Rule:**
+
+| Proportion | Category | Colors |
+|------------|----------|--------|
+| **~60%** | Neutral Surfaces | `surfaceLight`, `cardLight`, `borderSubtle` |
+| **~30%** | Wealth Greens | `wealthDark`, `wealthDeep`, `wealthStrong` |
+| **~10%** | Accent & CTA | `wealthBright`, `accentPurple` |
+
+---
+
+## 🟢 Core Wealth Greens
+
+### `wealthDark` – Wealth Dark
 | Property | Value |
 |----------|-------|
-| **Hex** | `#FF7538` |
-| **RGB** | 255, 117, 56 |
-| **Swift** | `ThemeColors.primaryBrand` |
-
-**Usage:**
-- Primary CTA buttons (Upload Résumé, Create Account, Sign In)
-- Hero section accents
-- Key action states (active, selected tabs)
-
-**Brand Note:**  
-Atomic Tangerine is energetic, optimistic, and action-oriented. It signals "do this now" and should be reserved for the most important user actions.
-
----
-
-## 🔵 Complementary Blues
-
-### `primaryComplement` – Vibrant Sky Blue
-| Property | Value |
-|----------|-------|
-| **Hex** | `#38A1FF` |
-| **RGB** | 56, 161, 255 |
-| **Swift** | `ThemeColors.primaryComplement` |
-
-**Usage:**
-- Secondary CTAs and buttons
-- Text links and interactive elements
-- Selected/active state indicators
-- Accent borders and highlights
-
-**Brand Note:**  
-A trustworthy, professional blue that complements our orange. Use for secondary actions that still need visibility.
-
----
-
-### `softComplement` – Soft Ice Blue
-| Property | Value |
-|----------|-------|
-| **Hex** | `#A1D6FF` |
-| **RGB** | 161, 214, 255 |
-| **Swift** | `ThemeColors.softComplement` |
-
-**Usage:**
-- Light background tints on cards
-- Onboarding illustration fills
-- Subtle emphasis backgrounds
-- Progress bar tracks (unfilled)
-
-**Brand Note:**  
-Gentle and approachable. Use at low opacity (10-30%) for subtle visual layers. Never use for text or small icons.
-
----
-
-### `deepComplement` – Deep Cyan
-| Property | Value |
-|----------|-------|
-| **Hex** | `#005D8A` |
-| **RGB** | 0, 93, 138 |
-| **Swift** | `ThemeColors.deepComplement` |
-
-**Usage:**
-- Dark mode card backgrounds
-- Navigation bar in dark mode
-- Modal overlays
-- Footer sections
-
-**Brand Note:**  
-Professional depth without being as heavy as pure black. Creates a rich dark mode experience.
-
----
-
-### `midnight` – Midnight Navy
-| Property | Value |
-|----------|-------|
-| **Hex** | `#0D3A6A` |
-| **RGB** | 13, 58, 106 |
-| **Swift** | `ThemeColors.midnight` |
+| **Hex** | `#132A13` |
+| **RGB** | 19, 42, 19 |
+| **Swift** | `ThemeColors.wealthDark` |
 
 **Usage:**
 - Primary text on light backgrounds
-- Headlines and titles
-- Dark mode surface color
-- Icon fills on light mode
+- Dark mode app background
+- Navigation bars and headers (dark mode)
+- Footer sections
 
 **Brand Note:**  
-Our "text black" – warmer and more branded than pure black. Creates a cohesive feel when used throughout.
+Our darkest green serves as "text black" – professional and rooted. Creates strong contrast on light backgrounds while maintaining brand unity.
 
 ---
 
-## 🟡 Warm Accent
-
-### `warmAccent` – Warm Honey
+### `wealthDeep` – Wealth Deep
 | Property | Value |
 |----------|-------|
-| **Hex** | `#FFB140` |
-| **RGB** | 255, 177, 64 |
-| **Swift** | `ThemeColors.warmAccent` |
+| **Hex** | `#31572C` |
+| **RGB** | 49, 87, 44 |
+| **Swift** | `ThemeColors.wealthDeep` |
 
 **Usage:**
-- Warning states (not errors)
-- Subtle highlights and badges
-- Chart/data visualization accents
-- Star ratings and achievements
+- Dark mode card backgrounds
+- Modal overlays (dark mode)
+- Elevated surfaces in dark mode
+- Section backgrounds
 
 **Brand Note:**  
-A softer, warmer alternative to orange. Use when you need emphasis without the urgency of a CTA.
+Forest green depth. Provides visual hierarchy in dark mode while staying on-brand.
 
 ---
 
-## ⬜ Neutrals
-
-### `surfaceLight` – Light Gray Surface
+### `wealthStrong` – Wealth Strong ⭐
 | Property | Value |
 |----------|-------|
-| **Hex** | `#F9F9F9` |
-| **RGB** | 249, 249, 249 |
+| **Hex** | `#4F772D` |
+| **RGB** | 79, 119, 45 |
+| **Swift** | `ThemeColors.wealthStrong` |
+
+**Usage:**
+- **Primary CTA buttons** (Upload Résumé, Sign In, Get Matches)
+- Selected tab states
+- Active navigation items
+- Important badges and highlights
+- Progress bar fills
+
+**Brand Note:**  
+**This is our hero color.** Strong, confident green that drives action. Use for the most important user interactions.
+
+---
+
+### `wealthBright` – Wealth Bright
+| Property | Value |
+|----------|-------|
+| **Hex** | `#90A955` |
+| **RGB** | 144, 169, 85 |
+| **Swift** | `ThemeColors.wealthBright` |
+
+**Usage:**
+- Secondary buttons
+- Hover states
+- Progress indicators (unfilled)
+- Success states and checkmarks
+- Subtle emphasis backgrounds
+
+**Brand Note:**  
+Optimistic spring green. Lighter and more approachable than wealthStrong. Perfect for secondary interactions.
+
+---
+
+### `wealthLight` – Wealth Light
+| Property | Value |
+|----------|-------|
+| **Hex** | `#ECF39E` |
+| **RGB** | 236, 243, 158 |
+| **Swift** | `ThemeColors.wealthLight` |
+
+**Usage:**
+- Text on dark backgrounds
+- Light accent fills
+- Illustration highlights
+- Gradient endpoints
+- Badge text on dark
+
+**Brand Note:**  
+Soft lime glow. Provides excellent readability on dark surfaces. Use at 10-30% opacity for subtle background tints.
+
+---
+
+## 🟣 Complementary Accent
+
+### `accentPurple` – Accent Purple
+| Property | Value |
+|----------|-------|
+| **Hex** | `#532C58` |
+| **RGB** | 83, 44, 88 |
+| **Swift** | `ThemeColors.accentPurple` |
+
+**Usage:**
+- Secondary CTA buttons
+- Link text and clickable elements
+- Special badges (premium, featured)
+- Alert/notification accents (non-error)
+- Variety in data visualizations
+
+**Brand Note:**  
+Regal purple provides contrast against the green palette. Use sparingly for visual interest and to highlight secondary actions.
+
+---
+
+## ⬜ Surfaces & Backgrounds
+
+### `surfaceLight` – Surface Light
+| Property | Value |
+|----------|-------|
+| **Hex** | `#F8F9F7` |
+| **RGB** | 248, 249, 247 |
 | **Swift** | `ThemeColors.surfaceLight` |
 
 **Usage:**
@@ -146,24 +153,53 @@ A softer, warmer alternative to orange. Use when you need emphasis without the u
 - Page-level container
 - List backgrounds
 
+**Note:** Subtle warm off-white that complements greens without competing.
+
 ---
 
-### `surfaceWhite` – Pure White
+### `surfaceDark` – Surface Dark
+| Property | Value |
+|----------|-------|
+| **Hex** | `#132A13` (same as wealthDark) |
+| **RGB** | 19, 42, 19 |
+| **Swift** | `ThemeColors.surfaceDark` |
+
+**Usage:**
+- Main app background (dark mode)
+- Full-screen dark overlays
+
+---
+
+### `cardLight` – Card Light
 | Property | Value |
 |----------|-------|
 | **Hex** | `#FFFFFF` |
 | **RGB** | 255, 255, 255 |
-| **Swift** | `ThemeColors.surfaceWhite` |
+| **Swift** | `ThemeColors.cardLight` |
 
 **Usage:**
-- Card backgrounds
+- Card backgrounds (light mode)
 - Modal surfaces
 - Input field backgrounds
 - Elevated content containers
 
 ---
 
-### `borderSubtle` – Subtle Border Gray
+### `cardDark` – Card Dark
+| Property | Value |
+|----------|-------|
+| **Hex** | `#31572C` (same as wealthDeep) |
+| **RGB** | 49, 87, 44 |
+| **Swift** | `ThemeColors.cardDark` |
+
+**Usage:**
+- Card backgrounds (dark mode)
+- Modal surfaces (dark mode)
+- Input field backgrounds (dark mode)
+
+---
+
+### `borderSubtle` – Border Subtle
 | Property | Value |
 |----------|-------|
 | **Hex** | `#E5E7EB` |
@@ -178,7 +214,7 @@ A softer, warmer alternative to orange. Use when you need emphasis without the u
 
 ---
 
-## 🔴 Utility
+## 🔴 Utility Colors
 
 ### `errorRed` – Error Red
 | Property | Value |
@@ -193,112 +229,256 @@ A softer, warmer alternative to orange. Use when you need emphasis without the u
 - Form validation errors
 - Critical alerts
 
-**Note:** Use sparingly. This color demands attention and should only appear for genuine errors or destructive actions.
-
 ---
 
-### `textOnLight` – Text on Light
+### `warningAmber` – Warning Amber
 | Property | Value |
 |----------|-------|
-| **Hex** | `#0D3A6A` |
-| **RGB** | 13, 58, 106 |
-| **Swift** | `ThemeColors.textOnLight` |
+| **Hex** | `#F39C12` |
+| **RGB** | 243, 156, 18 |
+| **Swift** | `ThemeColors.warningAmber` |
 
 **Usage:**
-- Body text on light backgrounds
-- Labels and descriptions
-- Navigation titles
-
-**Note:** This is an alias for `midnight`. Use whichever name is more semantically appropriate.
+- Warning states (non-critical)
+- Pending states
+- Attention indicators
+- Caution badges
 
 ---
 
-### `textOnDark` – Text on Dark
+### `successGreen` – Success Green
 | Property | Value |
 |----------|-------|
-| **Hex** | `#F9F9F9` |
-| **RGB** | 249, 249, 249 |
-| **Swift** | `ThemeColors.textOnDark` |
+| **Hex** | `#90A955` (same as wealthBright) |
+| **RGB** | 144, 169, 85 |
+| **Swift** | `ThemeColors.successGreen` |
 
 **Usage:**
-- Body text on dark backgrounds
-- Button labels on `primaryBrand`, `deepComplement`, etc.
-- Dark mode text
+- Success banners
+- Completed states
+- Positive feedback
+- Checkmarks and confirmations
 
 ---
 
-## 📐 Usage Guidelines
+## 🎨 Gradient System
+
+### Brand Gradient (Canonical)
+**Colors:** `wealthDark` → `wealthStrong` → `wealthBright` → `wealthLight`  
+**Swift:** `ThemeColors.brandGradient`
+
+**Usage:**
+- Hero sections
+- Splash screens
+- Onboarding backgrounds
+- Premium feature highlights
+
+**Direction:** Top-left to bottom-right
+
+---
+
+### Light Gradient
+**Colors:** `wealthStrong` → `wealthBright`  
+**Swift:** `ThemeColors.lightGradient`
+
+**Usage:**
+- Card backgrounds (light mode emphasis)
+- Section headers
+- Button hover states
+
+---
+
+### Dark Gradient
+**Colors:** `wealthDark` → `wealthDeep`  
+**Swift:** `ThemeColors.darkGradient`
+
+**Usage:**
+- Dark mode backgrounds
+- Navigation bars (dark mode)
+- Footer sections
+
+---
+
+### Accent Gradient
+**Colors:** `accentPurple` → `wealthBright`  
+**Swift:** `ThemeColors.accentGradient`
+
+**Usage:**
+- Special emphasis
+- Premium badges
+- Promotional banners
+
+---
+
+## 📐 Application Guidelines
 
 ### Button Hierarchy
 
-| Level | Background | Text |
-|-------|------------|------|
-| **Primary CTA** | `primaryBrand` | `textOnDark` (white) |
-| **Secondary** | `primaryComplement` | `textOnDark` |
-| **Tertiary** | `surfaceWhite` + border | `primaryComplement` |
-| **Destructive** | `errorRed` | `textOnDark` |
+| Level | Background | Text | Border |
+|-------|------------|------|--------|
+| **Primary CTA** | `wealthStrong` | `textOnDark` (wealthLight) | none |
+| **Secondary CTA** | `accentPurple` | `textOnDark` | none |
+| **Tertiary** | `cardLight` + border | `wealthStrong` | `wealthStrong` (1.5px) |
+| **Destructive** | `errorRed` | white | none |
+| **Ghost/Text** | transparent | `wealthStrong` | none |
+
+**Example:**
+```swift
+// Primary CTA
+Button("Upload Résumé") { }
+    .foregroundColor(ThemeColors.textOnDark)
+    .background(ThemeColors.primaryCTA)
+    .cornerRadius(12)
+
+// Secondary CTA
+Button("Learn More") { }
+    .foregroundColor(ThemeColors.textOnDark)
+    .background(ThemeColors.secondaryCTA)
+    .cornerRadius(12)
+
+// Tertiary
+Button("Cancel") { }
+    .foregroundColor(ThemeColors.wealthStrong)
+    .background(ThemeColors.cardLight)
+    .overlay(
+        RoundedRectangle(cornerRadius: 12)
+            .stroke(ThemeColors.wealthStrong, lineWidth: 1.5)
+    )
+```
+
+---
 
 ### Text Hierarchy
 
-| Context | Color |
-|---------|-------|
-| Headlines (light mode) | `midnight` |
-| Body text (light mode) | `textOnLight` |
-| Secondary text | `midnight` at 60% opacity |
-| Text on dark surfaces | `textOnDark` |
+| Context | Color | Opacity |
+|---------|-------|---------|
+| **Headline (light mode)** | `textOnLight` | 100% |
+| **Body text (light mode)** | `textOnLight` | 100% |
+| **Secondary text (light mode)** | `textSecondaryLight` | 100% |
+| **Caption (light mode)** | `textOnLight` | 60% |
+| **Headline (dark mode)** | `textOnDark` | 100% |
+| **Body text (dark mode)** | `textOnDark` | 100% |
+| **Secondary text (dark mode)** | `textSecondaryDark` | 100% |
 
-### Backgrounds
+---
 
-| Layer | Light Mode | Dark Mode |
-|-------|------------|-----------|
-| Page background | `surfaceLight` | `midnight` |
-| Cards | `surfaceWhite` | `deepComplement` |
-| Elevated modals | `surfaceWhite` | `deepComplement` |
+### Navigation & Tab Bars
+
+| State | Background | Text/Icon | Indicator |
+|-------|------------|-----------|-----------|
+| **Active tab** | transparent | `wealthStrong` | `wealthStrong` underline |
+| **Inactive tab** | transparent | `textSecondaryLight` | none |
+| **Nav bar (light)** | `surfaceLight` | `textOnLight` | - |
+| **Nav bar (dark)** | `surfaceDark` | `textOnDark` | - |
+
+---
+
+### Cards & Containers
+
+| Mode | Background | Border | Shadow |
+|------|------------|--------|--------|
+| **Light mode card** | `cardLight` | `borderSubtle` (optional) | subtle gray |
+| **Dark mode card** | `cardDark` | none | none |
+| **Elevated modal (light)** | `cardLight` | none | strong shadow |
+| **Elevated modal (dark)** | `cardDark` | none | none |
+
+---
+
+### Badges & Pills
+
+| Type | Background | Text |
+|------|------------|------|
+| **Primary** | `wealthStrong` | `textOnDark` |
+| **Success** | `successGreen` | `wealthDark` |
+| **Warning** | `warningAmber` | `wealthDark` |
+| **Error** | `errorRed` | white |
+| **Accent** | `accentPurple` | `textOnDark` |
+| **Neutral** | `borderSubtle` | `textOnLight` |
 
 ---
 
 ## 🔧 Implementation
 
-### Swift Usage
-
-```swift
-import SwiftUI
-
-struct MyButton: View {
-    var body: some View {
-        Button("Upload Résumé") {
-            // action
-        }
-        .foregroundColor(ThemeColors.textOnDark)
-        .background(ThemeColors.primaryBrand)
-        .cornerRadius(12)
-    }
-}
-```
-
 ### Semantic Aliases
 
-For common patterns, use the provided aliases:
+Use these convenient aliases for common patterns:
 
 ```swift
-ThemeColors.cta          // → primaryBrand
-ThemeColors.destructive  // → errorRed
-ThemeColors.warning      // → warmAccent
-ThemeColors.subtleHighlight  // → softComplement at 30% opacity
+ThemeColors.primaryBrand   // → wealthStrong
+ThemeColors.primaryCTA     // → wealthStrong
+ThemeColors.secondaryCTA   // → accentPurple
+ThemeColors.destructive    // → errorRed
+ThemeColors.warning        // → warningAmber
+ThemeColors.success        // → successGreen
 ```
 
 ---
 
-## ✅ Checklist for New UI Work
+### Dark Mode Support
 
-- [ ] Use `ThemeColors.xyz` instead of hardcoded hex values
-- [ ] Follow the 60-30-10 balance rule
-- [ ] Test on both light and dark backgrounds
-- [ ] Ensure sufficient contrast for accessibility (4.5:1 for text)
-- [ ] Use `primaryBrand` only for primary CTAs
-- [ ] Use `errorRed` only for actual errors or destructive actions
+All colors are designed to work in both light and dark modes:
+
+```swift
+// Light mode
+.background(ThemeColors.surfaceLight)
+.foregroundColor(ThemeColors.textOnLight)
+
+// Dark mode
+.background(ThemeColors.surfaceDark)
+.foregroundColor(ThemeColors.textOnDark)
+```
 
 ---
 
-*Questions? Contact the design team or reference this document.*
+### Gradient Usage
 
+```swift
+// Hero section with brand gradient
+ZStack {
+    ThemeColors.brandGradient
+        .ignoresSafeArea()
+    
+    VStack {
+        Text("Find Your Perfect Role")
+            .foregroundColor(ThemeColors.textOnDark)
+    }
+}
+
+// Card with light gradient
+RoundedRectangle(cornerRadius: 16)
+    .fill(ThemeColors.lightGradient)
+    .frame(height: 120)
+```
+
+---
+
+## ✅ Migration Checklist
+
+When updating from the old palette:
+
+- [ ] Replace `primaryBrand` (orange) → now `wealthStrong` (green)
+- [ ] Replace `primaryComplement` (blue) → now `accentPurple`
+- [ ] Replace `softComplement` (light blue) → now `wealthBright`
+- [ ] Replace `deepComplement` (dark blue) → now `wealthDeep`
+- [ ] Replace `midnight` (navy) → now `wealthDark`
+- [ ] Update all gradient references to use new gradient system
+- [ ] Test all screens in both light and dark mode
+- [ ] Verify text contrast ratios (WCAG AA: 4.5:1 for body text)
+
+---
+
+## 🎯 Quick Reference
+
+**Primary Actions:** `wealthStrong`  
+**Secondary Actions:** `accentPurple`  
+**Success:** `wealthBright` (successGreen)  
+**Warning:** `warningAmber`  
+**Error/Destructive:** `errorRed`  
+**Text (Light Mode):** `wealthDark`  
+**Text (Dark Mode):** `wealthLight`  
+**Backgrounds (Light):** `surfaceLight` → `cardLight`  
+**Backgrounds (Dark):** `surfaceDark` → `cardDark`
+
+---
+
+*Questions? Contact the design team or reference `Core/ThemeColors.swift`.*

@@ -22,89 +22,21 @@ import SwiftUI
 
 enum Theme {
     
-    // MARK: - Deprecated Color Aliases
-    // ⚠️ These exist only for backward compatibility.
-    // All usages have been migrated to ThemeColors.* as of Nov 2024.
-    // These will be REMOVED in a future version.
+    // MARK: - Gradients (Updated for Green Wealth System)
     
-    /// @available(*, deprecated, message: "Use ThemeColors.primaryBrand instead")
-    @available(*, deprecated, message: "Use ThemeColors.primaryBrand instead")
-    static let primaryBrand = ThemeColors.primaryBrand
-    
-    /// @available(*, deprecated, message: "Use ThemeColors.primaryComplement instead")
-    @available(*, deprecated, message: "Use ThemeColors.primaryComplement instead")
-    static let primaryBlue = ThemeColors.primaryComplement
-    
-    /// @available(*, deprecated, message: "Use ThemeColors tokens instead")
-    @available(*, deprecated, message: "Use ThemeColors tokens instead")
-    static let primary = Color("AccentColor")
-    
-    /// @available(*, deprecated, message: "Use Color.secondary or ThemeColors.textOnLight instead")
-    @available(*, deprecated, message: "Use Color.secondary or ThemeColors.textOnLight instead")
-    static let secondaryText = Color.secondary
-    
-    /// @available(*, deprecated, message: "Use ThemeColors.surfaceLight or surfaceWhite instead")
-    @available(*, deprecated, message: "Use ThemeColors.surfaceLight or surfaceWhite instead")
-    static let background = Color(UIColor.systemBackground)
-    
-    /// @available(*, deprecated, message: "Use ThemeColors.surfaceWhite instead")
-    @available(*, deprecated, message: "Use ThemeColors.surfaceWhite instead")
-    static let secondaryBackground = Color(UIColor.secondarySystemBackground)
-    
-    /// @available(*, deprecated, message: "Use ThemeColors.surfaceLight instead")
-    @available(*, deprecated, message: "Use ThemeColors.surfaceLight instead")
-    static let tertiaryBackground = Color(UIColor.tertiarySystemBackground)
-    
-    /// @available(*, deprecated, message: "Use ThemeColors.primaryComplement for success states")
-    @available(*, deprecated, message: "Use ThemeColors.primaryComplement for success states")
-    static let success = Color.green
-    
-    /// @available(*, deprecated, message: "Use ThemeColors.warmAccent instead")
-    @available(*, deprecated, message: "Use ThemeColors.warmAccent instead")
-    static let warning = ThemeColors.warmAccent
-    
-    /// @available(*, deprecated, message: "Use ThemeColors.errorRed instead")
-    @available(*, deprecated, message: "Use ThemeColors.errorRed instead")
-    static let error = ThemeColors.errorRed
-    
-    /// @available(*, deprecated, message: "Use ThemeColors.primaryComplement instead")
-    @available(*, deprecated, message: "Use ThemeColors.primaryComplement instead")
-    static let directCategory = ThemeColors.primaryComplement
-    
-    /// @available(*, deprecated, message: "Use ThemeColors.softComplement instead")
-    @available(*, deprecated, message: "Use ThemeColors.softComplement instead")
-    static let adjacentCategory = ThemeColors.softComplement
-    
-    // MARK: - Gradients
-    
-    /// Primary brand gradient using Atomic Tangerine
+    /// Primary brand gradient using wealth greens
     static var primaryGradient: LinearGradient {
-        LinearGradient(
-            colors: [ThemeColors.primaryBrand, ThemeColors.primaryBrand.opacity(0.85)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        ThemeColors.brandGradient
     }
     
-    /// Blue accent gradient for secondary elements
-    static var blueGradient: LinearGradient {
-        LinearGradient(
-            colors: [ThemeColors.primaryComplement, ThemeColors.deepComplement],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+    /// Light gradient for cards and sections
+    static var lightGradient: LinearGradient {
+        ThemeColors.lightGradient
     }
     
     /// Dark gradient for onboarding and auth screens
     static var onboardingGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                ThemeColors.midnight,
-                ThemeColors.deepComplement.opacity(0.8)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+        ThemeColors.darkGradient
     }
     
     // MARK: - Spacing
@@ -129,7 +61,7 @@ enum Theme {
     
     // MARK: - Button Styles
     
-    /// Primary CTA button style using brand orange
+    /// Primary CTA button style using wealth green
     struct PrimaryButtonStyle: ButtonStyle {
         var isDisabled: Bool = false
         
@@ -139,7 +71,7 @@ enum Theme {
                 .foregroundColor(ThemeColors.textOnDark)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
-                .background(isDisabled ? ThemeColors.borderSubtle : ThemeColors.primaryBrand)
+                .background(isDisabled ? ThemeColors.borderSubtle : ThemeColors.primaryCTA)
                 .cornerRadius(CornerRadius.medium)
                 .opacity(configuration.isPressed ? 0.9 : 1.0)
                 .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
@@ -147,17 +79,19 @@ enum Theme {
         }
     }
     
-    /// Secondary button style using blue accent
+    /// Secondary button style using accent purple
     struct SecondaryButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .font(.headline)
-                .foregroundColor(ThemeColors.primaryComplement)
+                .foregroundColor(ThemeColors.textOnDark)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
-                .background(ThemeColors.softComplement.opacity(0.3))
+                .background(ThemeColors.secondaryCTA)
                 .cornerRadius(CornerRadius.medium)
-                .opacity(configuration.isPressed ? 0.7 : 1.0)
+                .opacity(configuration.isPressed ? 0.9 : 1.0)
+                .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+                .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
         }
     }
     
