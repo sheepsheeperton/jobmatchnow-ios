@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import VisionKit
 
 // MARK: - Search Upload View
 
@@ -7,6 +8,7 @@ import UniformTypeIdentifiers
 struct SearchUploadView: View {
     @StateObject private var appState = AppState.shared
     @State private var isShowingDocumentPicker = false
+    @State private var isShowingScanner = false  // NEW: Camera scanner state
     @State private var navigateToPipeline = false
     @State private var navigateToLastSearch = false
     @State private var viewToken: String? = nil
@@ -112,6 +114,31 @@ struct SearchUploadView: View {
                 }
                 .disabled(isUploading)
                 
+                // Secondary camera button - scan with camera
+                if DocumentScannerView.isSupported {
+                    Button(action: {
+                        print("[SearchUploadView] Camera button pressed")
+                        isShowingScanner = true
+                    }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "camera.fill")
+                                .font(.title3)
+                            Text("Scan with Camera")
+                                .font(.headline)
+                        }
+                        .foregroundColor(ThemeColors.primaryComplement)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(ThemeColors.surfaceWhite)
+                        .cornerRadius(Theme.CornerRadius.medium)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                                .stroke(ThemeColors.primaryComplement, lineWidth: 1.5)
+                        )
+                    }
+                    .disabled(isUploading)
+                }
+                
                 // Supported formats hint
                 Text("Supports PDF, Word, and image files")
                     .font(.caption)
@@ -190,6 +217,21 @@ struct SearchUploadView: View {
             )
             .ignoresSafeArea()
         }
+        // NEW: Camera scanner sheet
+        .fullScreenCover(isPresented: $isShowingScanner) {
+            DocumentScannerView(
+                onScan: { image in
+                    print("[SearchUploadView] Document scanned, processing image...")
+                    isShowingScanner = false
+                    handleScannedImage(image)
+                },
+                onCancel: {
+                    print("[SearchUploadView] Scanner cancelled")
+                    isShowingScanner = false
+                }
+            )
+            .ignoresSafeArea()
+        }
     }
     
     // MARK: - Load Last Search Results
@@ -224,6 +266,33 @@ struct SearchUploadView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - Handle Scanned Image
+    
+    /// Processes a scanned image from the document scanner and uploads it.
+    /// This method prepares the image (orientation fix, compression) and
+    /// then uses the existing uploadFile() flow.
+    private func handleScannedImage(_ image: UIImage) {
+        print("[SearchUploadView] Processing scanned image: \(Int(image.size.width))x\(Int(image.size.height))")
+        
+        guard !isUploading else {
+            print("[SearchUploadView] Upload already in progress, ignoring scanned image")
+            return
+        }
+        
+        // Process the image (normalize orientation, compress, save to temp file)
+        guard let fileURL = ImageProcessor.prepareForUpload(image) else {
+            print("[SearchUploadView] ❌ Failed to process scanned image")
+            errorMessage = "Could not process the scanned image. Please try again."
+            showErrorAlert = true
+            return
+        }
+        
+        print("[SearchUploadView] ✅ Scanned image ready at: \(fileURL.lastPathComponent)")
+        
+        // Use the existing upload flow
+        uploadFile(fileURL)
     }
     
     // MARK: - Upload File
