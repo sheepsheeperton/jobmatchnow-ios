@@ -311,16 +311,19 @@ struct RecentSessionCard: View {
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 12) {
-                // Header
+                // Header - now shows current role title (from résumé)
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
+                        // Primary: User's current role from résumé
                         Text(session.displayTitle)
                             .font(.headline)
                             .foregroundColor(ThemeColors.textOnLight)
                         
-                        Text(session.fullFormattedDate)
-                            .font(.caption)
-                            .foregroundColor(ThemeColors.textOnLight.opacity(0.65))
+                        // Secondary: Search subtitle with intent, matches, and time
+                        Text(session.dashboardSubtitle)
+                            .font(.subheadline)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                            .lineLimit(1)
                     }
                     
                     Spacer()

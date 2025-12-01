@@ -98,6 +98,9 @@ final class DashboardViewModel: ObservableObject {
             
             dashboardData = response
             
+            // Sync the most recent session to AppState for the Search tab's Last Search card
+            updateLastSearchInAppState(from: response)
+            
             if response.summary.totalSearches == 0 && response.recentSessions.isEmpty {
                 viewState = .empty
             } else {
@@ -149,6 +152,9 @@ final class DashboardViewModel: ObservableObject {
             
             dashboardData = response
             
+            // Sync the most recent session to AppState for the Search tab's Last Search card
+            updateLastSearchInAppState(from: response)
+            
             if response.summary.totalSearches == 0 && response.recentSessions.isEmpty {
                 viewState = .empty
             } else {
@@ -161,6 +167,30 @@ final class DashboardViewModel: ObservableObject {
             viewState = .error("Session expired. Please sign in again.")
             print("[DashboardViewModel] ❌ Dashboard load failed after refresh: \(error)")
         }
+    }
+    
+    /// Sync the most recent dashboard session to AppState for the Search tab's Last Search card
+    /// This ensures both Dashboard and Search tabs show consistent data for the last search.
+    private func updateLastSearchInAppState(from response: DashboardAPIResponse) {
+        guard let mostRecent = response.recentSessions.first,
+              let viewToken = mostRecent.viewToken, !viewToken.isEmpty else {
+            print("[DashboardViewModel] No recent session to sync to AppState")
+            return
+        }
+        
+        let lastSearchInfo = AppState.LastSearchInfo(
+            viewToken: viewToken,
+            date: mostRecent.createdAt,
+            totalMatches: mostRecent.totalJobs,
+            directMatches: mostRecent.localCount,      // Map local to direct for backwards compatibility
+            adjacentMatches: mostRecent.nationalCount, // Map national to adjacent for backwards compatibility
+            label: mostRecent.title,                   // Legacy fallback label
+            currentRoleTitle: mostRecent.currentRoleTitle,
+            lastSearchTitle: mostRecent.lastSearchTitle
+        )
+        
+        AppState.shared.saveLastSearch(lastSearchInfo)
+        print("[DashboardViewModel] ✅ Synced last search to AppState: \(mostRecent.searchIntentTitle)")
     }
     
     /// Refresh dashboard data (for pull-to-refresh)

@@ -124,7 +124,10 @@ struct DashboardSummaryMetrics: Decodable {
 /// {
 ///   "search_session_id": "2dc0f0f3-...",
 ///   "created_at": "2025-11-29T18:52:17.621835+00:00",
-///   "title_or_inferred_role": "Scheduler",
+///   "title_or_inferred_role": "Scheduler",   // deprecated, use currentRoleTitle/lastSearchTitle
+///   "current_role_title": "Co-owner / CFO",  // user's current job from résumé
+///   "current_role_company": "Acme Inc",      // user's current company from résumé
+///   "last_search_title": "Accounting Specialist", // the search intent/inferred role
 ///   "total_jobs": 81,
 ///   "local_count": 10,
 ///   "national_count": 60,
@@ -134,7 +137,7 @@ struct DashboardSummaryMetrics: Decodable {
 /// }
 struct DashboardSessionSummary: Identifiable, Decodable {
     let id: String
-    let title: String?
+    let title: String?  // Deprecated: use currentRoleTitle or lastSearchTitle
     let createdAt: Date
     let totalJobs: Int
     let localCount: Int
@@ -142,6 +145,11 @@ struct DashboardSessionSummary: Identifiable, Decodable {
     let remoteCount: Int
     let status: String?
     let viewToken: String?
+    
+    // NEW: Semantic labels from backend
+    let currentRoleTitle: String?   // User's current job title from résumé
+    let currentRoleCompany: String? // User's current company from résumé
+    let lastSearchTitle: String?    // The search intent / inferred target role
     
     enum CodingKeys: String, CodingKey {
         case id = "search_session_id"
@@ -153,6 +161,10 @@ struct DashboardSessionSummary: Identifiable, Decodable {
         case remoteCount = "remote_count"
         case status
         case viewToken = "view_token"
+        // New fields
+        case currentRoleTitle = "current_role_title"
+        case currentRoleCompany = "current_role_company"
+        case lastSearchTitle = "last_search_title"
     }
     
     init(from decoder: Decoder) throws {
@@ -166,6 +178,11 @@ struct DashboardSessionSummary: Identifiable, Decodable {
         remoteCount = try container.decodeIfPresent(Int.self, forKey: .remoteCount) ?? 0
         status = try container.decodeIfPresent(String.self, forKey: .status)
         viewToken = try container.decodeIfPresent(String.self, forKey: .viewToken)
+        
+        // New fields
+        currentRoleTitle = try container.decodeIfPresent(String.self, forKey: .currentRoleTitle)
+        currentRoleCompany = try container.decodeIfPresent(String.self, forKey: .currentRoleCompany)
+        lastSearchTitle = try container.decodeIfPresent(String.self, forKey: .lastSearchTitle)
         
         // Parse date from ISO8601 string
         let dateString = try container.decode(String.self, forKey: .createdAt)
@@ -183,11 +200,34 @@ struct DashboardSessionSummary: Identifiable, Decodable {
     
     // MARK: - Computed Properties
     
+    /// Primary display: current role title from résumé, or fallback to legacy title
     var displayTitle: String {
+        if let role = currentRoleTitle, !role.isEmpty {
+            return role
+        }
         if let title = title, !title.isEmpty {
             return title
         }
         return "Search #\(id.prefix(8))"
+    }
+    
+    /// Secondary display: the search intent (what jobs they're looking for)
+    var searchIntentTitle: String {
+        if let search = lastSearchTitle, !search.isEmpty {
+            return search
+        }
+        if let title = title, !title.isEmpty {
+            return title
+        }
+        return "Job Search"
+    }
+    
+    /// Formatted subtitle for dashboard cards
+    var dashboardSubtitle: String {
+        let searchTitle = searchIntentTitle
+        let matches = totalJobs
+        let timeAgo = formattedDate
+        return "Last search: \(searchTitle) • \(matches) matches • \(timeAgo)"
     }
     
     var formattedDate: String {
@@ -209,7 +249,20 @@ struct DashboardSessionSummary: Identifiable, Decodable {
     
     // MARK: - Initializer for previews/testing
     
-    init(id: String, title: String?, createdAt: Date, totalJobs: Int, localCount: Int, nationalCount: Int, remoteCount: Int, status: String? = "completed", viewToken: String?) {
+    init(
+        id: String,
+        title: String?,
+        createdAt: Date,
+        totalJobs: Int,
+        localCount: Int,
+        nationalCount: Int,
+        remoteCount: Int,
+        status: String? = "completed",
+        viewToken: String?,
+        currentRoleTitle: String? = nil,
+        currentRoleCompany: String? = nil,
+        lastSearchTitle: String? = nil
+    ) {
         self.id = id
         self.title = title
         self.createdAt = createdAt
@@ -219,6 +272,9 @@ struct DashboardSessionSummary: Identifiable, Decodable {
         self.remoteCount = remoteCount
         self.status = status
         self.viewToken = viewToken
+        self.currentRoleTitle = currentRoleTitle
+        self.currentRoleCompany = currentRoleCompany
+        self.lastSearchTitle = lastSearchTitle
     }
 }
 
@@ -249,18 +305,21 @@ extension DashboardSessionSummary {
     static let samples: [DashboardSessionSummary] = [
         DashboardSessionSummary(
             id: "session_1",
-            title: "Chief Financial Officer",
+            title: "Chief Financial Officer",  // Legacy fallback
             createdAt: Date().addingTimeInterval(-2400),
             totalJobs: 95,
             localCount: 15,
             nationalCount: 62,
             remoteCount: 18,
             status: "completed",
-            viewToken: "token_abc123"
+            viewToken: "token_abc123",
+            currentRoleTitle: "Co-owner / CFO",
+            currentRoleCompany: "Sheppard Family Corporation",
+            lastSearchTitle: "Accounting Specialist"
         ),
         DashboardSessionSummary(
             id: "session_2",
-            title: "Senior iOS Developer",
+            title: "Senior iOS Developer",  // Legacy fallback
             createdAt: Date().addingTimeInterval(-86400),
             totalJobs: 67,
             localCount: 12,

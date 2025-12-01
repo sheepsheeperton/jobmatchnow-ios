@@ -303,7 +303,7 @@ struct DashboardSummary: Decodable {
 ```swift
 struct DashboardSessionSummary: Identifiable, Decodable {
     let id: String              // from "search_session_id"
-    let title: String?          // from "title_or_inferred_role"
+    let title: String?          // from "title_or_inferred_role" (deprecated)
     let createdAt: Date
     let totalJobs: Int
     let localCount: Int         // from "local_count"
@@ -311,6 +311,16 @@ struct DashboardSessionSummary: Identifiable, Decodable {
     let remoteCount: Int        // from "remote_count"
     let status: String?
     let viewToken: String?
+    
+    // NEW: Semantic labels from backend
+    let currentRoleTitle: String?   // from "current_role_title" - User's current job from résumé
+    let currentRoleCompany: String? // from "current_role_company" - User's current company
+    let lastSearchTitle: String?    // from "last_search_title" - Search intent / inferred role
+    
+    // Computed properties for UI
+    var displayTitle: String        // Returns currentRoleTitle ?? title ?? fallback
+    var searchIntentTitle: String   // Returns lastSearchTitle ?? title ?? "Job Search"
+    var dashboardSubtitle: String   // "Last search: {intent} • {count} matches • {time}"
 }
 ```
 
@@ -628,7 +638,7 @@ final class AppState: ObservableObject {
     @Published var authState: AuthState = .unauthenticated
     @Published var selectedTab: AppTab = .search
     @Published var currentViewToken: String?
-    @Published var lastSearchSession: SearchSession?
+    @Published var lastSearch: LastSearchInfo?    // Synced from Dashboard
     
     enum AuthState {
         case authenticated
@@ -639,8 +649,22 @@ final class AppState: ObservableObject {
         case search = 0
         case dashboard = 1
     }
+    
+    // Last search info with semantic labels
+    struct LastSearchInfo: Codable, Equatable {
+        let viewToken: String
+        let date: Date
+        let totalMatches: Int
+        let directMatches: Int
+        let adjacentMatches: Int
+        let label: String?               // Deprecated fallback
+        let currentRoleTitle: String?    // User's current job from résumé
+        let lastSearchTitle: String?     // Search intent / target role
+    }
 }
 ```
+
+**Last Search Sync:** When `DashboardViewModel.loadDashboard()` succeeds, it automatically calls `updateLastSearchInAppState()` to populate `AppState.shared.lastSearch` from the most recent dashboard session. This ensures the Search tab's "Last Search" card shows the same data as the Dashboard.
 
 **Injection:**
 ```swift
@@ -657,9 +681,39 @@ RootView()
 
 ## Recent Changes
 
+### December 1, 2025
+
+#### 0. **Semantic Labels for Search Sessions** (Latest)
+- **Change:** Added `currentRoleTitle`, `currentRoleCompany`, `lastSearchTitle` to dashboard and search models
+- **Purpose:** Show meaningful labels instead of generic "Search" or "Recent search"
+- **Dashboard Card Now Shows:**
+  - **Primary:** User's current role from résumé (e.g., "Co-owner / CFO")
+  - **Subtitle:** "Last search: Accounting Specialist • 79 matches • 2h ago"
+- **Search Upload Card Now Shows:**
+  - **Primary:** Search intent (e.g., "Accounting Specialist")
+  - **Secondary:** "Based on your role: Co-owner / CFO"
+- **Files Changed:**
+  - `DashboardModels.swift` - Added new fields + computed properties
+  - `AppState.swift` - Updated `LastSearchInfo` struct
+  - `DashboardViewModel.swift` - Added `updateLastSearchInAppState()` sync
+  - `DashboardView.swift` - Updated `RecentSessionCard` subtitle
+  - `SearchUploadView.swift` - Updated `LastSearchCard` display logic
+
+#### 1. **Automatic Token Refresh**
+- **Change:** Dashboard now automatically refreshes expired Supabase tokens
+- **Problem:** After ~1 hour, tokens expire and dashboard shows "Session expired"
+- **Solution:**
+  - Added `AuthManager.refreshTokenIfNeeded() async -> Bool`
+  - `DashboardViewModel.loadDashboard()` catches `.unauthorized` and tries refresh
+  - If refresh succeeds → retries dashboard load automatically
+  - If refresh fails → shows "Session expired. Please sign in again."
+- **Files Changed:**
+  - `AuthManager.swift` - Added public refresh method
+  - `DashboardViewModel.swift` - Added retry logic for 401 errors
+
 ### November 30, 2025
 
-#### 0. **Job Bucket Filter Refactor** (Latest)
+#### 2. **Job Bucket Filter Refactor**
 - **Change:** Replaced dual-control filtering with single 4-button bucket control
 - **Old:** Local/National scope toggle + All/Remote filter (2 separate controls)
 - **New:** All | Remote | Local | National (single mutually-exclusive control)
@@ -673,62 +727,36 @@ RootView()
   - `ResultsViewModel.swift` - Replaced `locationScope` with `selectedBucket`
   - `SearchResultsView.swift` - Replaced `LocationScopeToggle` and `JobFilter` with `JobBucketPicker`
 
-#### 1. **Dashboard Authentication Fix** (Commit: `e665d36`)
+#### 3. **Dashboard Authentication Fix**
 - **Problem:** `GET /api/me/dashboard` returned 401 Unauthorized
 - **Solution:**
   - Added `APIError.unauthorized` case
-  - Modified `APIService.getDashboard()` to:
-    - Read `supabase_access_token` from UserDefaults
-    - Add `Authorization: Bearer <token>` header
-    - Handle 401/403 responses as unauthorized errors
+  - Modified `APIService.getDashboard()` to add Authorization header
   - Updated `DashboardViewModel.loadDashboard()` to show "Please sign in" error for unauthorized state
 
-#### 2. **Dashboard Model Update** (Commit: `a75e7fd`)
+#### 4. **Dashboard Model Update**
 - **Problem:** Dashboard decoding failed with `keyNotFound("id")`
-- **Backend JSON Changed:**
-  - `"search_session_id"` replaces `"id"`
-  - `"title_or_inferred_role"` replaces `"title"`
-  - `"local_count"`, `"national_count"`, `"remote_count"` replace `"direct_count"`, `"adjacent_count"`
-  - Added `"status"` field
 - **Solution:**
-  - Updated `DashboardSessionSummary` CodingKeys
+  - Updated `DashboardSessionSummary` CodingKeys to match new backend JSON
   - Updated `DashboardView` to show: Total | Local | National | Remote
-  - Updated sample data
 
-#### 3. **Location Scope Fix** (Earlier)
-- **Problem:** UI showed "Local" but API fetched all/national jobs on first load
-- **Solution:**
-  - Changed `ResultsViewModel.locationScope` default to `.national`
-  - Added debug logging for scope consistency
-  - Ensured toggle triggers correct API call with `?scope=<value>`
-
-#### 4. **Last Search Card Functionality** (Earlier)
+#### 5. **Last Search Card Functionality**
 - **Problem:** "Last Search" card on Upload screen was not tappable
 - **Solution:**
   - Made entire card a tappable Button
-  - Added `loadLastSearchResults()` method to fetch jobs via `APIService`
-  - Added navigation to `SearchResultsView` with historical results
-  - Added loading indicator while fetching
+  - Added navigation to historical results
 
-#### 5. **Status Bar Visibility** (Earlier)
+#### 6. **Status Bar Visibility**
 - **Problem:** Status bar icons invisible on light backgrounds
 - **Solution:**
   - Implemented custom `RootHostingController` with Combine observation
   - Created `StatusBarStyleManager.shared` singleton
-  - Added `.statusBarDarkContent()` / `.statusBarLightContent()` view modifiers
   - Migrated from SwiftUI App lifecycle to UIKit AppDelegate/SceneDelegate
 
-#### 6. **2025 Color System Compliance** (Earlier)
-- Removed all non-palette violets/purples
-- Updated gear icons to use `ThemeColors.midnight` (light mode) and `ThemeColors.primaryComplement` (dark mode)
-- Replaced "Adjacent" category color with `ThemeColors.deepComplement`
-- Updated empty states, save banners, and analyzing screen to use approved colors
-
-#### 7. **Theme → ThemeColors Migration** (Earlier)
-- Deprecated all `Theme.*` color aliases
-- Migrated all views to use `ThemeColors.*` directly
-- Added `@available(*, deprecated, ...)` attributes to `Theme.swift`
-- Updated button styles, cards, and text to use design tokens
+#### 7. **2025 Color System & Theme Migration**
+- Migrated all views from `Theme.*` to `ThemeColors.*`
+- Removed non-palette violets/purples
+- Updated gear icons, empty states, and cards to use approved colors
 
 ---
 
@@ -900,7 +928,7 @@ JobMatchNow/
 - Add unit tests for ViewModels and APIService
 - Implement error analytics (e.g., Sentry, Firebase Crashlytics)
 - Add retry logic with exponential backoff for API failures
-- Implement token refresh flow for expired Supabase sessions
+- ✅ ~~Implement token refresh flow for expired Supabase sessions~~ (Completed Dec 1, 2025)
 
 ---
 

@@ -56,7 +56,32 @@ final class AppState: ObservableObject {
         let totalMatches: Int
         let directMatches: Int
         let adjacentMatches: Int
-        let label: String?
+        let label: String?  // Deprecated: use currentRoleTitle or lastSearchTitle
+        
+        // NEW: Semantic labels from backend
+        let currentRoleTitle: String?   // User's current job title from résumé (e.g., "Co-owner / CFO")
+        let lastSearchTitle: String?    // The search intent / inferred target role (e.g., "Accounting Specialist")
+        
+        // Backwards-compatible initializer
+        init(
+            viewToken: String,
+            date: Date,
+            totalMatches: Int,
+            directMatches: Int = 0,
+            adjacentMatches: Int = 0,
+            label: String? = nil,
+            currentRoleTitle: String? = nil,
+            lastSearchTitle: String? = nil
+        ) {
+            self.viewToken = viewToken
+            self.date = date
+            self.totalMatches = totalMatches
+            self.directMatches = directMatches
+            self.adjacentMatches = adjacentMatches
+            self.label = label
+            self.currentRoleTitle = currentRoleTitle
+            self.lastSearchTitle = lastSearchTitle
+        }
     }
     
     // MARK: - Initialization

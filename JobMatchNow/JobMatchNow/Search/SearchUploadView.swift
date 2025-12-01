@@ -338,16 +338,27 @@ struct LastSearchCard: View {
     var body: some View {
         Button(action: onTap) {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
+                    // Section label
                     Text("Last Search")
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
                     
-                    Text(lastSearch.label ?? "Recent search")
+                    // Primary: Search intent / what jobs they're looking for
+                    Text(displayTitle)
                         .font(.headline)
                         .foregroundColor(ThemeColors.textOnLight)
                     
+                    // Secondary: Based on current role (if available)
+                    if let currentRole = lastSearch.currentRoleTitle, !currentRole.isEmpty {
+                        Text("Based on your role: \(currentRole)")
+                            .font(.subheadline)
+                            .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                            .lineLimit(1)
+                    }
+                    
+                    // Stats line
                     HStack(spacing: 12) {
                         Label("\(lastSearch.totalMatches) matches", systemImage: "briefcase")
                         Label(formattedDate, systemImage: "clock")
@@ -377,6 +388,17 @@ struct LastSearchCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(isLoading)
+    }
+    
+    /// Display title: prefer lastSearchTitle, fall back to label
+    private var displayTitle: String {
+        if let searchTitle = lastSearch.lastSearchTitle, !searchTitle.isEmpty {
+            return searchTitle
+        }
+        if let label = lastSearch.label, !label.isEmpty {
+            return label
+        }
+        return "Recent search"
     }
     
     private var formattedDate: String {
