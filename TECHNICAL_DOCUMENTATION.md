@@ -1,7 +1,7 @@
 # JobMatchNow iOS - Technical Documentation
 
-**Last Updated:** November 30, 2025  
-**Version:** 1.0  
+**Last Updated:** December 1, 2025  
+**Version:** 1.1  
 **Platform:** iOS 16.0+  
 **Framework:** SwiftUI + UIKit Lifecycle
 
@@ -217,10 +217,17 @@ AuthView
 #### SearchUploadView
 - **Purpose:** Resume upload entry point
 - **Features:**
-  - File picker for PDF resumes
-  - "Use sample resume" shortcut button
+  - **File picker** for PDF, Word, and image files (primary upload method)
+  - **Camera scanner** using VNDocumentCameraViewController (iOS 13+)
+    - Auto edge detection and perspective correction
+    - Image processing: orientation normalization, compression, resize
+    - Only shown on devices with camera support
+  - "Use sample resume" shortcut button (debug builds only)
   - "Last Search" card (tappable, navigates to previous results)
 - **State:** `@StateObject` for upload progress
+- **Supporting Files:**
+  - `DocumentScannerView.swift` - SwiftUI wrapper for VisionKit scanner
+  - `ImageProcessor.swift` - Image normalization and JPEG compression
 
 #### SearchAnalyzingView
 - **Purpose:** Display resume analysis progress
@@ -683,7 +690,31 @@ RootView()
 
 ### December 1, 2025
 
-#### 0. **Semantic Labels for Search Sessions** (Latest)
+#### 0. **Camera Scanning for Resume Upload** (Latest)
+- **Change:** Added camera scanning capability using VisionKit's document scanner
+- **Purpose:** Allow users to photograph their résumé directly with iPhone camera
+- **Features:**
+  - Uses `VNDocumentCameraViewController` for optimal OCR results
+  - Auto edge detection and perspective correction
+  - Image processing pipeline: orientation fix, resize, JPEG compression
+  - Camera button hidden on simulator and unsupported devices
+  - Falls back to existing file picker (unchanged)
+- **New Files:**
+  - `Search/DocumentScannerView.swift` - SwiftUI wrapper for VisionKit scanner
+  - `Search/ImageProcessor.swift` - Image normalization and compression utility
+- **Modified Files:**
+  - `Info.plist` - Added `NSCameraUsageDescription` permission
+  - `Search/SearchUploadView.swift` - Added "Scan with Camera" button + fullScreenCover
+- **Data Flow:**
+  ```
+  Camera → VNDocumentCameraViewController → UIImage
+    → ImageProcessor (normalize, resize, compress)
+    → temp JPEG file → uploadFile() (existing)
+    → Backend OCR (already supports JPEG)
+  ```
+- **Note:** No backend changes required - OCR already processes image files
+
+#### 1. **Semantic Labels for Search Sessions**
 - **Change:** Added `currentRoleTitle`, `currentRoleCompany`, `lastSearchTitle` to dashboard and search models
 - **Purpose:** Show meaningful labels instead of generic "Search" or "Recent search"
 - **Dashboard Card Now Shows:**
@@ -775,6 +806,9 @@ RootView()
         </array>
     </dict>
 </array>
+
+<key>NSCameraUsageDescription</key>
+<string>JobMatchNow uses your camera to photograph your résumé for AI-powered job matching.</string>
 
 <key>UIViewControllerBasedStatusBarAppearance</key>
 <true/>
@@ -891,7 +925,9 @@ JobMatchNow/
 │   ├── SplashView.swift                  # Launch screen
 │   └── OnboardingCarouselView.swift      # Feature intro
 ├── Search/
-│   ├── SearchUploadView.swift            # Resume upload
+│   ├── SearchUploadView.swift            # Resume upload (file picker + camera)
+│   ├── DocumentScannerView.swift         # VisionKit camera scanner wrapper
+│   ├── ImageProcessor.swift              # Image normalization & compression
 │   ├── SearchAnalyzingView.swift         # Analysis progress
 │   ├── SearchResultsView.swift           # Job matches
 │   ├── ResultsViewModel.swift            # Results state management
