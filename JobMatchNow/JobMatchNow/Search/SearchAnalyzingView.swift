@@ -243,7 +243,7 @@ struct PipelineStepRow: View {
     private var backgroundColor: Color {
         switch status {
         case .completed:
-            return ThemeColors.wealthBright.opacity(0.6)
+            return ThemeColors.accentPurple
         case .inProgress:
             return ThemeColors.primaryBrand
         case .pending:
