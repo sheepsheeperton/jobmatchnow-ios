@@ -2,15 +2,15 @@
 //  ThemeColors.swift
 //  JobMatchNow
 //
-//  CANONICAL COLOR PALETTE - GREEN WEALTH SYSTEM
-//  ==============================================
+//  CANONICAL COLOR PALETTE - PALETTE A (INK + INDIGO SYSTEM)
+//  ==========================================================
 //  This file defines the official JobMatchNow brand color palette.
-//  Built around greens (wealth, growth, trust) with complementary purple.
+//  Built around cool purples/indigos for trust, clarity, and modern calm.
 //  
 //  All SwiftUI views should consume colors via ThemeColors rather than
 //  hard-coded hex values or system colors.
 //
-//  Usage: ThemeColors.wealthStrong, ThemeColors.accentPurple, etc.
+//  Usage: ThemeColors.deepIndigo, ThemeColors.primaryBrand, etc.
 //
 //  For design rationale and usage guidelines, see: Docs/ColorPalette.md
 //
@@ -20,155 +20,223 @@ import SwiftUI
 // MARK: - ThemeColors Namespace
 
 /// Canonical JobMatchNow color palette.
-/// Green-based system signifying wealth, growth, and professional trust.
+/// Palette A: Cool indigo-violet system for trust, clarity, and premium feel.
 /// Use these tokens for all UI elements to ensure brand consistency.
 enum ThemeColors {
     
-    // MARK: - Core Wealth Greens
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // MARK: - Core Palette Colors
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    /// **Wealth Dark** – Darkest green for dark mode backgrounds and primary text on light.
-    /// Use for: Body text on light surfaces, dark mode app background, navigation bars (dark).
-    /// This is our "text black" and primary dark surface color.
-    static let wealthDark = Color(hex: 0x132A13)
+    /// **Ink Black** – Near-black with subtle teal undertone.
+    /// Use for: Dark mode backgrounds, primary text on light surfaces, high-contrast anchors.
+    /// This is our "text black" and deepest surface color.
+    static let inkBlack = Color(hex: 0x000505)
     
-    /// **Wealth Deep** – Deep forest green for elevated surfaces in dark mode.
-    /// Use for: Dark mode card backgrounds, modal backgrounds, navigation elements in dark mode.
-    /// Provides depth while maintaining brand consistency.
-    static let wealthDeep = Color(hex: 0x31572C)
+    /// **Deep Indigo** – Primary brand color, rich purple-blue.
+    /// Use for: Primary CTA buttons, key accent elements, active states.
+    /// This is the hero brand color that drives action.
+    static let deepIndigo = Color(hex: 0x3B3355)
     
-    /// **Wealth Strong** – Primary brand green for CTAs and emphasis.
-    /// Use for: Primary CTA buttons ("Upload Résumé", "Sign In", "Get Matches"),
-    /// selected states, active tabs, important highlights.
-    /// This is the hero color that drives action.
-    static let wealthStrong = Color(hex: 0x4F772D)
+    /// **Slate Violet** – Muted purple-grey for secondary elements.
+    /// Use for: Secondary CTAs, selected chips, tab highlights, supporting UI.
+    /// Provides visual interest without competing with primary actions.
+    static let slateViolet = Color(hex: 0x5D5D81)
     
-    /// **Wealth Bright** – Bright mid-tone green for secondary interactive elements.
-    /// Use for: Secondary buttons, hover states, progress indicators, badges.
-    /// Lighter than wealthStrong but still prominent.
-    static let wealthBright = Color(hex: 0x90A955)
+    /// **Mist Blue** – Soft, calm blue-grey for subtle backgrounds.
+    /// Use for: Soft backgrounds, badges, subtle highlights, illustration fills.
+    /// Creates visual breathing room and gentle emphasis.
+    static let mistBlue = Color(hex: 0xBFCDE0)
     
-    /// **Wealth Light** – Lightest green for subtle accents and text on dark backgrounds.
-    /// Use for: Text on dark green backgrounds, light accent fills, illustration highlights.
-    /// Low saturation; pairs well with wealthDark surfaces.
-    static let wealthLight = Color(hex: 0xECF39E)
+    /// **Paper White** – Warm off-white for light surfaces.
+    /// Use for: Light mode backgrounds, cards, modal surfaces.
+    /// Softer than pure white for reduced eye strain.
+    static let paperWhite = Color(hex: 0xFEFCFD)
     
-    // MARK: - Complementary Accent
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // MARK: - Supporting Neutrals
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    /// **Accent Purple** – Complementary purple for secondary CTAs and variety.
-    /// Use for: Secondary call-to-actions, special badges, alerts (non-error), links.
-    /// Provides visual contrast against the green palette.
-    static let accentPurple = Color(hex: 0x532C58)
+    /// **Soft Grey** – Secondary text on light backgrounds.
+    /// Use for: Captions, timestamps, less prominent metadata.
+    static let softGrey = Color(hex: 0x6B7280)
     
+    /// **Border Grey** – Light borders that work on paper/mist surfaces.
+    /// Use for: Dividers, input borders, card outlines.
+    static let borderGrey = Color(hex: 0xD1D5DB)
+    
+    /// **Surface Grey Dark** – Elevated dark surfaces (cards in dark mode).
+    /// Use for: Dark mode card backgrounds, modals in dark mode.
+    /// Slightly lighter than inkBlack for visual hierarchy.
+    static let surfaceGreyDark = Color(hex: 0x1A1B26)
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // MARK: - Semantic Brand Tokens
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    /// Primary brand color – use for main CTAs.
+    /// Maps to: deepIndigo
+    static var primaryBrand: Color { deepIndigo }
+    
+    /// Primary CTA color – same as primaryBrand.
+    static var primaryCTA: Color { deepIndigo }
+    
+    /// Primary complement – use for secondary CTAs, selections.
+    /// Maps to: slateViolet
+    static var primaryComplement: Color { slateViolet }
+    
+    /// Secondary CTA color – same as primaryComplement.
+    static var secondaryCTA: Color { slateViolet }
+    
+    /// Soft complement – use for subtle backgrounds, soft highlights.
+    /// Maps to: mistBlue
+    static var softComplement: Color { mistBlue }
+    
+    /// Deep complement – use for dark mode cards, deep backgrounds.
+    /// Maps to: inkBlack
+    static var deepComplement: Color { inkBlack }
+    
+    /// Midnight – deep dark color for dark mode shells.
+    /// Maps to: inkBlack (unified dark experience)
+    static var midnight: Color { inkBlack }
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // MARK: - Surfaces & Backgrounds
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     /// **Surface Light** – Primary background for light mode screens.
-    /// Use as: Main app background in light mode, page-level container.
-    /// Subtle warm off-white that complements green tones.
-    static let surfaceLight = Color(hex: 0xF8F9F7)
+    /// Maps to: paperWhite
+    static let surfaceLight = paperWhite
     
     /// **Surface Dark** – Primary background for dark mode screens.
-    /// Use as: Main app background in dark mode.
-    /// Same as wealthDark for unified dark experience.
-    static let surfaceDark = wealthDark  // #132A13
+    /// Maps to: inkBlack
+    static let surfaceDark = inkBlack
     
     /// **Card Light** – Elevated surface for cards in light mode.
-    /// Use for: Card backgrounds, modals, input fields in light mode.
-    static let cardLight = Color(hex: 0xFFFFFF)
+    /// Maps to: paperWhite (pure white also acceptable)
+    static let cardLight = paperWhite
     
     /// **Card Dark** – Elevated surface for cards in dark mode.
-    /// Use for: Card backgrounds, modals, input fields in dark mode.
-    /// Same as wealthDeep for consistency.
-    static let cardDark = wealthDeep  // #31572C
+    /// Maps to: surfaceGreyDark
+    static let cardDark = surfaceGreyDark
     
     /// **Border Subtle** – Dividers, borders, and separators.
-    /// Use for: Hairline dividers, input field borders, subtle separations.
-    /// Neutral gray that doesn't compete with content.
-    static let borderSubtle = Color(hex: 0xE5E7EB)
+    /// Maps to: borderGrey
+    static let borderSubtle = borderGrey
     
-    // MARK: - Utility Colors
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // MARK: - Text Colors
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    /// **Text on Light** – Primary text color for light backgrounds.
+    /// Maps to: deepIndigo (slightly softened black for brand cohesion)
+    static let textOnLight = deepIndigo
+    
+    /// **Text on Dark** – Primary text color for dark backgrounds.
+    /// Maps to: paperWhite (near-white for maximum contrast)
+    static let textOnDark = paperWhite
+    
+    /// **Text Secondary Light** – Secondary text on light backgrounds.
+    /// Maps to: softGrey
+    static let textSecondaryLight = softGrey
+    
+    /// **Text Secondary Dark** – Secondary text on dark backgrounds.
+    /// Maps to: mistBlue
+    static let textSecondaryDark = mistBlue
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // MARK: - Utility / Status Colors
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     /// **Error Red** – Destructive actions and error states.
-    /// Use for: Delete buttons, error banners, validation messages, alerts.
-    /// High contrast for accessibility; use sparingly.
+    /// Use for: Delete buttons, error banners, validation messages.
     static let errorRed = Color(hex: 0xE74C3C)
     
     /// **Warning Amber** – Warning states and caution indicators.
-    /// Use for: Non-critical warnings, pending states, attention indicators.
+    /// Use for: Non-critical warnings, pending states, attention notices.
+    /// Reserved for status only, NOT brand usage.
     static let warningAmber = Color(hex: 0xF39C12)
     
-    /// **Success Bright** – Success confirmations (uses wealthBright).
+    /// **Success Green** – Success confirmations and positive states.
     /// Use for: Success banners, completed states, positive feedback.
-    static let successGreen = wealthBright  // #90A955
+    static let successGreen = Color(hex: 0x27AE60)
     
-    // MARK: - Text Colors
+    /// **Info Teal** – Informational states and neutral highlights.
+    /// Use for: Info banners, tips, neutral callouts.
+    static let infoTeal = Color(hex: 0x17A2B8)
     
-    /// **Text on Light** – Primary text color for light backgrounds.
-    /// Use for: Body text, headings, labels on light surfaces.
-    /// Same as wealthDark for brand consistency.
-    static let textOnLight = wealthDark  // #132A13
+    // MARK: Semantic Aliases for Status
     
-    /// **Text on Dark** – Primary text color for dark backgrounds.
-    /// Use for: Text on dark surfaces (wealthDark, wealthDeep, wealthStrong).
-    /// Same as wealthLight for readability.
-    static let textOnDark = wealthLight  // #ECF39E
-    
-    /// **Text Secondary Light** – Secondary text on light backgrounds.
-    /// Lower contrast for less important information.
-    static let textSecondaryLight = Color(hex: 0x4A5D4A)
-    
-    /// **Text Secondary Dark** – Secondary text on dark backgrounds.
-    static let textSecondaryDark = Color(hex: 0xC4D9A8)
-    
-    // MARK: - Semantic Aliases (Convenience)
-    
-    /// Primary brand color - use for main CTAs
-    static var primaryBrand: Color { wealthStrong }
-    
-    /// Primary CTA color - same as primaryBrand
-    static var primaryCTA: Color { wealthStrong }
-    
-    /// Secondary CTA color - use for less prominent actions
-    static var secondaryCTA: Color { accentPurple }
-    
-    /// Alias for errorRed – use for destructive actions
     static var destructive: Color { errorRed }
-    
-    /// Alias for warningAmber – use for warning states
     static var warning: Color { warningAmber }
-    
-    /// Alias for successGreen – use for success states
     static var success: Color { successGreen }
+    static var info: Color { infoTeal }
     
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // MARK: - Legacy Compatibility Aliases
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // These aliases maintain backward compatibility with existing code.
+    // They map old green palette names to new Palette A equivalents.
+    
+    /// Legacy: wealthDark → inkBlack
+    static var wealthDark: Color { inkBlack }
+    
+    /// Legacy: wealthDeep → surfaceGreyDark
+    static var wealthDeep: Color { surfaceGreyDark }
+    
+    /// Legacy: wealthStrong → deepIndigo
+    static var wealthStrong: Color { deepIndigo }
+    
+    /// Legacy: wealthBright → slateViolet
+    static var wealthBright: Color { slateViolet }
+    
+    /// Legacy: wealthLight → mistBlue
+    static var wealthLight: Color { mistBlue }
+    
+    /// Legacy: accentPurple → slateViolet (now primary in palette)
+    static var accentPurple: Color { slateViolet }
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // MARK: - Gradient System
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    /// Canonical brand gradient: Dark → Strong → Bright → Light
-    /// Use for: Hero sections, onboarding backgrounds, splash screens
+    /// **Brand Hero Gradient (Light)** – Full palette sweep for hero sections.
+    /// Use for: Splash screens, onboarding backgrounds, marketing heroes.
+    /// Direction: Top-leading to bottom-trailing (diagonal)
     static let brandGradient = LinearGradient(
-        colors: [wealthDark, wealthStrong, wealthBright, wealthLight],
+        colors: [inkBlack, deepIndigo, slateViolet, mistBlue],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
     
-    /// Light mode gradient: Strong → Bright
-    /// Use for: Card backgrounds, section headers in light mode
+    /// **Light Gradient** – Soft gradient for light mode emphasis.
+    /// Use for: Card headers, section backgrounds in light mode.
     static let lightGradient = LinearGradient(
-        colors: [wealthStrong, wealthBright],
+        colors: [slateViolet, mistBlue],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
     
-    /// Dark mode gradient: Dark → Deep
-    /// Use for: Backgrounds, navigation bars in dark mode
+    /// **Dark Gradient** – Deep gradient for dark mode backgrounds.
+    /// Use for: Dark mode shells, splash screens, navigation bars.
     static let darkGradient = LinearGradient(
-        colors: [wealthDark, wealthDeep],
+        colors: [inkBlack, deepIndigo],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    
+    /// **Hero Gradient (Dark Mode)** – Simpler, more subtle for dark contexts.
+    /// Use for: Dark mode hero sections, modals with emphasis.
+    static let heroGradientDark = LinearGradient(
+        colors: [inkBlack, deepIndigo],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
     
-    /// Accent gradient: Purple → Bright Green
-    /// Use for: Special emphasis, premium features, highlights
+    /// **Accent Gradient** – Violet-to-mist for special emphasis.
+    /// Use for: Premium features, special badges, highlights.
     static let accentGradient = LinearGradient(
-        colors: [accentPurple, wealthBright],
+        colors: [slateViolet, mistBlue],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -178,7 +246,7 @@ enum ThemeColors {
 
 extension Color {
     /// Initialize a Color from a hex integer value.
-    /// - Parameter hex: The hex color value (e.g., 0x132A13)
+    /// - Parameter hex: The hex color value (e.g., 0x3B3355)
     init(hex: UInt) {
         self.init(
             red: Double((hex >> 16) & 0xFF) / 255.0,
@@ -188,7 +256,7 @@ extension Color {
     }
     
     /// Initialize a Color from a hex string.
-    /// - Parameter hexString: The hex color string (e.g., "#132A13" or "132A13")
+    /// - Parameter hexString: The hex color string (e.g., "#3B3355" or "3B3355")
     init(hexString: String) {
         let hex = hexString.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
@@ -206,45 +274,61 @@ struct ThemeColorsPreview: View {
             VStack(alignment: .leading, spacing: 24) {
                 Text("JobMatchNow Color Palette")
                     .font(.largeTitle.bold())
-                    .foregroundColor(ThemeColors.wealthDark)
+                    .foregroundColor(ThemeColors.textOnLight)
                 
+                // Core Palette
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Core Wealth Greens")
+                    Text("Core Palette")
                         .font(.headline)
-                        .foregroundColor(ThemeColors.wealthDark)
+                        .foregroundColor(ThemeColors.textOnLight)
                     
-                    colorRow("wealthDark", ThemeColors.wealthDark)
-                    colorRow("wealthDeep", ThemeColors.wealthDeep)
-                    colorRow("wealthStrong", ThemeColors.wealthStrong)
-                    colorRow("wealthBright", ThemeColors.wealthBright)
-                    colorRow("wealthLight", ThemeColors.wealthLight)
+                    colorRow("inkBlack", ThemeColors.inkBlack)
+                    colorRow("deepIndigo", ThemeColors.deepIndigo)
+                    colorRow("slateViolet", ThemeColors.slateViolet)
+                    colorRow("mistBlue", ThemeColors.mistBlue)
+                    colorRow("paperWhite", ThemeColors.paperWhite)
                 }
                 
+                // Supporting Neutrals
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Accent & Surfaces")
+                    Text("Supporting Neutrals")
                         .font(.headline)
-                        .foregroundColor(ThemeColors.wealthDark)
+                        .foregroundColor(ThemeColors.textOnLight)
                     
-                    colorRow("accentPurple", ThemeColors.accentPurple)
+                    colorRow("softGrey", ThemeColors.softGrey)
+                    colorRow("borderGrey", ThemeColors.borderGrey)
+                    colorRow("surfaceGreyDark", ThemeColors.surfaceGreyDark)
+                }
+                
+                // Semantic Tokens
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Semantic Tokens")
+                        .font(.headline)
+                        .foregroundColor(ThemeColors.textOnLight)
+                    
+                    colorRow("primaryBrand", ThemeColors.primaryBrand)
+                    colorRow("secondaryCTA", ThemeColors.secondaryCTA)
                     colorRow("surfaceLight", ThemeColors.surfaceLight)
                     colorRow("cardLight", ThemeColors.cardLight)
-                    colorRow("cardDark", ThemeColors.cardDark)
                 }
                 
+                // Utility Colors
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Utility Colors")
                         .font(.headline)
-                        .foregroundColor(ThemeColors.wealthDark)
+                        .foregroundColor(ThemeColors.textOnLight)
                     
                     colorRow("errorRed", ThemeColors.errorRed)
                     colorRow("warningAmber", ThemeColors.warningAmber)
                     colorRow("successGreen", ThemeColors.successGreen)
+                    colorRow("infoTeal", ThemeColors.infoTeal)
                 }
                 
+                // Gradients
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Gradients")
                         .font(.headline)
-                        .foregroundColor(ThemeColors.wealthDark)
+                        .foregroundColor(ThemeColors.textOnLight)
                     
                     gradientRow("brandGradient", ThemeColors.brandGradient)
                     gradientRow("lightGradient", ThemeColors.lightGradient)

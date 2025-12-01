@@ -2,209 +2,152 @@
 
 > **Last Updated:** December 2025  
 > **Swift Reference:** `JobMatchNow/Core/ThemeColors.swift`  
-> **System:** Green Wealth + Complementary Purple
+> **System:** Palette A – Ink + Indigo Monochromatic System
 
-This document describes the official JobMatchNow brand color palette. Our green-based system evokes **wealth, growth, and professional trust**, with complementary purple for visual variety.
+This document describes the official JobMatchNow brand color palette. Our cool indigo-violet system evokes **trust, clarity, and modern calm** – perfect for a premium AI-powered career assistant.
 
 ---
 
-## 🌱 Palette Philosophy
+## 🎯 Palette Philosophy
 
-**Why Green?**  
-Green symbolizes **growth, prosperity, and stability** – perfect for a career advancement platform. Our palette ranges from deep forest greens (professionalism) to bright spring greens (optimism and opportunity).
+### Why Cool Indigo/Violet?
 
-**60-30-10 Rule:**
+**Trust & Premium Feel**  
+Cool purples and indigos communicate sophistication, intelligence, and trustworthiness. Unlike generic "blue job board" palettes, our deeper tones create a distinctive, premium experience.
+
+**Calm & Focused UX**  
+The monochromatic/analogous palette supports a calm, focused user experience. Job seekers are often stressed – our palette provides visual relief while maintaining clarity.
+
+**Accessibility First**  
+High contrast between Ink Black text and Paper White surfaces ensures excellent readability. The palette is designed for WCAG AA compliance.
+
+### 60-30-10 Rule
 
 | Proportion | Category | Colors |
 |------------|----------|--------|
-| **~60%** | Neutral Surfaces | `surfaceLight`, `cardLight`, `borderSubtle` |
-| **~30%** | Wealth Greens | `wealthDark`, `wealthDeep`, `wealthStrong` |
-| **~10%** | Accent & CTA | `wealthBright`, `accentPurple` |
+| **~60%** | Neutral Surfaces | `paperWhite`, `surfaceLight`, `cardLight` |
+| **~30%** | Structure Colors | `mistBlue`, `borderGrey`, `softGrey` |
+| **~10%** | Brand Accents | `deepIndigo`, `slateViolet` |
 
 ---
 
-## 🟢 Core Wealth Greens
+## 🎨 Core Palette
 
-### `wealthDark` – Wealth Dark
+### `inkBlack` – Ink Black
 | Property | Value |
 |----------|-------|
-| **Hex** | `#132A13` |
-| **RGB** | 19, 42, 19 |
-| **Swift** | `ThemeColors.wealthDark` |
+| **Hex** | `#000505` |
+| **RGB** | 0, 5, 5 |
+| **Swift** | `ThemeColors.inkBlack` |
 
 **Usage:**
-- Primary text on light backgrounds
 - Dark mode app background
-- Navigation bars and headers (dark mode)
-- Footer sections
+- Primary text on light backgrounds (via `textOnLight` alias)
+- High-contrast anchoring elements
+- Dark mode navigation shells
 
-**Brand Note:**  
-Our darkest green serves as "text black" – professional and rooted. Creates strong contrast on light backgrounds while maintaining brand unity.
-
----
-
-### `wealthDeep` – Wealth Deep
-| Property | Value |
-|----------|-------|
-| **Hex** | `#31572C` |
-| **RGB** | 49, 87, 44 |
-| **Swift** | `ThemeColors.wealthDeep` |
-
-**Usage:**
-- Dark mode card backgrounds
-- Modal overlays (dark mode)
-- Elevated surfaces in dark mode
-- Section backgrounds
-
-**Brand Note:**  
-Forest green depth. Provides visual hierarchy in dark mode while staying on-brand.
+**Design Note:**  
+Near-black with a subtle cool undertone. Creates depth without pure black's harshness.
 
 ---
 
-### `wealthStrong` – Wealth Strong ⭐
+### `deepIndigo` – Deep Indigo ⭐
 | Property | Value |
 |----------|-------|
-| **Hex** | `#4F772D` |
-| **RGB** | 79, 119, 45 |
-| **Swift** | `ThemeColors.wealthStrong` |
+| **Hex** | `#3B3355` |
+| **RGB** | 59, 51, 85 |
+| **Swift** | `ThemeColors.deepIndigo` |
 
 **Usage:**
 - **Primary CTA buttons** (Upload Résumé, Sign In, Get Matches)
-- Selected tab states
-- Active navigation items
-- Important badges and highlights
-- Progress bar fills
+- Key accent elements and highlights
+- Active/selected states
+- Primary text on light backgrounds (via `textOnLight`)
 
-**Brand Note:**  
-**This is our hero color.** Strong, confident green that drives action. Use for the most important user interactions.
-
----
-
-### `wealthBright` – Wealth Bright
-| Property | Value |
-|----------|-------|
-| **Hex** | `#90A955` |
-| **RGB** | 144, 169, 85 |
-| **Swift** | `ThemeColors.wealthBright` |
-
-**Usage:**
-- Secondary buttons
-- Hover states
-- Progress indicators (unfilled)
-- Success states and checkmarks
-- Subtle emphasis backgrounds
-
-**Brand Note:**  
-Optimistic spring green. Lighter and more approachable than wealthStrong. Perfect for secondary interactions.
+**Design Note:**  
+**This is our hero brand color.** Rich, confident purple-indigo that drives action while communicating trust.
 
 ---
 
-### `wealthLight` – Wealth Light
+### `slateViolet` – Slate Violet
 | Property | Value |
 |----------|-------|
-| **Hex** | `#ECF39E` |
-| **RGB** | 236, 243, 158 |
-| **Swift** | `ThemeColors.wealthLight` |
-
-**Usage:**
-- Text on dark backgrounds
-- Light accent fills
-- Illustration highlights
-- Gradient endpoints
-- Badge text on dark
-
-**Brand Note:**  
-Soft lime glow. Provides excellent readability on dark surfaces. Use at 10-30% opacity for subtle background tints.
-
----
-
-## 🟣 Complementary Accent
-
-### `accentPurple` – Accent Purple
-| Property | Value |
-|----------|-------|
-| **Hex** | `#532C58` |
-| **RGB** | 83, 44, 88 |
-| **Swift** | `ThemeColors.accentPurple` |
+| **Hex** | `#5D5D81` |
+| **RGB** | 93, 93, 129 |
+| **Swift** | `ThemeColors.slateViolet` |
 
 **Usage:**
 - Secondary CTA buttons
-- Link text and clickable elements
-- Special badges (premium, featured)
-- Alert/notification accents (non-error)
-- Variety in data visualizations
+- Tab highlight states
+- Selected chips and filters
+- Links and interactive text
+- Badges and tags
 
-**Brand Note:**  
-Regal purple provides contrast against the green palette. Use sparingly for visual interest and to highlight secondary actions.
-
----
-
-## ⬜ Surfaces & Backgrounds
-
-### `surfaceLight` – Surface Light
-| Property | Value |
-|----------|-------|
-| **Hex** | `#F8F9F7` |
-| **RGB** | 248, 249, 247 |
-| **Swift** | `ThemeColors.surfaceLight` |
-
-**Usage:**
-- Main app background (light mode)
-- Page-level container
-- List backgrounds
-
-**Note:** Subtle warm off-white that complements greens without competing.
+**Design Note:**  
+Muted purple-grey that complements Deep Indigo. Provides visual interest for secondary actions without competing with primary CTAs.
 
 ---
 
-### `surfaceDark` – Surface Dark
+### `mistBlue` – Mist Blue
 | Property | Value |
 |----------|-------|
-| **Hex** | `#132A13` (same as wealthDark) |
-| **RGB** | 19, 42, 19 |
-| **Swift** | `ThemeColors.surfaceDark` |
+| **Hex** | `#BFCDE0` |
+| **RGB** | 191, 205, 224 |
+| **Swift** | `ThemeColors.mistBlue` |
 
 **Usage:**
-- Main app background (dark mode)
-- Full-screen dark overlays
+- Soft backgrounds and highlights
+- Badge backgrounds
+- Illustration fills
+- Subtle emphasis areas
+- Secondary text on dark backgrounds
+
+**Design Note:**  
+Calm, soft blue-grey that creates breathing room. Use at 10-30% opacity for very subtle tints.
 
 ---
 
-### `cardLight` – Card Light
+### `paperWhite` – Paper White
 | Property | Value |
 |----------|-------|
-| **Hex** | `#FFFFFF` |
-| **RGB** | 255, 255, 255 |
-| **Swift** | `ThemeColors.cardLight` |
+| **Hex** | `#FEFCFD` |
+| **RGB** | 254, 252, 253 |
+| **Swift** | `ThemeColors.paperWhite` |
 
 **Usage:**
-- Card backgrounds (light mode)
+- Light mode app background
+- Card backgrounds
 - Modal surfaces
-- Input field backgrounds
-- Elevated content containers
+- Text on dark backgrounds
+
+**Design Note:**  
+Warm off-white that's softer than pure white (#FFFFFF). Reduces eye strain during extended use.
 
 ---
 
-### `cardDark` – Card Dark
+## 🔘 Supporting Neutrals
+
+### `softGrey` – Soft Grey
 | Property | Value |
 |----------|-------|
-| **Hex** | `#31572C` (same as wealthDeep) |
-| **RGB** | 49, 87, 44 |
-| **Swift** | `ThemeColors.cardDark` |
+| **Hex** | `#6B7280` |
+| **RGB** | 107, 114, 128 |
+| **Swift** | `ThemeColors.softGrey` |
 
 **Usage:**
-- Card backgrounds (dark mode)
-- Modal surfaces (dark mode)
-- Input field backgrounds (dark mode)
+- Secondary text on light backgrounds
+- Captions and timestamps
+- Less prominent metadata
+- Placeholder text
 
 ---
 
-### `borderSubtle` – Border Subtle
+### `borderGrey` – Border Grey
 | Property | Value |
 |----------|-------|
-| **Hex** | `#E5E7EB` |
-| **RGB** | 229, 231, 235 |
-| **Swift** | `ThemeColors.borderSubtle` |
+| **Hex** | `#D1D5DB` |
+| **RGB** | 209, 213, 219 |
+| **Swift** | `ThemeColors.borderGrey` |
 
 **Usage:**
 - Dividers and separators
@@ -214,7 +157,26 @@ Regal purple provides contrast against the green palette. Use sparingly for visu
 
 ---
 
-## 🔴 Utility Colors
+### `surfaceGreyDark` – Surface Grey Dark
+| Property | Value |
+|----------|-------|
+| **Hex** | `#1A1B26` |
+| **RGB** | 26, 27, 38 |
+| **Swift** | `ThemeColors.surfaceGreyDark` |
+
+**Usage:**
+- Dark mode card backgrounds
+- Dark mode modals
+- Elevated surfaces in dark mode
+
+**Design Note:**  
+Slightly lighter than Ink Black to create visual hierarchy in dark mode.
+
+---
+
+## 🔴 Utility / Status Colors
+
+> ⚠️ **Important:** These colors are reserved for status indication ONLY. Never use them as brand colors or primary backgrounds.
 
 ### `errorRed` – Error Red
 | Property | Value |
@@ -249,8 +211,8 @@ Regal purple provides contrast against the green palette. Use sparingly for visu
 ### `successGreen` – Success Green
 | Property | Value |
 |----------|-------|
-| **Hex** | `#90A955` (same as wealthBright) |
-| **RGB** | 144, 169, 85 |
+| **Hex** | `#27AE60` |
+| **RGB** | 39, 174, 96 |
 | **Swift** | `ThemeColors.successGreen` |
 
 **Usage:**
@@ -261,66 +223,101 @@ Regal purple provides contrast against the green palette. Use sparingly for visu
 
 ---
 
-## 🎨 Gradient System
-
-### Brand Gradient (Canonical)
-**Colors:** `wealthDark` → `wealthStrong` → `wealthBright` → `wealthLight`  
-**Swift:** `ThemeColors.brandGradient`
+### `infoTeal` – Info Teal
+| Property | Value |
+|----------|-------|
+| **Hex** | `#17A2B8` |
+| **RGB** | 23, 162, 184 |
+| **Swift** | `ThemeColors.infoTeal` |
 
 **Usage:**
-- Hero sections
-- Splash screens
-- Onboarding backgrounds
-- Premium feature highlights
-
-**Direction:** Top-left to bottom-right
+- Informational banners
+- Tips and hints
+- Neutral callouts
 
 ---
 
-### Light Gradient
-**Colors:** `wealthStrong` → `wealthBright`  
-**Swift:** `ThemeColors.lightGradient`
+## 🌈 Gradient System
+
+### Brand Gradient (Hero)
+**Colors:** `inkBlack` → `deepIndigo` → `slateViolet` → `mistBlue`  
+**Swift:** `ThemeColors.brandGradient`  
+**Direction:** Top-left to bottom-right
 
 **Usage:**
-- Card backgrounds (light mode emphasis)
-- Section headers
-- Button hover states
+- Splash screens
+- Onboarding backgrounds
+- Marketing hero sections
+- App icon background
 
 ---
 
 ### Dark Gradient
-**Colors:** `wealthDark` → `wealthDeep`  
-**Swift:** `ThemeColors.darkGradient`
+**Colors:** `inkBlack` → `deepIndigo`  
+**Swift:** `ThemeColors.darkGradient`  
+**Direction:** Top to bottom
 
 **Usage:**
 - Dark mode backgrounds
 - Navigation bars (dark mode)
-- Footer sections
+- Analyzing/loading screens
+
+---
+
+### Light Gradient
+**Colors:** `slateViolet` → `mistBlue`  
+**Swift:** `ThemeColors.lightGradient`
+
+**Usage:**
+- Card headers (light mode)
+- Section backgrounds
+- Soft emphasis areas
 
 ---
 
 ### Accent Gradient
-**Colors:** `accentPurple` → `wealthBright`  
+**Colors:** `slateViolet` → `mistBlue`  
 **Swift:** `ThemeColors.accentGradient`
 
 **Usage:**
 - Special emphasis
-- Premium badges
-- Promotional banners
+- Premium feature highlights
+- Promotional elements
 
 ---
 
-## 📐 Application Guidelines
+## 📐 Semantic Token Map
+
+| Token | Maps To | Role |
+|-------|---------|------|
+| `primaryBrand` | `deepIndigo` | Primary CTAs, key accents |
+| `primaryCTA` | `deepIndigo` | Same as primaryBrand |
+| `primaryComplement` | `slateViolet` | Secondary CTAs, selections |
+| `secondaryCTA` | `slateViolet` | Same as primaryComplement |
+| `softComplement` | `mistBlue` | Soft backgrounds, badges |
+| `deepComplement` | `inkBlack` | Dark mode cards, shells |
+| `midnight` | `inkBlack` | Dark mode backgrounds |
+| `surfaceLight` | `paperWhite` | Light mode background |
+| `surfaceDark` | `inkBlack` | Dark mode background |
+| `cardLight` | `paperWhite` | Cards (light mode) |
+| `cardDark` | `surfaceGreyDark` | Cards (dark mode) |
+| `textOnLight` | `deepIndigo` | Text on light surfaces |
+| `textOnDark` | `paperWhite` | Text on dark surfaces |
+| `borderSubtle` | `borderGrey` | Dividers, borders |
+
+---
+
+## 📱 Application Guidelines
 
 ### Button Hierarchy
 
 | Level | Background | Text | Border |
 |-------|------------|------|--------|
-| **Primary CTA** | `wealthStrong` | `textOnDark` (wealthLight) | none |
-| **Secondary CTA** | `accentPurple` | `textOnDark` | none |
-| **Tertiary** | `cardLight` + border | `wealthStrong` | `wealthStrong` (1.5px) |
+| **Primary CTA** | `deepIndigo` | `paperWhite` | none |
+| **Secondary CTA** | `slateViolet` | `paperWhite` | none |
+| **Tertiary** | `paperWhite` | `deepIndigo` | `deepIndigo` (1.5px) |
 | **Destructive** | `errorRed` | white | none |
-| **Ghost/Text** | transparent | `wealthStrong` | none |
+| **Ghost/Text** | transparent | `deepIndigo` | none |
 
 **Example:**
 ```swift
@@ -338,11 +335,11 @@ Button("Learn More") { }
 
 // Tertiary
 Button("Cancel") { }
-    .foregroundColor(ThemeColors.wealthStrong)
+    .foregroundColor(ThemeColors.deepIndigo)
     .background(ThemeColors.cardLight)
     .overlay(
         RoundedRectangle(cornerRadius: 12)
-            .stroke(ThemeColors.wealthStrong, lineWidth: 1.5)
+            .stroke(ThemeColors.deepIndigo, lineWidth: 1.5)
     )
 ```
 
@@ -350,37 +347,53 @@ Button("Cancel") { }
 
 ### Text Hierarchy
 
-| Context | Color | Opacity |
-|---------|-------|---------|
-| **Headline (light mode)** | `textOnLight` | 100% |
-| **Body text (light mode)** | `textOnLight` | 100% |
-| **Secondary text (light mode)** | `textSecondaryLight` | 100% |
-| **Caption (light mode)** | `textOnLight` | 60% |
-| **Headline (dark mode)** | `textOnDark` | 100% |
-| **Body text (dark mode)** | `textOnDark` | 100% |
-| **Secondary text (dark mode)** | `textSecondaryDark` | 100% |
+| Context | Color | Notes |
+|---------|-------|-------|
+| **Headline (light)** | `textOnLight` | Deep Indigo |
+| **Body (light)** | `textOnLight` | Deep Indigo |
+| **Secondary (light)** | `textSecondaryLight` | Soft Grey |
+| **Caption (light)** | `textOnLight` at 60% | Reduced opacity |
+| **Headline (dark)** | `textOnDark` | Paper White |
+| **Body (dark)** | `textOnDark` | Paper White |
+| **Secondary (dark)** | `textSecondaryDark` | Mist Blue |
 
 ---
 
 ### Navigation & Tab Bars
 
-| State | Background | Text/Icon | Indicator |
-|-------|------------|-----------|-----------|
-| **Active tab** | transparent | `wealthStrong` | `wealthStrong` underline |
-| **Inactive tab** | transparent | `textSecondaryLight` | none |
-| **Nav bar (light)** | `surfaceLight` | `textOnLight` | - |
-| **Nav bar (dark)** | `surfaceDark` | `textOnDark` | - |
+**Light Mode:**
+| Element | Color |
+|---------|-------|
+| Nav background | `surfaceLight` |
+| Title text | `textOnLight` |
+| Active tab icon | `deepIndigo` |
+| Inactive tab icon | `slateViolet` at 50% |
+
+**Dark Mode:**
+| Element | Color |
+|---------|-------|
+| Nav background | `surfaceDark` |
+| Title text | `textOnDark` |
+| Active tab icon | `mistBlue` |
+| Inactive tab icon | `mistBlue` at 50% |
 
 ---
 
 ### Cards & Containers
 
-| Mode | Background | Border | Shadow |
-|------|------------|--------|--------|
-| **Light mode card** | `cardLight` | `borderSubtle` (optional) | subtle gray |
-| **Dark mode card** | `cardDark` | none | none |
-| **Elevated modal (light)** | `cardLight` | none | strong shadow |
-| **Elevated modal (dark)** | `cardDark` | none | none |
+**Light Mode:**
+| Element | Color |
+|---------|-------|
+| Background | `cardLight` |
+| Border | `borderGrey` (optional) |
+| Shadow | Subtle grey shadow |
+
+**Dark Mode:**
+| Element | Color |
+|---------|-------|
+| Background | `cardDark` |
+| Border | none (rely on elevation) |
+| Shadow | none |
 
 ---
 
@@ -388,97 +401,78 @@ Button("Cancel") { }
 
 | Type | Background | Text |
 |------|------------|------|
-| **Primary** | `wealthStrong` | `textOnDark` |
-| **Success** | `successGreen` | `wealthDark` |
-| **Warning** | `warningAmber` | `wealthDark` |
+| **Primary** | `deepIndigo` | `paperWhite` |
+| **Secondary** | `slateViolet` | `paperWhite` |
+| **Soft** | `mistBlue` | `deepIndigo` |
+| **Success** | `successGreen` | white |
+| **Warning** | `warningAmber` | `inkBlack` |
 | **Error** | `errorRed` | white |
-| **Accent** | `accentPurple` | `textOnDark` |
-| **Neutral** | `borderSubtle` | `textOnLight` |
+| **Neutral** | `borderGrey` | `textOnLight` |
 
 ---
 
-## 🔧 Implementation
+## ✅ Accessibility & Testing
 
-### Semantic Aliases
+### Required Contrast Checks
 
-Use these convenient aliases for common patterns:
+Run contrast checks for these primary pairs (target WCAG AA 4.5:1):
 
-```swift
-ThemeColors.primaryBrand   // → wealthStrong
-ThemeColors.primaryCTA     // → wealthStrong
-ThemeColors.secondaryCTA   // → accentPurple
-ThemeColors.destructive    // → errorRed
-ThemeColors.warning        // → warningAmber
-ThemeColors.success        // → successGreen
-```
+| Foreground | Background | Expected |
+|------------|------------|----------|
+| `textOnLight` (deepIndigo) | `surfaceLight` (paperWhite) | ✅ Pass |
+| `textOnDark` (paperWhite) | `surfaceDark` (inkBlack) | ✅ Pass |
+| `paperWhite` | `deepIndigo` | ✅ Pass |
+| `paperWhite` | `slateViolet` | ✅ Pass |
 
----
+### Accessibility Guidelines
 
-### Dark Mode Support
-
-All colors are designed to work in both light and dark modes:
-
-```swift
-// Light mode
-.background(ThemeColors.surfaceLight)
-.foregroundColor(ThemeColors.textOnLight)
-
-// Dark mode
-.background(ThemeColors.surfaceDark)
-.foregroundColor(ThemeColors.textOnDark)
-```
+1. **Never rely on color alone** – Always pair colors with icons, labels, or patterns
+2. **Avoid long text on saturated backgrounds** – Gradients and brand colors are for heroes, not body text
+3. **Test in both light and dark mode** – Ensure all states are readable
+4. **Consider color blindness** – Our purple/blue palette works well for most forms of color blindness
 
 ---
 
-### Gradient Usage
+## 🔧 Implementation Notes
 
-```swift
-// Hero section with brand gradient
-ZStack {
-    ThemeColors.brandGradient
-        .ignoresSafeArea()
-    
-    VStack {
-        Text("Find Your Perfect Role")
-            .foregroundColor(ThemeColors.textOnDark)
-    }
-}
+### Golden Rules
 
-// Card with light gradient
-RoundedRectangle(cornerRadius: 16)
-    .fill(ThemeColors.lightGradient)
-    .frame(height: 120)
-```
+1. **All SwiftUI views MUST use `ThemeColors` tokens** – Never hard-code hex values
+2. **Use semantic tokens when possible** – `primaryBrand` instead of `deepIndigo` for future-proofing
+3. **Gradients are for heroes only** – Splash, onboarding, marketing sections – NOT behind body text
+4. **Status colors are reserved** – Red=error, Amber=warning, Green=success – Don't repurpose
 
----
+### Dark Mode Strategy
 
-## ✅ Migration Checklist
+The app uses `darkGradient` (Ink → Indigo) for dark mode backgrounds, creating a unified, branded dark experience rather than generic system dark colors.
 
-When updating from the old palette:
+### Legacy Compatibility
 
-- [ ] Replace `primaryBrand` (orange) → now `wealthStrong` (green)
-- [ ] Replace `primaryComplement` (blue) → now `accentPurple`
-- [ ] Replace `softComplement` (light blue) → now `wealthBright`
-- [ ] Replace `deepComplement` (dark blue) → now `wealthDeep`
-- [ ] Replace `midnight` (navy) → now `wealthDark`
-- [ ] Update all gradient references to use new gradient system
-- [ ] Test all screens in both light and dark mode
-- [ ] Verify text contrast ratios (WCAG AA: 4.5:1 for body text)
+The `ThemeColors` file includes legacy aliases for the previous green palette:
+- `wealthDark` → `inkBlack`
+- `wealthDeep` → `surfaceGreyDark`
+- `wealthStrong` → `deepIndigo`
+- `wealthBright` → `slateViolet`
+- `wealthLight` → `mistBlue`
+- `accentPurple` → `slateViolet`
+
+These allow gradual migration. New code should use the canonical Palette A names.
 
 ---
 
-## 🎯 Quick Reference
+## 🎯 Component Quick Reference
 
-**Primary Actions:** `wealthStrong`  
-**Secondary Actions:** `accentPurple`  
-**Success:** `wealthBright` (successGreen)  
-**Warning:** `warningAmber`  
-**Error/Destructive:** `errorRed`  
-**Text (Light Mode):** `wealthDark`  
-**Text (Dark Mode):** `wealthLight`  
-**Backgrounds (Light):** `surfaceLight` → `cardLight`  
-**Backgrounds (Dark):** `surfaceDark` → `cardDark`
+| Screen | Background | Primary CTA | Text |
+|--------|------------|-------------|------|
+| **Splash** | `darkGradient` | n/a | `textOnDark` |
+| **Onboarding** | `darkGradient` | `primaryBrand` | `textOnDark` |
+| **Auth** | `surfaceDark` | `primaryBrand` | `textOnDark` |
+| **Upload** | `surfaceLight` | `primaryBrand` | `textOnLight` |
+| **Analyzing** | `darkGradient` | n/a | `textOnDark` |
+| **Results** | `surfaceLight` | `primaryBrand` | `textOnLight` |
+| **Dashboard** | `surfaceLight` | `primaryBrand` | `textOnLight` |
+| **Settings** | System List | `primaryBrand` | System |
 
 ---
 
-*Questions? Contact the design team or reference `Core/ThemeColors.swift`.*
+*Questions? Reference `Core/ThemeColors.swift` or contact the design team.*
