@@ -2,15 +2,15 @@
 //  ThemeColors.swift
 //  JobMatchNow
 //
-//  CANONICAL COLOR PALETTE - PALETTE A (CORRECTED)
-//  ================================================
-//  Cool indigo/violet system. ALL colors from this palette only.
-//  NO off-palette blues, NO system colors.
+//  CANONICAL COLOR PALETTE — TRIADIC SYSTEM
+//  =========================================
+//  Purple (brand) + Green-Teal (actions) + Warm Sand (accents)
 //
-//  KEY TOKENS:
-//  - primaryBrand (deepIndigo) = brand text, icons, headings
-//  - primaryAccent (bright violet) = CTAs, highlights, interactive elements
-//  - All surfaces are neutral (white/grey)
+//  HIERARCHY:
+//  - Purple family: typography, icons, brand identity
+//  - Green-teal: primary CTAs, key actions, important metrics
+//  - Warm sand: soft highlights, secondary surfaces, subtle chips
+//  - Neutrals: backgrounds, cards, borders
 //
 //  For design rationale: see Docs/ColorPalette.md
 //
@@ -22,111 +22,100 @@ import SwiftUI
 enum ThemeColors {
     
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MARK: - Core Palette A Colors
+    // MARK: - Core Triadic Palette
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    /// **Ink Black** – Near-black for dark mode backgrounds.
-    /// Use for: Dark mode shells, gradient dark end.
-    static let inkBlack = Color(hex: 0x000505)
+    // MARK: Purple Family (Brand)
     
-    /// **Deep Indigo** – Primary brand identity color.
-    /// Use for: Brand text, headings, icons – NOT for CTA backgrounds.
-    static let deepIndigo = Color(hex: 0x3B3355)
+    /// **Brand Purple Dark** – Primary brand color for headings, icons, key labels.
+    /// Use for: Typography, icons, brand identity (NOT for CTA fills).
+    static let brandPurpleDark = Color(hex: 0x3B3355)
     
-    /// **Slate Violet** – Mid-tone purple-grey.
-    /// Use for: Secondary text on dark, inactive states, supporting UI.
-    static let slateViolet = Color(hex: 0x5D5D81)
+    /// **Brand Purple Mid** – Secondary brand tone for structure.
+    /// Use for: Secondary text on dark, inactive states, dark mode structure.
+    static let brandPurpleMid = Color(hex: 0x5D5D81)
     
-    /// **Mist Blue** – Soft cool accent.
-    /// Use for: Soft backgrounds, badges, subtle highlights.
-    static let mistBlue = Color(hex: 0xBFCDE0)
+    // MARK: Green-Teal (Primary Action)
     
-    /// **Paper White** – Warm off-white for surfaces.
-    /// Use for: Light mode backgrounds, text on dark.
-    static let paperWhite = Color(hex: 0xFEFCFD)
-    
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MARK: - Primary Accent (CTA Color)
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
-    /// **Primary Accent** – Brighter, more saturated violet for CTAs.
-    /// This is slateViolet lightened and saturated to work as a button fill.
+    /// **Accent Green** – Primary CTA / action color.
     /// ⭐ USE THIS FOR ALL PRIMARY CTAs ⭐
-    /// Stays in the purple/indigo family – NO off-palette blues.
-    static let primaryAccent = Color(hex: 0x7B6FA2)
+    /// Use for: Buttons, key actions, important metrics.
+    static let accentGreen = Color(hex: 0x52885E)
     
-    /// **Accent Pressed** – Darker variant for pressed/active states.
-    static let accentPressed = Color(hex: 0x5D5481)
+    /// **Accent Green Pressed** – Darker variant for pressed states.
+    static let accentGreenPressed = Color(hex: 0x3D6847)
     
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MARK: - Neutral Greys (De-saturated, no blue tint)
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // MARK: Warm Sand (Secondary Accent)
     
-    /// **Soft Grey** – Secondary text on light backgrounds.
-    static let softGrey = Color(hex: 0x6B7280)
+    /// **Accent Sand** – Soft warm neutral accent.
+    /// Use for: Soft backgrounds, subtle chips, gentle highlights.
+    static let accentSand = Color(hex: 0xF5EEE4)
     
-    /// **Border Grey** – Dividers, card borders.
-    static let borderGrey = Color(hex: 0xE5E7EB)
-    
-    /// **Surface Grey Dark** – Dark mode cards/elevated surfaces.
-    static let surfaceGreyDark = Color(hex: 0x1A1B26)
+    /// **Accent Sand Dark** – Slightly darker sand for borders/hover.
+    static let accentSandDark = Color(hex: 0xE8DFD2)
     
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MARK: - Surfaces & Backgrounds (NEUTRAL)
+    // MARK: - Neutrals
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    /// **Surface Light** – Main page background (light mode).
-    static let surfaceLight = paperWhite
+    /// **Surface Light** – Main light mode background (off-white).
+    static let surfaceLight = Color(hex: 0xF9FAFB)
     
     /// **Surface White** – Pure white for cards.
     static let surfaceWhite = Color(hex: 0xFFFFFF)
     
-    /// **Surface Dark** – Main background (dark mode).
-    static let surfaceDark = inkBlack
+    /// **Surface Dark** – Deep neutral for dark mode backgrounds.
+    static let surfaceDark = Color(hex: 0x0A0A0F)
     
     /// **Card Light** – Card backgrounds (light mode). Pure white.
     static let cardLight = Color(hex: 0xFFFFFF)
     
-    /// **Card Dark** – Card backgrounds (dark mode).
-    static let cardDark = surfaceGreyDark
+    /// **Card Dark** – Card backgrounds (dark mode). Deep but not pure black.
+    static let cardDark = Color(hex: 0x1A1B26)
     
-    /// **Border Subtle** – Dividers and borders.
-    static let borderSubtle = borderGrey
+    /// **Border Subtle** – Light neutral grey for dividers (no purple tint).
+    static let borderSubtle = Color(hex: 0xE5E7EB)
+    
+    /// **Soft Grey** – Medium neutral grey for secondary text.
+    static let softGrey = Color(hex: 0x6B7280)
+    
+    /// **Paper White** – Warm off-white for text on dark.
+    static let paperWhite = Color(hex: 0xFEFCFD)
     
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // MARK: - Semantic Brand Tokens
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    /// **Primary Brand** – Brand identity for TEXT and ICONS.
-    /// Maps to: deepIndigo
-    static var primaryBrand: Color { deepIndigo }
+    /// **Primary Brand** – Brand identity for text and icons.
+    /// Maps to: brandPurpleDark
+    /// Use for: Headings, icons, key labels (NOT for CTA fills).
+    static var primaryBrand: Color { brandPurpleDark }
     
-    /// **Primary CTA** – Main interactive/clickable element color.
-    /// Maps to: primaryAccent (bright violet)
-    static var primaryCTA: Color { primaryAccent }
+    /// **Primary Accent** – Primary CTA / action color.
+    /// Maps to: accentGreen (green-teal)
+    /// Use for: Button fills, key actions, important metrics.
+    static var primaryAccent: Color { accentGreen }
     
-    /// **Secondary CTA** – For secondary buttons (outline style).
-    /// Maps to: primaryAccent
-    static var secondaryCTA: Color { primaryAccent }
+    /// **Secondary Accent** – Soft accent for highlights.
+    /// Maps to: accentSand (warm sand)
+    /// Use for: Soft backgrounds, subtle chips, gentle highlights.
+    static var secondaryAccent: Color { accentSand }
     
-    /// **Primary Complement** – Supporting brand tone.
-    static var primaryComplement: Color { slateViolet }
+    /// **Primary Complement** – Supporting purple tone.
+    static var primaryComplement: Color { brandPurpleMid }
     
-    /// **Soft Complement** – Soft accent for badges, subtle fills.
-    static var softComplement: Color { mistBlue }
+    /// **Deep Complement** – Dark anchor for structure.
+    static var deepComplement: Color { brandPurpleDark }
     
-    /// **Deep Complement** – Dark anchor color.
-    static var deepComplement: Color { inkBlack }
-    
-    /// **Midnight** – Alias for deep dark backgrounds.
-    static var midnight: Color { inkBlack }
+    /// **Midnight** – Deepest dark for backgrounds.
+    static var midnight: Color { surfaceDark }
     
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // MARK: - Text Colors
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     /// **Text on Light** – Primary text for light backgrounds.
-    static let textOnLight = deepIndigo
+    static let textOnLight = brandPurpleDark
     
     /// **Text on Dark** – Primary text for dark backgrounds.
     static let textOnDark = paperWhite
@@ -135,7 +124,7 @@ enum ThemeColors {
     static let textSecondaryLight = softGrey
     
     /// **Text Secondary Dark** – Secondary text on dark.
-    static let textSecondaryDark = mistBlue
+    static let textSecondaryDark = Color(hex: 0xA0A0B0)
     
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // MARK: - Utility / Status Colors
@@ -147,11 +136,11 @@ enum ThemeColors {
     /// **Warning Amber** – Warnings, pending states.
     static let warningAmber = Color(hex: 0xF39C12)
     
-    /// **Success Green** – Success, completion.
+    /// **Success Green** – Success, completion (distinct from accent).
     static let successGreen = Color(hex: 0x27AE60)
     
-    /// **Info** – Informational (uses slateViolet to stay on palette).
-    static let info = slateViolet
+    /// **Info** – Informational (uses brand purple to stay on palette).
+    static let info = brandPurpleMid
     
     // Semantic Aliases
     static var destructive: Color { errorRed }
@@ -162,59 +151,52 @@ enum ThemeColors {
     // MARK: - Legacy Compatibility Aliases
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    static var wealthDark: Color { inkBlack }
-    static var wealthDeep: Color { surfaceGreyDark }
-    static var wealthStrong: Color { primaryAccent }
-    static var wealthBright: Color { primaryAccent }
-    static var wealthLight: Color { mistBlue }
-    static var accentPurple: Color { primaryAccent }
+    // These map old token names to the new triadic system
+    static var inkBlack: Color { surfaceDark }
+    static var deepIndigo: Color { brandPurpleDark }
+    static var slateViolet: Color { brandPurpleMid }
+    static var mistBlue: Color { accentSand } // Replaced with sand
+    static var primaryCTA: Color { accentGreen }
+    static var secondaryCTA: Color { accentGreen }
+    static var borderGrey: Color { borderSubtle }
     
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MARK: - Soft Background Gradients (Palette A Only)
+    // MARK: - Gradients (Dark Screens)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     /// **Intro Gradient** – Soft gradient for splash/intro screens.
-    /// Smooth transition: inkBlack → deepIndigo → slateViolet (soft dusk sky feel)
+    /// Built from surfaceDark and darkened brandPurpleDark.
     static let introGradient = LinearGradient(
         colors: [
-            inkBlack,
-            deepIndigo,
-            slateViolet.opacity(0.85)
+            surfaceDark,
+            brandPurpleDark.opacity(0.8),
+            brandPurpleMid.opacity(0.6)
         ],
         startPoint: .top,
         endPoint: .bottom
     )
     
     /// **Loading Gradient** – Soft gradient for analyzing/loading screens.
-    /// Similar to intro but with subtle mistBlue tint at bottom.
     static let loadingGradient = LinearGradient(
         colors: [
-            inkBlack,
-            deepIndigo,
-            slateViolet.opacity(0.7),
-            mistBlue.opacity(0.15)
+            surfaceDark,
+            brandPurpleDark.opacity(0.9),
+            brandPurpleMid.opacity(0.5)
         ],
         startPoint: .top,
         endPoint: .bottom
     )
     
-    /// **Brand Gradient** – Full palette sweep for marketing/hero.
-    static let brandGradient = LinearGradient(
-        colors: [inkBlack, deepIndigo, slateViolet, mistBlue.opacity(0.5)],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-    
-    /// **Dark Gradient** – Simple dark gradient.
+    /// **Dark Gradient** – Simple dark background gradient.
     static let darkGradient = LinearGradient(
-        colors: [inkBlack, deepIndigo],
+        colors: [surfaceDark, brandPurpleDark.opacity(0.7)],
         startPoint: .top,
         endPoint: .bottom
     )
     
-    /// **Light Gradient** – Soft gradient for light mode.
+    /// **Light Gradient** – Soft gradient for light mode emphasis.
     static let lightGradient = LinearGradient(
-        colors: [mistBlue.opacity(0.2), paperWhite],
+        colors: [accentSand.opacity(0.3), surfaceLight],
         startPoint: .top,
         endPoint: .bottom
     )
@@ -248,35 +230,56 @@ struct ThemeColorsPreview: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Palette A Colors")
+                Text("Triadic Palette")
                     .font(.largeTitle.bold())
                     .foregroundColor(ThemeColors.textOnLight)
                 
-                // Core Palette
+                // Purple Family
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Core Palette A")
+                    Text("Purple (Brand)")
                         .font(.headline)
-                    colorRow("inkBlack", ThemeColors.inkBlack)
-                    colorRow("deepIndigo", ThemeColors.deepIndigo)
-                    colorRow("slateViolet", ThemeColors.slateViolet)
-                    colorRow("mistBlue", ThemeColors.mistBlue)
-                    colorRow("paperWhite", ThemeColors.paperWhite)
+                    colorRow("brandPurpleDark", ThemeColors.brandPurpleDark)
+                    colorRow("brandPurpleMid", ThemeColors.brandPurpleMid)
                 }
                 
-                // Primary Accent
+                // Green-Teal
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Primary Accent (CTAs)")
+                    Text("Green-Teal (Actions)")
                         .font(.headline)
-                    colorRow("primaryAccent", ThemeColors.primaryAccent)
-                    colorRow("accentPressed", ThemeColors.accentPressed)
+                    colorRow("accentGreen", ThemeColors.accentGreen)
+                    colorRow("accentGreenPressed", ThemeColors.accentGreenPressed)
                 }
                 
-                // Gradients
+                // Warm Sand
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Gradients")
+                    Text("Warm Sand (Accent)")
                         .font(.headline)
-                    gradientRow("introGradient", ThemeColors.introGradient)
-                    gradientRow("loadingGradient", ThemeColors.loadingGradient)
+                    colorRow("accentSand", ThemeColors.accentSand)
+                    colorRow("accentSandDark", ThemeColors.accentSandDark)
+                }
+                
+                // Neutrals
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Neutrals")
+                        .font(.headline)
+                    colorRow("surfaceLight", ThemeColors.surfaceLight)
+                    colorRow("cardLight", ThemeColors.cardLight)
+                    colorRow("borderSubtle", ThemeColors.borderSubtle)
+                    colorRow("softGrey", ThemeColors.softGrey)
+                }
+                
+                // Button Example
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Button Example")
+                        .font(.headline)
+                    
+                    Button("Primary CTA") {}
+                        .font(.headline)
+                        .foregroundColor(ThemeColors.textOnDark)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(ThemeColors.primaryAccent)
+                        .cornerRadius(12)
                 }
             }
             .padding()
@@ -297,17 +300,6 @@ struct ThemeColorsPreview: View {
                 .font(.system(.caption, design: .monospaced))
                 .foregroundColor(ThemeColors.textOnLight)
             Spacer()
-        }
-    }
-    
-    private func gradientRow(_ name: String, _ gradient: LinearGradient) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(name)
-                .font(.system(.caption, design: .monospaced))
-                .foregroundColor(ThemeColors.textOnLight)
-            RoundedRectangle(cornerRadius: 8)
-                .fill(gradient)
-                .frame(height: 40)
         }
     }
 }

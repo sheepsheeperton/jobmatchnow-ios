@@ -9,7 +9,7 @@ enum ResultsSource {
 
 // MARK: - Search Results View
 
-/// Displays job matches (Palette A colors only)
+/// Displays job matches (triadic palette)
 struct SearchResultsView: View {
     let viewToken: String
     var source: ResultsSource = .currentSearch
@@ -54,7 +54,7 @@ struct SearchResultsView: View {
                     Text("Your Job Matches")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundColor(ThemeColors.textOnLight)
+                        .foregroundColor(ThemeColors.primaryBrand)
                     
                     Text("Found \(viewModel.jobs.count) matches based on your résumé")
                         .font(.subheadline)
@@ -173,7 +173,7 @@ struct SearchResultsView: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .scaleEffect(1.2)
-                        .tint(ThemeColors.primaryAccent)
+                        .tint(ThemeColors.accentGreen)
                     Text("Loading \(viewModel.selectedBucket.displayName) jobs...")
                         .font(.subheadline)
                         .foregroundColor(ThemeColors.textOnLight)
@@ -245,7 +245,7 @@ struct SearchResultsView: View {
     }
 }
 
-// MARK: - Job Bucket Picker (Palette A colors)
+// MARK: - Job Bucket Picker (triadic palette)
 
 struct JobBucketPicker: View {
     @Binding var selectedBucket: JobBucket
@@ -283,7 +283,7 @@ struct JobBucketPicker: View {
                     .padding(.vertical, 10)
                     .background(
                         selectedBucket == bucket
-                            ? ThemeColors.primaryAccent
+                            ? ThemeColors.accentGreen
                             : Color.clear
                     )
                 }
@@ -316,7 +316,7 @@ struct JobBucketPicker: View {
     }
 }
 
-// MARK: - Job Card View (Palette A colors)
+// MARK: - Job Card View (triadic palette)
 
 struct JobCardView: View {
     let job: Job
@@ -359,12 +359,12 @@ struct JobCardView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(job.title)
                         .font(.headline)
-                        .foregroundColor(ThemeColors.textOnLight)
+                        .foregroundColor(ThemeColors.primaryBrand)
                         .multilineTextAlignment(.leading)
                     
                     Text(job.company_name)
                         .font(.subheadline)
-                        .foregroundColor(ThemeColors.primaryAccent)
+                        .foregroundColor(ThemeColors.accentGreen)
                 }
                 
                 Spacer()
@@ -413,7 +413,7 @@ struct JobCardView: View {
                 if explanationState.isLoading {
                     ProgressView()
                         .scaleEffect(0.7)
-                        .tint(ThemeColors.primaryAccent)
+                        .tint(ThemeColors.accentGreen)
                 } else {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
@@ -422,7 +422,7 @@ struct JobCardView: View {
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 12)
-            .background(ThemeColors.mistBlue.opacity(0.2))
+            .background(ThemeColors.accentSand.opacity(0.5))
             .cornerRadius(Theme.CornerRadius.small)
         }
         .buttonStyle(PlainButtonStyle())
@@ -450,7 +450,7 @@ struct JobCardView: View {
         HStack(spacing: 12) {
             ProgressView()
                 .scaleEffect(0.8)
-                .tint(ThemeColors.primaryAccent)
+                .tint(ThemeColors.accentGreen)
             
             Text("Analyzing your résumé match…")
                 .font(.subheadline)
@@ -460,7 +460,7 @@ struct JobCardView: View {
             Spacer()
         }
         .padding(12)
-        .background(ThemeColors.mistBlue.opacity(0.15))
+        .background(ThemeColors.accentSand.opacity(0.3))
         .cornerRadius(Theme.CornerRadius.small)
     }
     
@@ -479,7 +479,7 @@ struct JobCardView: View {
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
-                                .foregroundColor(ThemeColors.successGreen)
+                                .foregroundColor(ThemeColors.accentGreen)
                                 .padding(.top, 2)
                             
                             Text(bullet)
@@ -492,7 +492,7 @@ struct JobCardView: View {
             }
         }
         .padding(12)
-        .background(ThemeColors.mistBlue.opacity(0.1))
+        .background(ThemeColors.accentSand.opacity(0.2))
         .cornerRadius(Theme.CornerRadius.small)
     }
     
@@ -514,7 +514,7 @@ struct JobCardView: View {
                 Text("Try Again")
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(ThemeColors.primaryAccent)
+                    .foregroundColor(ThemeColors.accentGreen)
             }
         }
         .padding(12)
@@ -535,7 +535,7 @@ struct JobCardView: View {
                     .foregroundColor(ThemeColors.textOnDark)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(jobURL != nil ? ThemeColors.primaryAccent : ThemeColors.softGrey)
+                    .background(jobURL != nil ? ThemeColors.accentGreen : ThemeColors.softGrey)
                     .cornerRadius(Theme.CornerRadius.small)
                 
                 Image(systemName: "arrow.up.right")
@@ -549,7 +549,7 @@ struct JobCardView: View {
     }
 }
 
-// MARK: - Remote Badge (Palette A colors)
+// MARK: - Remote Badge (sand background)
 
 struct RemoteBadge: View {
     var body: some View {
@@ -560,15 +560,15 @@ struct RemoteBadge: View {
         }
         .font(.caption)
         .fontWeight(.medium)
-        .foregroundColor(ThemeColors.primaryAccent)
+        .foregroundColor(ThemeColors.primaryBrand)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(ThemeColors.mistBlue.opacity(0.3))
+        .background(ThemeColors.accentSand)
         .cornerRadius(Theme.CornerRadius.small)
     }
 }
 
-// MARK: - Save Search Prompt (Palette A colors)
+// MARK: - Save Search Prompt (sand background)
 
 struct SaveSearchPromptView: View {
     let onSave: () -> Void
@@ -576,11 +576,11 @@ struct SaveSearchPromptView: View {
     var body: some View {
         HStack {
             Image(systemName: "bookmark.fill")
-                .foregroundColor(ThemeColors.primaryAccent)
+                .foregroundColor(ThemeColors.accentGreen)
             
             Text("Search saved to dashboard")
                 .font(.subheadline)
-                .foregroundColor(ThemeColors.textOnLight)
+                .foregroundColor(ThemeColors.primaryBrand)
             
             Spacer()
             
@@ -589,10 +589,10 @@ struct SaveSearchPromptView: View {
             }
             .font(.subheadline)
             .fontWeight(.medium)
-            .foregroundColor(ThemeColors.primaryAccent)
+            .foregroundColor(ThemeColors.accentGreen)
         }
         .padding(12)
-        .background(ThemeColors.mistBlue.opacity(0.2))
+        .background(ThemeColors.accentSand.opacity(0.5))
         .cornerRadius(Theme.CornerRadius.small)
     }
 }

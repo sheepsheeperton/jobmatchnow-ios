@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Settings View
 
-/// App settings (Palette A colors only)
+/// App settings (triadic palette)
 struct SettingsView: View {
     @StateObject private var appState = AppState.shared
     @Environment(\.dismiss) private var dismiss
@@ -135,14 +135,14 @@ struct SettingsView: View {
                 }) {
                     Label("Reset Onboarding", systemImage: "arrow.counterclockwise")
                 }
-                .foregroundColor(ThemeColors.primaryAccent)
+                .foregroundColor(ThemeColors.accentGreen)
                 
                 Button(action: {
                     appState.clearLastSearch()
                 }) {
                     Label("Clear Last Search", systemImage: "trash")
                 }
-                .foregroundColor(ThemeColors.primaryAccent)
+                .foregroundColor(ThemeColors.accentGreen)
             } header: {
                 Text("Debug")
             }
@@ -155,7 +155,7 @@ struct SettingsView: View {
                 Button("Done") {
                     dismiss()
                 }
-                .foregroundColor(ThemeColors.primaryAccent)
+                .foregroundColor(ThemeColors.accentGreen)
             }
         }
         .confirmationDialog(

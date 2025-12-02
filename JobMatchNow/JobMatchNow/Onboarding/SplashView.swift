@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Splash View
 
 /// Initial splash screen shown on app launch
-/// Uses soft intro gradient (Palette A only), no halos
+/// Uses intro gradient (purple family), sand accent for icon
 struct SplashView: View {
     @StateObject private var appState = AppState.shared
     @State private var isAnimating = false
@@ -11,21 +11,21 @@ struct SplashView: View {
     
     var body: some View {
         ZStack {
-            // Soft background gradient (Palette A only)
+            // Dark gradient background (purple family)
             ThemeColors.introGradient
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
-                // App Icon / Logo - simple, no halo
+                // App Icon / Logo
                 ZStack {
                     Circle()
-                        .fill(ThemeColors.slateViolet.opacity(0.3))
+                        .fill(ThemeColors.brandPurpleMid.opacity(0.4))
                         .frame(width: 120, height: 120)
                         .scaleEffect(isAnimating ? 1.05 : 1.0)
                     
                     Image(systemName: "briefcase.fill")
                         .font(.system(size: 50))
-                        .foregroundColor(ThemeColors.mistBlue)
+                        .foregroundColor(ThemeColors.accentSand)
                         .scaleEffect(isAnimating ? 1.02 : 1.0)
                 }
                 .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: isAnimating)
@@ -38,13 +38,13 @@ struct SplashView: View {
                     
                     Text("Find your perfect match")
                         .font(.subheadline)
-                        .foregroundColor(ThemeColors.mistBlue)
+                        .foregroundColor(ThemeColors.textSecondaryDark)
                 }
                 
                 // Loading indicator
                 if !checkComplete {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.mistBlue))
+                        .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.accentSand))
                         .scaleEffect(1.2)
                         .padding(.top, 40)
                 }

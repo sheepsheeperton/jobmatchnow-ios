@@ -4,7 +4,7 @@ import VisionKit
 
 // MARK: - Search Upload View
 
-/// Root view for the Search tab (Palette A colors only)
+/// Root view for the Search tab (triadic palette)
 struct SearchUploadView: View {
     @StateObject private var appState = AppState.shared
     @State private var isShowingDocumentPicker = false
@@ -40,7 +40,7 @@ struct SearchUploadView: View {
                     Text("Upload Your Résumé")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundColor(ThemeColors.textOnLight)
+                        .foregroundColor(ThemeColors.primaryBrand)
                         .multilineTextAlignment(.center)
                     
                     Text("We'll analyze your skills and match you with relevant job opportunities")
@@ -53,10 +53,10 @@ struct SearchUploadView: View {
                 
                 Spacer()
                 
-                // Upload illustration - mistBlue fill, primaryBrand icon
+                // Upload illustration - sand background, purple icon
                 ZStack {
                     Circle()
-                        .fill(ThemeColors.mistBlue.opacity(0.4))
+                        .fill(ThemeColors.accentSand)
                         .frame(width: 160, height: 160)
                     
                     Image(systemName: "doc.badge.arrow.up.fill")
@@ -69,7 +69,7 @@ struct SearchUploadView: View {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.5)
-                            .tint(ThemeColors.primaryAccent)
+                            .tint(ThemeColors.accentGreen)
                         
                         Text("Analyzing your résumé...")
                             .font(.subheadline)
@@ -95,7 +95,7 @@ struct SearchUploadView: View {
             
             // Bottom button section
             VStack(spacing: 16) {
-                // Primary upload button - primaryAccent (Palette A purple)
+                // Primary upload button - green CTA
                 Button(action: {
                     print("[SearchUploadView] Upload button pressed")
                     isShowingDocumentPicker = true
@@ -109,12 +109,12 @@ struct SearchUploadView: View {
                     .foregroundColor(ThemeColors.textOnDark)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(isUploading ? ThemeColors.softGrey : ThemeColors.primaryAccent)
+                    .background(isUploading ? ThemeColors.softGrey : ThemeColors.accentGreen)
                     .cornerRadius(Theme.CornerRadius.medium)
                 }
                 .disabled(isUploading)
                 
-                // Secondary camera button - outline style
+                // Secondary camera button - outlined green
                 if DocumentScannerView.isSupported {
                     Button(action: {
                         print("[SearchUploadView] Camera button pressed")
@@ -126,14 +126,14 @@ struct SearchUploadView: View {
                             Text("Scan with Camera")
                                 .font(.headline)
                         }
-                        .foregroundColor(ThemeColors.primaryAccent)
+                        .foregroundColor(ThemeColors.accentGreen)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
                         .background(ThemeColors.cardLight)
                         .cornerRadius(Theme.CornerRadius.medium)
                         .overlay(
                             RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
-                                .stroke(ThemeColors.primaryAccent, lineWidth: 1.5)
+                                .stroke(ThemeColors.accentGreen, lineWidth: 1.5)
                         )
                     }
                     .disabled(isUploading)
@@ -156,7 +156,7 @@ struct SearchUploadView: View {
                             Text("Use Sample Résumé")
                         }
                         .font(.subheadline)
-                        .foregroundColor(ThemeColors.primaryAccent)
+                        .foregroundColor(ThemeColors.primaryBrand)
                     }
                     .disabled(isUploading)
                     .padding(.top, 8)
@@ -390,7 +390,7 @@ struct SearchUploadView: View {
     }
 }
 
-// MARK: - Last Search Card
+// MARK: - Last Search Card (triadic palette)
 
 struct LastSearchCard: View {
     let lastSearch: AppState.LastSearchInfo
@@ -408,7 +408,7 @@ struct LastSearchCard: View {
                     
                     Text(displayTitle)
                         .font(.headline)
-                        .foregroundColor(ThemeColors.textOnLight)
+                        .foregroundColor(ThemeColors.primaryBrand)
                     
                     if let currentRole = lastSearch.currentRoleTitle, !currentRole.isEmpty {
                         Text("Based on your role: \(currentRole)")
@@ -430,7 +430,7 @@ struct LastSearchCard: View {
                 if isLoading {
                     ProgressView()
                         .scaleEffect(0.8)
-                        .tint(ThemeColors.primaryAccent)
+                        .tint(ThemeColors.accentGreen)
                 } else {
                     Image(systemName: "chevron.right")
                         .foregroundColor(ThemeColors.textSecondaryLight)

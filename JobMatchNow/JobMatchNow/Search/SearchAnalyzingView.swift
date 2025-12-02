@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Search Analyzing View
 
-/// Pipeline loading screen with soft gradient (Palette A only, no halos)
+/// Pipeline loading screen (triadic palette)
 struct SearchAnalyzingView: View {
     let viewToken: String
     
@@ -24,7 +24,7 @@ struct SearchAnalyzingView: View {
     
     var body: some View {
         ZStack {
-            // Soft loading gradient (Palette A only)
+            // Dark gradient background (purple family)
             ThemeColors.loadingGradient
                 .ignoresSafeArea()
             
@@ -39,7 +39,7 @@ struct SearchAnalyzingView: View {
                     
                     Text("This will only take a moment")
                         .font(.body)
-                        .foregroundColor(ThemeColors.mistBlue)
+                        .foregroundColor(ThemeColors.textSecondaryDark)
                 }
                 .padding(.top, 60)
                 
@@ -199,7 +199,7 @@ enum StepStatus {
     case completed
 }
 
-// MARK: - Pipeline Step Row (no halos, Palette A only)
+// MARK: - Pipeline Step Row (triadic palette)
 
 struct PipelineStepRow: View {
     let step: PipelineStep
@@ -208,24 +208,23 @@ struct PipelineStepRow: View {
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
-                // Simple circle background, no halo
                 Circle()
                     .fill(backgroundColor)
                     .frame(width: 44, height: 44)
                 
                 if status == .completed {
+                    // Green checkmark for completed
                     Image(systemName: "checkmark")
                         .font(.title3)
                         .fontWeight(.semibold)
                         .foregroundColor(ThemeColors.textOnDark)
                 } else if status == .inProgress {
-                    // Outline ring for current step
                     Circle()
-                        .stroke(ThemeColors.primaryAccent, lineWidth: 2)
+                        .stroke(ThemeColors.accentGreen, lineWidth: 2)
                         .frame(width: 44, height: 44)
                     
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.primaryAccent))
+                        .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.accentSand))
                         .scaleEffect(0.8)
                 } else {
                     Image(systemName: step.icon)
@@ -245,11 +244,11 @@ struct PipelineStepRow: View {
     private var backgroundColor: Color {
         switch status {
         case .completed:
-            return ThemeColors.primaryAccent
+            return ThemeColors.accentGreen
         case .inProgress:
-            return ThemeColors.slateViolet.opacity(0.3)
+            return ThemeColors.brandPurpleMid.opacity(0.3)
         case .pending:
-            return ThemeColors.slateViolet.opacity(0.2)
+            return ThemeColors.brandPurpleMid.opacity(0.2)
         }
     }
     
@@ -258,7 +257,7 @@ struct PipelineStepRow: View {
         case .completed:
             return ThemeColors.textOnDark
         case .inProgress:
-            return ThemeColors.mistBlue
+            return ThemeColors.accentSand
         case .pending:
             return ThemeColors.textOnDark.opacity(0.5)
         }

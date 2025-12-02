@@ -13,8 +13,8 @@ struct SafariView: UIViewControllerRepresentable {
         config.barCollapsingEnabled = true
         
         let safari = SFSafariViewController(url: url, configuration: config)
-        // Use primaryAccent (Palette A purple) for Safari controls
-        safari.preferredControlTintColor = UIColor(ThemeColors.primaryAccent)
+        // Use green accent (triadic CTA color) for Safari controls
+        safari.preferredControlTintColor = UIColor(ThemeColors.accentGreen)
         return safari
     }
     

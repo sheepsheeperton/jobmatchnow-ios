@@ -9,7 +9,7 @@ enum AuthMode {
 
 // MARK: - Auth View
 
-/// Authentication screen (Palette A colors only, no halos)
+/// Authentication screen (triadic palette)
 struct AuthView: View {
     @StateObject private var authManager = AuthManager.shared
     @StateObject private var appState = AppState.shared
@@ -28,17 +28,17 @@ struct AuthView: View {
     
     var body: some View {
         ZStack {
-            // Soft background gradient (Palette A)
+            // Dark gradient background (purple family)
             ThemeColors.introGradient
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
                 Spacer()
                 
-                // Logo - simple, no halo
+                // Logo
                 Image(systemName: "briefcase.fill")
                     .font(.system(size: 60))
-                    .foregroundColor(ThemeColors.primaryAccent)
+                    .foregroundColor(ThemeColors.accentSand)
                     .padding(.bottom, 20)
                 
                 Text("Welcome to JobMatchNow")
@@ -91,7 +91,7 @@ struct AuthView: View {
                         .padding(.horizontal, 40)
                 }
                 
-                // Submit button - primaryAccent (Palette A purple)
+                // Submit button - green CTA
                 Button {
                     submitForm()
                 } label: {
@@ -106,7 +106,7 @@ struct AuthView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(canSubmit ? ThemeColors.primaryAccent : ThemeColors.slateViolet.opacity(0.5))
+                .background(canSubmit ? ThemeColors.accentGreen : ThemeColors.softGrey)
                 .cornerRadius(10)
                 .padding(.horizontal, 40)
                 .disabled(!canSubmit)
@@ -119,7 +119,7 @@ struct AuthView: View {
                 }
                 .padding(.horizontal, 40)
                 
-                // LinkedIn - slateViolet
+                // LinkedIn - purple secondary
                 Button {
                     Task {
                         try? await authManager.signInWithLinkedIn()
@@ -133,7 +133,7 @@ struct AuthView: View {
                     .foregroundColor(ThemeColors.textOnDark)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(ThemeColors.slateViolet)
+                    .background(ThemeColors.brandPurpleMid)
                     .cornerRadius(10)
                 }
                 .padding(.horizontal, 40)
@@ -148,7 +148,7 @@ struct AuthView: View {
                     ))
                 } label: {
                     Text("Skip for Demo")
-                        .foregroundColor(ThemeColors.mistBlue)
+                        .foregroundColor(ThemeColors.accentSand)
                 }
                 #endif
                 

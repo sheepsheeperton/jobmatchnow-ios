@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Dashboard View
 
-/// Shows search history and metrics (Palette A colors only)
+/// Shows search history and metrics (triadic palette)
 struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     @StateObject private var appState = AppState.shared
@@ -79,7 +79,7 @@ struct DashboardView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
-                .tint(ThemeColors.primaryAccent)
+                .tint(ThemeColors.accentGreen)
             Text("Loading your dashboard...")
                 .font(.subheadline)
                 .foregroundColor(ThemeColors.textSecondaryLight)
@@ -107,7 +107,7 @@ struct DashboardView: View {
                 Text("Something Went Wrong")
                     .font(.title3)
                     .fontWeight(.semibold)
-                    .foregroundColor(ThemeColors.textOnLight)
+                    .foregroundColor(ThemeColors.primaryBrand)
                 
                 Text(message)
                     .font(.body)
@@ -124,7 +124,7 @@ struct DashboardView: View {
                 .font(.headline)
                 .foregroundColor(ThemeColors.textOnDark)
                 .frame(width: 160, height: 50)
-                .background(ThemeColors.primaryAccent)
+                .background(ThemeColors.accentGreen)
                 .cornerRadius(Theme.CornerRadius.medium)
             }
             .padding(.top, 8)
@@ -141,7 +141,7 @@ struct DashboardView: View {
             
             ZStack {
                 Circle()
-                    .fill(ThemeColors.mistBlue.opacity(0.3))
+                    .fill(ThemeColors.accentSand)
                     .frame(width: 120, height: 120)
                 
                 Image(systemName: "doc.text.magnifyingglass")
@@ -153,7 +153,7 @@ struct DashboardView: View {
                 Text("No Search History")
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .foregroundColor(ThemeColors.textOnLight)
+                    .foregroundColor(ThemeColors.primaryBrand)
                 
                 Text("Your past job searches will appear here.\nStart by uploading your résumé!")
                     .font(.body)
@@ -169,7 +169,7 @@ struct DashboardView: View {
                     .font(.headline)
                     .foregroundColor(ThemeColors.textOnDark)
                     .frame(width: 200, height: 50)
-                    .background(ThemeColors.primaryAccent)
+                    .background(ThemeColors.accentGreen)
                     .cornerRadius(Theme.CornerRadius.medium)
             }
             .padding(.top, 16)
@@ -202,7 +202,7 @@ struct DashboardView: View {
                     value: "\(viewModel.totalSearches)",
                     label: "Total Searches",
                     icon: "magnifyingglass",
-                    color: ThemeColors.primaryAccent
+                    color: ThemeColors.primaryBrand
                 )
                 
                 Divider()
@@ -212,7 +212,7 @@ struct DashboardView: View {
                     value: "\(viewModel.totalJobsFound)",
                     label: "Jobs Found",
                     icon: "briefcase.fill",
-                    color: ThemeColors.primaryAccent
+                    color: ThemeColors.accentGreen
                 )
                 
                 Divider()
@@ -222,7 +222,7 @@ struct DashboardView: View {
                     value: viewModel.avgJobsPerSearch,
                     label: "Avg per Search",
                     icon: "chart.bar.fill",
-                    color: ThemeColors.slateViolet
+                    color: ThemeColors.brandPurpleMid
                 )
             }
             .padding(.vertical, 20)
@@ -243,7 +243,7 @@ struct DashboardView: View {
             HStack {
                 Text("Recent Searches")
                     .font(.headline)
-                    .foregroundColor(ThemeColors.textOnLight)
+                    .foregroundColor(ThemeColors.primaryBrand)
                 
                 Spacer()
                 
@@ -270,7 +270,7 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - Summary Metric Item (Palette A)
+// MARK: - Summary Metric Item (triadic)
 
 struct SummaryMetricItem: View {
     let value: String
@@ -300,7 +300,7 @@ struct SummaryMetricItem: View {
     }
 }
 
-// MARK: - Recent Session Card (Palette A)
+// MARK: - Recent Session Card (triadic)
 
 struct RecentSessionCard: View {
     let session: DashboardSessionSummary
@@ -315,7 +315,7 @@ struct RecentSessionCard: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(session.displayTitle)
                             .font(.headline)
-                            .foregroundColor(ThemeColors.textOnLight)
+                            .foregroundColor(ThemeColors.primaryBrand)
                         
                         Text(session.dashboardSubtitle)
                             .font(.subheadline)
@@ -328,7 +328,7 @@ struct RecentSessionCard: View {
                     if isLoading {
                         ProgressView()
                             .scaleEffect(0.8)
-                            .tint(ThemeColors.primaryAccent)
+                            .tint(ThemeColors.accentGreen)
                     } else {
                         Image(systemName: "chevron.right")
                             .font(.caption)
@@ -342,7 +342,7 @@ struct RecentSessionCard: View {
                     SessionStatItem(
                         value: session.totalJobs,
                         label: "Total",
-                        color: ThemeColors.primaryAccent
+                        color: ThemeColors.accentGreen
                     )
                     
                     SessionStatItem(
@@ -383,7 +383,7 @@ struct RecentSessionCard: View {
     }
 }
 
-// MARK: - Session Stat Item (Palette A)
+// MARK: - Session Stat Item (triadic)
 
 struct SessionStatItem: View {
     let value: Int

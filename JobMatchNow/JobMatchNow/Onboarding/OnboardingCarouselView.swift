@@ -12,38 +12,38 @@ struct OnboardingPage: Identifiable {
 
 // MARK: - Onboarding Carousel View
 
-/// Multi-page onboarding carousel (Palette A colors only)
+/// Multi-page onboarding carousel (triadic palette)
 struct OnboardingCarouselView: View {
     @StateObject private var appState = AppState.shared
     @State private var currentPage = 0
     let onComplete: () -> Void
     
-    // MARK: - Pages (all colors from Palette A)
+    // MARK: - Pages (triadic colors)
     
     private let pages: [OnboardingPage] = [
         OnboardingPage(
             icon: "doc.text.magnifyingglass",
             title: "Upload Your Résumé",
             subtitle: "Simply upload your résumé in PDF, Word, or image format. Our AI will analyze your skills, experience, and career goals.",
-            color: ThemeColors.primaryAccent
+            color: ThemeColors.accentGreen
         ),
         OnboardingPage(
             icon: "cpu",
             title: "AI-Powered Matching",
             subtitle: "Our intelligent pipeline generates targeted search queries and matches you with real, live job postings that fit your profile.",
-            color: ThemeColors.slateViolet
+            color: ThemeColors.brandPurpleMid
         ),
         OnboardingPage(
             icon: "lock.shield.fill",
             title: "Your Data is Secure",
             subtitle: "We treat your résumé with care. Your data is encrypted and never shared with third parties without your consent.",
-            color: ThemeColors.mistBlue
+            color: ThemeColors.accentSand
         )
     ]
     
     var body: some View {
         ZStack {
-            // Soft background gradient (Palette A)
+            // Dark gradient background (purple family)
             ThemeColors.introGradient
                 .ignoresSafeArea()
             
@@ -79,7 +79,7 @@ struct OnboardingCarouselView: View {
                 HStack(spacing: 8) {
                     ForEach(0..<pages.count, id: \.self) { index in
                         Circle()
-                            .fill(index == currentPage ? ThemeColors.primaryAccent : ThemeColors.textOnDark.opacity(0.3))
+                            .fill(index == currentPage ? ThemeColors.accentGreen : ThemeColors.textOnDark.opacity(0.3))
                             .frame(width: index == currentPage ? 10 : 8, height: index == currentPage ? 10 : 8)
                             .animation(.spring(), value: currentPage)
                     }
@@ -89,7 +89,7 @@ struct OnboardingCarouselView: View {
                 // Bottom buttons
                 VStack(spacing: 16) {
                     if currentPage == pages.count - 1 {
-                        // Get Started button - primaryAccent (Palette A purple)
+                        // Get Started button - green CTA
                         Button(action: {
                             appState.completeOnboarding()
                             onComplete()
@@ -99,11 +99,11 @@ struct OnboardingCarouselView: View {
                                 .foregroundColor(ThemeColors.textOnDark)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
-                                .background(ThemeColors.primaryAccent)
+                                .background(ThemeColors.accentGreen)
                                 .cornerRadius(Theme.CornerRadius.medium)
                         }
                     } else {
-                        // Next button - slateViolet
+                        // Next button - purple secondary
                         Button(action: {
                             withAnimation {
                                 currentPage += 1
@@ -114,7 +114,7 @@ struct OnboardingCarouselView: View {
                                 .foregroundColor(ThemeColors.textOnDark)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
-                                .background(ThemeColors.slateViolet)
+                                .background(ThemeColors.brandPurpleMid)
                                 .cornerRadius(Theme.CornerRadius.medium)
                         }
                     }
@@ -136,7 +136,7 @@ struct OnboardingPageView: View {
         VStack(spacing: 32) {
             Spacer()
             
-            // Icon - simple circle, no halo
+            // Icon
             ZStack {
                 Circle()
                     .fill(page.color.opacity(0.2))
