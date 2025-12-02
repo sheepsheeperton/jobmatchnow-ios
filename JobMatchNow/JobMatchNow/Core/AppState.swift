@@ -16,6 +16,9 @@ final class AppState: ObservableObject {
     /// Whether the user has completed onboarding
     @Published var hasCompletedOnboarding: Bool
     
+    /// Whether the user has accepted data/AI processing consent
+    @Published var hasAcceptedDataConsent: Bool
+    
     /// Current user info (if authenticated)
     @Published var currentUser: UserInfo?
     
@@ -88,6 +91,7 @@ final class AppState: ObservableObject {
     
     private init() {
         self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        self.hasAcceptedDataConsent = UserDefaults.standard.bool(forKey: "hasAcceptedDataConsent")
         loadLastSearch()
     }
     
@@ -101,6 +105,18 @@ final class AppState: ObservableObject {
     func resetOnboarding() {
         hasCompletedOnboarding = false
         UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+    }
+    
+    // MARK: - Data Consent
+    
+    func acceptDataConsent() {
+        hasAcceptedDataConsent = true
+        UserDefaults.standard.set(true, forKey: "hasAcceptedDataConsent")
+    }
+    
+    func resetDataConsent() {
+        hasAcceptedDataConsent = false
+        UserDefaults.standard.set(false, forKey: "hasAcceptedDataConsent")
     }
     
     // MARK: - Authentication

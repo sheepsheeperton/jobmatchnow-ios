@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var showLogoutConfirmation = false
     @State private var showSafari = false
     @State private var safariURL: URL?
+    @State private var showDataConsentInfo = false
     
     var body: some View {
         List {
@@ -49,6 +50,27 @@ struct SettingsView: View {
                 }
             } header: {
                 Text("Subscription")
+            }
+            
+            // Data & AI Section
+            Section {
+                Button(action: {
+                    showDataConsentInfo = true
+                }) {
+                    HStack {
+                        Label("How we use your résumé", systemImage: "cpu")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .foregroundColor(.primary)
+            } header: {
+                Text("Data & AI Processing")
+            } footer: {
+                Text("Learn how JobMatchNow analyzes your résumé using AI to find job matches.")
+                    .font(.caption)
             }
             
             // Links Section
@@ -138,6 +160,13 @@ struct SettingsView: View {
                 .foregroundColor(ThemeColors.accentGreen)
                 
                 Button(action: {
+                    appState.resetDataConsent()
+                }) {
+                    Label("Reset Data Consent", systemImage: "arrow.counterclockwise")
+                }
+                .foregroundColor(ThemeColors.accentGreen)
+                
+                Button(action: {
                     appState.clearLastSearch()
                 }) {
                     Label("Clear Last Search", systemImage: "trash")
@@ -174,6 +203,11 @@ struct SettingsView: View {
             if let url = safariURL {
                 SafariView(url: url)
                     .ignoresSafeArea()
+            }
+        }
+        .sheet(isPresented: $showDataConsentInfo) {
+            NavigationStack {
+                DataConsentInfoView()
             }
         }
     }

@@ -18,6 +18,7 @@ struct SearchUploadView: View {
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
     @State private var showSettings = false
+    @State private var showConsentGate = false
     
     // MARK: - Allowed Content Types
     private static let allowedContentTypes: [UTType] = [
@@ -98,7 +99,11 @@ struct SearchUploadView: View {
                 // Primary upload button - green CTA
                 Button(action: {
                     print("[SearchUploadView] Upload button pressed")
-                    isShowingDocumentPicker = true
+                    if appState.hasAcceptedDataConsent {
+                        isShowingDocumentPicker = true
+                    } else {
+                        showConsentGate = true
+                    }
                 }) {
                     HStack(spacing: 12) {
                         Image(systemName: "doc.badge.arrow.up")
@@ -118,7 +123,11 @@ struct SearchUploadView: View {
                 if DocumentScannerView.isSupported {
                     Button(action: {
                         print("[SearchUploadView] Camera button pressed")
-                        isShowingScanner = true
+                        if appState.hasAcceptedDataConsent {
+                            isShowingScanner = true
+                        } else {
+                            showConsentGate = true
+                        }
                     }) {
                         HStack(spacing: 12) {
                             Image(systemName: "camera.fill")
@@ -149,7 +158,11 @@ struct SearchUploadView: View {
                 if isRunningInSimulator {
                     Button(action: {
                         print("[SearchUploadView] DEBUG: Using bundled sample resume")
-                        uploadBundledSampleResume()
+                        if appState.hasAcceptedDataConsent {
+                            uploadBundledSampleResume()
+                        } else {
+                            showConsentGate = true
+                        }
                     }) {
                         HStack(spacing: 8) {
                             Image(systemName: "doc.fill")
@@ -230,6 +243,25 @@ struct SearchUploadView: View {
                 }
             )
             .ignoresSafeArea()
+        }
+        .fullScreenCover(isPresented: $showConsentGate) {
+            DataConsentView(
+                onConsent: {
+                    print("[SearchUploadView] User accepted data consent")
+                    showConsentGate = false
+                },
+                onDecline: {
+                    print("[SearchUploadView] User declined data consent")
+                    showConsentGate = false
+                    // Stay on screen but user can't upload without consent
+                }
+            )
+        }
+        .onAppear {
+            // Show consent gate on first visit if not already accepted
+            if !appState.hasAcceptedDataConsent {
+                showConsentGate = true
+            }
         }
     }
     
