@@ -17,18 +17,14 @@ struct SplashView: View {
             
             VStack(spacing: 24) {
                 // App Icon / Logo
-                ZStack {
-                    Circle()
-                        .fill(ThemeColors.brandPurpleMid.opacity(0.4))
-                        .frame(width: 120, height: 120)
-                        .scaleEffect(isAnimating ? 1.05 : 1.0)
-                    
-                    Image(systemName: "briefcase.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(ThemeColors.accentSand)
-                        .scaleEffect(isAnimating ? 1.02 : 1.0)
-                }
-                .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: isAnimating)
+                Image("AppLogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+                    .scaleEffect(isAnimating ? 1.05 : 1.0)
+                    .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: isAnimating)
                 
                 // App Name
                 VStack(spacing: 8) {
