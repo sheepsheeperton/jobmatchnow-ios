@@ -200,6 +200,13 @@ enum ThemeColors {
         startPoint: .top,
         endPoint: .bottom
     )
+    
+    /// **Brand Gradient** – Full triadic sweep for marketing/hero sections.
+    static let brandGradient = LinearGradient(
+        colors: [brandPurpleDark, brandPurpleMid, accentGreen.opacity(0.7)],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
 }
 
 // MARK: - Color Extension for Hex Support
