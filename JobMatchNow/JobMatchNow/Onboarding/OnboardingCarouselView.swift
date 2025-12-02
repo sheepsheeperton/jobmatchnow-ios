@@ -25,34 +25,27 @@ struct OnboardingCarouselView: View {
             icon: "doc.text.magnifyingglass",
             title: "Upload Your Résumé",
             subtitle: "Simply upload your résumé in PDF, Word, or image format. Our AI will analyze your skills, experience, and career goals.",
-            color: ThemeColors.wealthStrong
+            color: ThemeColors.primaryAccent
         ),
         OnboardingPage(
             icon: "cpu",
             title: "AI-Powered Matching",
             subtitle: "Our intelligent pipeline generates targeted search queries and matches you with real, live job postings that fit your profile.",
-            color: ThemeColors.wealthBright
+            color: ThemeColors.accentLight
         ),
         OnboardingPage(
             icon: "lock.shield.fill",
             title: "Your Data is Secure",
             subtitle: "We treat your résumé with care. Your data is encrypted and never shared with third parties without your consent.",
-            color: ThemeColors.accentPurple
+            color: ThemeColors.slateViolet
         )
     ]
     
     var body: some View {
         ZStack {
-            // Background - dark wealth gradient
-            LinearGradient(
-                colors: [
-                    ThemeColors.wealthDark,
-                    ThemeColors.wealthDeep
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            // Background - rich dark gradient
+            ThemeColors.heroGradientDark
+                .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // Skip button (not on last page)
@@ -68,7 +61,6 @@ struct OnboardingCarouselView: View {
                         .foregroundColor(ThemeColors.textOnDark.opacity(0.7))
                         .padding()
                     } else {
-                        // Placeholder for layout
                         Text("")
                             .padding()
                     }
@@ -87,7 +79,7 @@ struct OnboardingCarouselView: View {
                 HStack(spacing: 8) {
                     ForEach(0..<pages.count, id: \.self) { index in
                         Circle()
-                            .fill(index == currentPage ? ThemeColors.primaryBrand : ThemeColors.textOnDark.opacity(0.3))
+                            .fill(index == currentPage ? ThemeColors.primaryAccent : ThemeColors.textOnDark.opacity(0.3))
                             .frame(width: index == currentPage ? 10 : 8, height: index == currentPage ? 10 : 8)
                             .animation(.spring(), value: currentPage)
                     }
@@ -97,7 +89,7 @@ struct OnboardingCarouselView: View {
                 // Bottom buttons
                 VStack(spacing: 16) {
                     if currentPage == pages.count - 1 {
-                        // Get Started button on last page - primary CTA
+                        // Get Started button - primary CTA with accent
                         Button(action: {
                             appState.completeOnboarding()
                             onComplete()
@@ -107,11 +99,11 @@ struct OnboardingCarouselView: View {
                                 .foregroundColor(ThemeColors.textOnDark)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
-                                .background(ThemeColors.primaryBrand)
+                                .background(ThemeColors.primaryAccent)
                                 .cornerRadius(Theme.CornerRadius.medium)
                         }
                     } else {
-                        // Next button - secondary action
+                        // Next button - secondary style
                         Button(action: {
                             withAnimation {
                                 currentPage += 1
@@ -122,7 +114,7 @@ struct OnboardingCarouselView: View {
                                 .foregroundColor(ThemeColors.textOnDark)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
-                                .background(ThemeColors.wealthBright)
+                                .background(ThemeColors.slateViolet)
                                 .cornerRadius(Theme.CornerRadius.medium)
                         }
                     }
@@ -131,7 +123,7 @@ struct OnboardingCarouselView: View {
                 .padding(.bottom, 40)
             }
         }
-        .statusBarLightContent()  // Dark background → light status bar
+        .statusBarLightContent()
     }
 }
 
@@ -144,8 +136,14 @@ struct OnboardingPageView: View {
         VStack(spacing: 32) {
             Spacer()
             
-            // Icon
+            // Icon with glow effect
             ZStack {
+                // Subtle glow
+                Circle()
+                    .fill(page.color.opacity(0.2))
+                    .frame(width: 160, height: 160)
+                    .blur(radius: 20)
+                
                 Circle()
                     .fill(page.color.opacity(0.15))
                     .frame(width: 140, height: 140)

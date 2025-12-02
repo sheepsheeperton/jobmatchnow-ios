@@ -14,7 +14,6 @@ struct SettingsView: View {
         List {
             // Account Section
             Section {
-                // Email
                 HStack {
                     Label("Email", systemImage: "envelope")
                     Spacer()
@@ -22,7 +21,6 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                // Connected providers
                 HStack {
                     Label("Connected via", systemImage: "link")
                     Spacer()
@@ -137,14 +135,14 @@ struct SettingsView: View {
                 }) {
                     Label("Reset Onboarding", systemImage: "arrow.counterclockwise")
                 }
-                .foregroundColor(.orange)
+                .foregroundColor(ThemeColors.primaryAccent)
                 
                 Button(action: {
                     appState.clearLastSearch()
                 }) {
                     Label("Clear Last Search", systemImage: "trash")
                 }
-                .foregroundColor(.orange)
+                .foregroundColor(ThemeColors.primaryAccent)
             } header: {
                 Text("Debug")
             }
@@ -157,7 +155,7 @@ struct SettingsView: View {
                 Button("Done") {
                     dismiss()
                 }
-                .foregroundColor(ThemeColors.primaryBrand)  // Dark mode: use brand orange
+                .foregroundColor(ThemeColors.primaryAccent)
             }
         }
         .confirmationDialog(
@@ -231,4 +229,3 @@ struct SettingsView: View {
         SettingsView()
     }
 }
-

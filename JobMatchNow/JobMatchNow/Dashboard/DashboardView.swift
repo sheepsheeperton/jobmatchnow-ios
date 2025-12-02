@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Dashboard View
 
-/// Shows search history and metrics, allowing navigation to past results
+/// Shows search history and metrics with neutral surfaces and accent highlights
 struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     @StateObject private var appState = AppState.shared
@@ -32,7 +32,7 @@ struct DashboardView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(ThemeColors.wealthDark)
+                        .foregroundColor(ThemeColors.primaryBrand)
                 }
             }
         }
@@ -79,9 +79,10 @@ struct DashboardView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
+                .tint(ThemeColors.primaryAccent)
             Text("Loading your dashboard...")
                 .font(.subheadline)
-                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                .foregroundColor(ThemeColors.textSecondaryLight)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -110,7 +111,7 @@ struct DashboardView: View {
                 
                 Text(message)
                     .font(.body)
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                    .foregroundColor(ThemeColors.textSecondaryLight)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
             }
@@ -123,7 +124,7 @@ struct DashboardView: View {
                 .font(.headline)
                 .foregroundColor(ThemeColors.textOnDark)
                 .frame(width: 160, height: 50)
-                .background(ThemeColors.primaryBrand)
+                .background(ThemeColors.primaryAccent)
                 .cornerRadius(Theme.CornerRadius.medium)
             }
             .padding(.top, 8)
@@ -140,12 +141,12 @@ struct DashboardView: View {
             
             ZStack {
                 Circle()
-                    .fill(ThemeColors.wealthBright.opacity(0.3))
+                    .fill(ThemeColors.mistBlue.opacity(0.3))
                     .frame(width: 120, height: 120)
                 
                 Image(systemName: "doc.text.magnifyingglass")
                     .font(.system(size: 50))
-                    .foregroundColor(ThemeColors.wealthStrong)
+                    .foregroundColor(ThemeColors.primaryBrand)
             }
             
             VStack(spacing: 8) {
@@ -156,7 +157,7 @@ struct DashboardView: View {
                 
                 Text("Your past job searches will appear here.\nStart by uploading your résumé!")
                     .font(.body)
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                    .foregroundColor(ThemeColors.textSecondaryLight)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
             }
@@ -168,7 +169,7 @@ struct DashboardView: View {
                     .font(.headline)
                     .foregroundColor(ThemeColors.textOnDark)
                     .frame(width: 200, height: 50)
-                    .background(ThemeColors.primaryBrand)
+                    .background(ThemeColors.primaryAccent)
                     .cornerRadius(Theme.CornerRadius.medium)
             }
             .padding(.top, 16)
@@ -182,10 +183,8 @@ struct DashboardView: View {
     private var dashboardContent: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Summary Strip Card
                 summaryStripCard
                 
-                // Recent Searches Section
                 if !viewModel.recentSessions.isEmpty {
                     recentSearchesSection
                 }
@@ -199,41 +198,42 @@ struct DashboardView: View {
     private var summaryStripCard: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                // Total Searches
                 SummaryMetricItem(
                     value: "\(viewModel.totalSearches)",
                     label: "Total Searches",
                     icon: "magnifyingglass",
-                    color: ThemeColors.primaryBrand
+                    color: ThemeColors.primaryAccent
                 )
                 
                 Divider()
                     .frame(height: 50)
                 
-                // Jobs Found
                 SummaryMetricItem(
                     value: "\(viewModel.totalJobsFound)",
                     label: "Jobs Found",
                     icon: "briefcase.fill",
-                    color: ThemeColors.wealthBright
+                    color: ThemeColors.primaryAccent
                 )
                 
                 Divider()
                     .frame(height: 50)
                 
-                // Avg Matches
                 SummaryMetricItem(
                     value: viewModel.avgJobsPerSearch,
                     label: "Avg per Search",
                     icon: "chart.bar.fill",
-                    color: ThemeColors.accentPurple
+                    color: ThemeColors.primaryAccent
                 )
             }
             .padding(.vertical, 20)
         }
         .background(ThemeColors.cardLight)
         .cornerRadius(Theme.CornerRadius.medium)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                .stroke(ThemeColors.borderSubtle, lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
     }
     
     // MARK: - Recent Searches Section
@@ -249,7 +249,7 @@ struct DashboardView: View {
                 
                 Text("Long press for options")
                     .font(.caption)
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                    .foregroundColor(ThemeColors.textSecondaryLight)
             }
             .padding(.horizontal, 4)
             
@@ -293,7 +293,7 @@ struct SummaryMetricItem: View {
             
             Text(label)
                 .font(.caption)
-                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                .foregroundColor(ThemeColors.textSecondaryLight)
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
@@ -311,18 +311,15 @@ struct RecentSessionCard: View {
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 12) {
-                // Header - now shows current role title (from résumé)
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        // Primary: User's current role from résumé
                         Text(session.displayTitle)
                             .font(.headline)
                             .foregroundColor(ThemeColors.textOnLight)
                         
-                        // Secondary: Search subtitle with intent, matches, and time
                         Text(session.dashboardSubtitle)
                             .font(.subheadline)
-                            .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                            .foregroundColor(ThemeColors.textSecondaryLight)
                             .lineLimit(1)
                     }
                     
@@ -331,47 +328,50 @@ struct RecentSessionCard: View {
                     if isLoading {
                         ProgressView()
                             .scaleEffect(0.8)
-                            .tint(ThemeColors.wealthBright)
+                            .tint(ThemeColors.primaryAccent)
                     } else {
                         Image(systemName: "chevron.right")
                             .font(.caption)
-                            .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                            .foregroundColor(ThemeColors.textSecondaryLight)
                     }
                 }
                 
                 Divider()
                 
-                // Stats
                 HStack(spacing: 16) {
                     SessionStatItem(
                         value: session.totalJobs,
                         label: "Total",
-                        color: ThemeColors.primaryBrand
+                        color: ThemeColors.primaryAccent
                     )
                     
                     SessionStatItem(
                         value: session.localCount,
                         label: "Local",
-                        color: ThemeColors.wealthBright
+                        color: ThemeColors.softGrey
                     )
                     
                     SessionStatItem(
                         value: session.nationalCount,
                         label: "National",
-                        color: ThemeColors.accentPurple
+                        color: ThemeColors.softGrey
                     )
                     
                     SessionStatItem(
                         value: session.remoteCount,
                         label: "Remote",
-                        color: ThemeColors.wealthDeep
+                        color: ThemeColors.softGrey
                     )
                 }
             }
             .padding()
             .background(ThemeColors.cardLight)
             .cornerRadius(Theme.CornerRadius.medium)
-            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                    .stroke(ThemeColors.borderSubtle, lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(isLoading || session.viewToken == nil)
@@ -399,7 +399,7 @@ struct SessionStatItem: View {
             
             Text(label)
                 .font(.caption)
-                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                .foregroundColor(ThemeColors.textSecondaryLight)
         }
     }
 }
@@ -407,12 +407,6 @@ struct SessionStatItem: View {
 // MARK: - Previews
 
 #Preview("Dashboard - Loaded") {
-    NavigationStack {
-        DashboardView()
-    }
-}
-
-#Preview("Dashboard - Empty") {
     NavigationStack {
         DashboardView()
     }

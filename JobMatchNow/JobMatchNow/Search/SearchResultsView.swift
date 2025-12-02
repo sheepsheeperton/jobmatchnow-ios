@@ -9,7 +9,7 @@ enum ResultsSource {
 
 // MARK: - Search Results View
 
-/// Displays job matches with filtering and actions
+/// Displays job matches with neutral surfaces and accent highlights
 struct SearchResultsView: View {
     let viewToken: String
     var source: ResultsSource = .currentSearch
@@ -25,7 +25,6 @@ struct SearchResultsView: View {
     @State private var showSavePrompt = true
     @Environment(\.dismiss) private var dismiss
     
-    // Custom initializer to create ViewModels with viewToken
     init(jobs: [Job], viewToken: String, source: ResultsSource = .currentSearch, hasLocalJobs: Bool = true) {
         self.viewToken = viewToken
         self.source = source
@@ -36,7 +35,6 @@ struct SearchResultsView: View {
     var filteredJobs: [Job] {
         var result = viewModel.jobs
         
-        // Apply search text filter
         if !searchText.isEmpty {
             result = result.filter { job in
                 job.title.localizedCaseInsensitiveContains(searchText) ||
@@ -60,7 +58,7 @@ struct SearchResultsView: View {
                     
                     Text("Found \(viewModel.jobs.count) matches based on your résumé")
                         .font(.subheadline)
-                        .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                        .foregroundColor(ThemeColors.textSecondaryLight)
                 }
                 .padding(.top, 20)
                 .padding(.bottom, 16)
@@ -68,14 +66,14 @@ struct SearchResultsView: View {
                 // Search bar
                 HStack {
                     Image(systemName: "magnifyingglass")
-                        .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                        .foregroundColor(ThemeColors.textSecondaryLight)
                     TextField("Search jobs...", text: $searchText)
                         .textFieldStyle(PlainTextFieldStyle())
                         .foregroundColor(ThemeColors.textOnLight)
                     if !searchText.isEmpty {
                         Button(action: { searchText = "" }) {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                                .foregroundColor(ThemeColors.textSecondaryLight)
                         }
                     }
                 }
@@ -89,7 +87,7 @@ struct SearchResultsView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 12)
                 
-                // Job Bucket Filter (All | Remote | Local | National)
+                // Job Bucket Filter
                 JobBucketPicker(
                     selectedBucket: $viewModel.selectedBucket,
                     isLoading: viewModel.isRefreshing,
@@ -101,7 +99,6 @@ struct SearchResultsView: View {
                 // Save prompt for new searches
                 if case .currentSearch = source, showSavePrompt {
                     SaveSearchPromptView {
-                        // Already saved via AppState
                         withAnimation {
                             showSavePrompt = false
                         }
@@ -110,7 +107,7 @@ struct SearchResultsView: View {
                     .padding(.bottom, 12)
                 }
                 
-                // Error message if present
+                // Error message
                 if let errorMessage = viewModel.errorMessage {
                     Button(action: { viewModel.retry() }) {
                         HStack(spacing: 8) {
@@ -118,7 +115,7 @@ struct SearchResultsView: View {
                                 .foregroundColor(ThemeColors.warningAmber)
                             Text(errorMessage)
                                 .font(.subheadline)
-                                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                                .foregroundColor(ThemeColors.textSecondaryLight)
                         }
                         .padding(12)
                         .frame(maxWidth: .infinity)
@@ -130,11 +127,11 @@ struct SearchResultsView: View {
                     .padding(.bottom, 12)
                 }
                 
-                // Results count (show when filtered by search text)
+                // Results count
                 if !searchText.isEmpty {
                     Text("\(filteredJobs.count) results")
                         .font(.caption)
-                        .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                        .foregroundColor(ThemeColors.textSecondaryLight)
                         .padding(.bottom, 8)
                 }
                 
@@ -168,7 +165,7 @@ struct SearchResultsView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            // Loading overlay when refreshing
+            // Loading overlay
             if viewModel.isRefreshing {
                 Color.black.opacity(0.1)
                     .ignoresSafeArea()
@@ -176,7 +173,7 @@ struct SearchResultsView: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .scaleEffect(1.2)
-                        .tint(ThemeColors.primaryBrand)
+                        .tint(ThemeColors.primaryAccent)
                     Text("Loading \(viewModel.selectedBucket.displayName) jobs...")
                         .font(.subheadline)
                         .foregroundColor(ThemeColors.textOnLight)
@@ -188,7 +185,7 @@ struct SearchResultsView: View {
             }
         }
         .background(ThemeColors.surfaceLight)
-        .statusBarDarkContent()  // Light background → dark status bar
+        .statusBarDarkContent()
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -216,7 +213,7 @@ struct SearchResultsView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                         .font(.title3)
-                        .foregroundColor(ThemeColors.wealthDark)
+                        .foregroundColor(ThemeColors.primaryBrand)
                 }
             }
         }
@@ -233,10 +230,7 @@ struct SearchResultsView: View {
         }
     }
     
-    // MARK: - Actions
-    
     private func startNewSearch() {
-        // Pop to root of search stack
         dismiss()
     }
     
@@ -252,7 +246,6 @@ struct SearchResultsView: View {
 }
 
 // MARK: - Job Bucket Picker
-// 4-button segmented control: All | Remote | Local | National
 
 struct JobBucketPicker: View {
     @Binding var selectedBucket: JobBucket
@@ -290,7 +283,7 @@ struct JobBucketPicker: View {
                     .padding(.vertical, 10)
                     .background(
                         selectedBucket == bucket
-                            ? ThemeColors.accentPurple
+                            ? ThemeColors.primaryAccent
                             : Color.clear
                     )
                 }
@@ -305,7 +298,6 @@ struct JobBucketPicker: View {
                 .stroke(ThemeColors.borderSubtle, lineWidth: 1)
         )
         .overlay(
-            // Loading indicator overlay
             Group {
                 if isLoading {
                     HStack(spacing: 6) {
@@ -313,10 +305,10 @@ struct JobBucketPicker: View {
                             .scaleEffect(0.7)
                         Text("Loading...")
                             .font(.caption2)
-                            .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                            .foregroundColor(ThemeColors.textSecondaryLight)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(ThemeColors.cardLight.opacity(0.8))
+                    .background(ThemeColors.cardLight.opacity(0.9))
                     .cornerRadius(Theme.CornerRadius.small)
                 }
             }
@@ -341,32 +333,28 @@ struct JobCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Main card content (always visible)
             mainCardContent
-            
-            // "Why this matches you" row
             whyThisMatchesRow
             
-            // Expanded explanation section
             if isExpanded {
                 explanationSection
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
             
-            // Action button - primary CTA
             actionButton
         }
         .padding()
         .background(ThemeColors.cardLight)
         .cornerRadius(Theme.CornerRadius.medium)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                .stroke(ThemeColors.borderSubtle, lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
     }
-    
-    // MARK: - Main Card Content
     
     private var mainCardContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(job.title)
@@ -376,77 +364,70 @@ struct JobCardView: View {
                     
                     Text(job.company_name)
                         .font(.subheadline)
-                        .foregroundColor(ThemeColors.accentPurple)
+                        .foregroundColor(ThemeColors.primaryAccent)
                 }
                 
                 Spacer()
                 
-                // Remote badge
                 if job.isRemote {
                     RemoteBadge()
                 }
             }
             
-            // Location
             HStack(spacing: 6) {
                 Image(systemName: job.isRemote ? "globe" : "location.fill")
                     .font(.caption)
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
+                    .foregroundColor(ThemeColors.textSecondaryLight)
                 Text(job.location)
                     .font(.subheadline)
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                    .foregroundColor(ThemeColors.textSecondaryLight)
             }
             
-            // Posted date
             if let postedAt = job.posted_at {
                 HStack(spacing: 6) {
                     Image(systemName: "calendar")
                         .font(.caption)
-                        .foregroundColor(ThemeColors.textOnLight.opacity(0.6))
+                        .foregroundColor(ThemeColors.textSecondaryLight)
                     Text(postedAt)
                         .font(.subheadline)
-                        .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                        .foregroundColor(ThemeColors.textSecondaryLight)
                 }
             }
         }
     }
-    
-    // MARK: - Why This Matches Row
     
     private var whyThisMatchesRow: some View {
         Button(action: onToggleExpand) {
             HStack {
                 Image(systemName: "sparkles")
                     .font(.caption)
-                    .foregroundColor(ThemeColors.primaryBrand)
+                    .foregroundColor(ThemeColors.primaryAccent)
                 
                 Text("Why this matches you")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(ThemeColors.primaryBrand)
+                    .foregroundColor(ThemeColors.primaryAccent)
                 
                 Spacer()
                 
                 if explanationState.isLoading {
                     ProgressView()
                         .scaleEffect(0.7)
-                        .tint(ThemeColors.primaryBrand)
+                        .tint(ThemeColors.primaryAccent)
                 } else {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
-                        .foregroundColor(ThemeColors.primaryBrand.opacity(0.7))
+                        .foregroundColor(ThemeColors.primaryAccent.opacity(0.7))
                 }
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 12)
-            .background(ThemeColors.primaryBrand.opacity(0.08))
+            .background(ThemeColors.primaryAccent.opacity(0.08))
             .cornerRadius(Theme.CornerRadius.small)
         }
         .buttonStyle(PlainButtonStyle())
         .padding(.top, 12)
     }
-    
-    // MARK: - Explanation Section
     
     @ViewBuilder
     private var explanationSection: some View {
@@ -469,23 +450,22 @@ struct JobCardView: View {
         HStack(spacing: 12) {
             ProgressView()
                 .scaleEffect(0.8)
-                .tint(ThemeColors.accentPurple)
+                .tint(ThemeColors.primaryAccent)
             
             Text("Analyzing your résumé match…")
                 .font(.subheadline)
-                .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                .foregroundColor(ThemeColors.textSecondaryLight)
                 .italic()
             
             Spacer()
         }
         .padding(12)
-        .background(ThemeColors.wealthBright.opacity(0.15))
+        .background(ThemeColors.mistBlue.opacity(0.2))
         .cornerRadius(Theme.CornerRadius.small)
     }
     
     private func loadedExplanationView(_ explanation: JobExplanation) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Summary paragraph
             if !explanation.explanationSummary.isEmpty {
                 Text(explanation.explanationSummary)
                     .font(.subheadline)
@@ -493,14 +473,13 @@ struct JobCardView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             
-            // Bullet points
             if !explanation.bullets.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(explanation.bullets, id: \.self) { bullet in
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
-                                .foregroundColor(ThemeColors.accentPurple)
+                                .foregroundColor(ThemeColors.successGreen)
                                 .padding(.top, 2)
                             
                             Text(bullet)
@@ -513,7 +492,7 @@ struct JobCardView: View {
             }
         }
         .padding(12)
-        .background(ThemeColors.wealthBright.opacity(0.1))
+        .background(ThemeColors.mistBlue.opacity(0.15))
         .cornerRadius(Theme.CornerRadius.small)
     }
     
@@ -526,7 +505,7 @@ struct JobCardView: View {
                 
                 Text(message)
                     .font(.subheadline)
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.7))
+                    .foregroundColor(ThemeColors.textSecondaryLight)
                 
                 Spacer()
             }
@@ -535,15 +514,13 @@ struct JobCardView: View {
                 Text("Try Again")
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(ThemeColors.accentPurple)
+                    .foregroundColor(ThemeColors.primaryAccent)
             }
         }
         .padding(12)
         .background(ThemeColors.warningAmber.opacity(0.1))
         .cornerRadius(Theme.CornerRadius.small)
     }
-    
-    // MARK: - Action Button
     
     private var actionButton: some View {
         Button(action: {
@@ -558,12 +535,12 @@ struct JobCardView: View {
                     .foregroundColor(ThemeColors.textOnDark)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(jobURL != nil ? ThemeColors.primaryBrand : ThemeColors.borderSubtle)
+                    .background(jobURL != nil ? ThemeColors.primaryAccent : ThemeColors.softGrey)
                     .cornerRadius(Theme.CornerRadius.small)
                 
                 Image(systemName: "arrow.up.right")
                     .font(.caption)
-                    .foregroundColor(ThemeColors.textOnLight.opacity(0.5))
+                    .foregroundColor(ThemeColors.textSecondaryLight)
             }
         }
         .buttonStyle(PlainButtonStyle())
@@ -583,10 +560,10 @@ struct RemoteBadge: View {
         }
         .font(.caption)
         .fontWeight(.medium)
-        .foregroundColor(ThemeColors.accentPurple)
+        .foregroundColor(ThemeColors.primaryAccent)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(ThemeColors.accentPurple.opacity(0.15))
+        .background(ThemeColors.primaryAccent.opacity(0.12))
         .cornerRadius(Theme.CornerRadius.small)
     }
 }
@@ -599,7 +576,7 @@ struct SaveSearchPromptView: View {
     var body: some View {
         HStack {
             Image(systemName: "bookmark.fill")
-                .foregroundColor(ThemeColors.primaryBrand)
+                .foregroundColor(ThemeColors.primaryAccent)
             
             Text("Search saved to dashboard")
                 .font(.subheadline)
@@ -612,10 +589,10 @@ struct SaveSearchPromptView: View {
             }
             .font(.subheadline)
             .fontWeight(.medium)
-            .foregroundColor(ThemeColors.primaryBrand)
+            .foregroundColor(ThemeColors.primaryAccent)
         }
         .padding(12)
-        .background(ThemeColors.wealthBright.opacity(0.2))
+        .background(ThemeColors.primaryAccent.opacity(0.1))
         .cornerRadius(Theme.CornerRadius.small)
     }
 }
@@ -623,9 +600,7 @@ struct SaveSearchPromptView: View {
 #Preview {
     let sampleJobs = [
         Job(id: "1", job_id: "job1", title: "iOS Developer", company_name: "Tech Corp", location: "Remote - Worldwide", posted_at: "2 days ago", job_url: "https://example.com", source_query: "iOS developer", category: "direct", isRemote: true),
-        Job(id: "2", job_id: "job2", title: "Senior Swift Engineer", company_name: "StartupXYZ", location: "San Francisco, CA", posted_at: "1 week ago", job_url: "https://example.com", source_query: "Swift developer", category: "direct", isRemote: false),
-        Job(id: "3", job_id: "job3", title: "Product Manager", company_name: "Innovation Labs", location: "Remote - US Only", posted_at: "3 days ago", job_url: "https://example.com", source_query: "product manager", category: "adjacent", isRemote: true),
-        Job(id: "4", job_id: "job4", title: "Backend Engineer", company_name: "DataFlow Inc", location: "New York, NY", posted_at: "5 days ago", job_url: "https://example.com", source_query: "backend engineer", category: "direct", isRemote: false)
+        Job(id: "2", job_id: "job2", title: "Senior Swift Engineer", company_name: "StartupXYZ", location: "San Francisco, CA", posted_at: "1 week ago", job_url: "https://example.com", source_query: "Swift developer", category: "direct", isRemote: false)
     ]
     
     return NavigationStack {

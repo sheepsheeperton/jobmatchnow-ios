@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Search Analyzing View
 
-/// Pipeline loading screen that shows progress while analyzing résumé
+/// Pipeline loading screen with rich dark gradient and accent highlights
 struct SearchAnalyzingView: View {
     let viewToken: String
     
@@ -23,45 +23,49 @@ struct SearchAnalyzingView: View {
     ]
     
     var body: some View {
-        VStack(spacing: 40) {
-            // Header
-            VStack(spacing: 12) {
-                Text("Analyzing Your Profile")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(ThemeColors.textOnDark)
-                    .multilineTextAlignment(.center)
-                
-                Text("This will only take a moment")
-                    .font(.body)
-                    .foregroundColor(ThemeColors.textOnDark.opacity(0.7))
-            }
-            .padding(.top, 60)
+        ZStack {
+            // Rich dark gradient background
+            ThemeColors.heroGradientDark
+                .ignoresSafeArea()
             
-            Spacer()
+            // Subtle accent glow behind steps
+            ThemeColors.accentGlow
+                .frame(width: 400, height: 400)
+                .offset(y: 50)
+                .opacity(0.5)
             
-            // Pipeline steps
-            VStack(spacing: 24) {
-                ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                    PipelineStepRow(
-                        step: step,
-                        status: getStepStatus(for: index)
-                    )
+            VStack(spacing: 40) {
+                // Header
+                VStack(spacing: 12) {
+                    Text("Analyzing Your Profile")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(ThemeColors.textOnDark)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("This will only take a moment")
+                        .font(.body)
+                        .foregroundColor(ThemeColors.textOnDark.opacity(0.7))
                 }
+                .padding(.top, 60)
+                
+                Spacer()
+                
+                // Pipeline steps
+                VStack(spacing: 24) {
+                    ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+                        PipelineStepRow(
+                            step: step,
+                            status: getStepStatus(for: index)
+                        )
+                    }
+                }
+                .padding(.horizontal, 30)
+                
+                Spacer()
             }
-            .padding(.horizontal, 30)
-            
-            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            LinearGradient(
-                colors: [ThemeColors.wealthDark, ThemeColors.wealthDeep],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
-        .statusBarLightContent()  // Dark background → light status bar
+        .statusBarLightContent()
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $navigateToResults) {
             SearchResultsView(jobs: jobs, viewToken: viewToken)
@@ -152,7 +156,6 @@ struct SearchAnalyzingView: View {
             
             print("DEBUG: Fetched \(fetchedJobs.count) jobs")
             
-            // Calculate category counts
             let directCount = fetchedJobs.filter { $0.category?.lowercased() == "direct" }.count
             let adjacentCount = fetchedJobs.filter { $0.category?.lowercased() == "adjacent" }.count
             
@@ -163,14 +166,13 @@ struct SearchAnalyzingView: View {
                 
                 jobs = fetchedJobs
                 
-                // Save as last search
                 let lastSearchInfo = AppState.LastSearchInfo(
                     viewToken: viewToken,
                     date: Date(),
                     totalMatches: fetchedJobs.count,
                     directMatches: directCount,
                     adjacentMatches: adjacentCount,
-                    label: fetchedJobs.first?.title // Use first job title as label
+                    label: fetchedJobs.first?.title
                 )
                 appState.saveLastSearch(lastSearchInfo)
                 
@@ -222,8 +224,13 @@ struct PipelineStepRow: View {
                         .fontWeight(.semibold)
                         .foregroundColor(ThemeColors.textOnDark)
                 } else if status == .inProgress {
+                    // Accent-colored ring for current step
+                    Circle()
+                        .stroke(ThemeColors.primaryAccent, lineWidth: 2)
+                        .frame(width: 44, height: 44)
+                    
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.textOnDark))
+                        .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.primaryAccent))
                         .scaleEffect(0.8)
                 } else {
                     Image(systemName: step.icon)
@@ -234,7 +241,7 @@ struct PipelineStepRow: View {
             
             Text(step.title)
                 .font(.headline)
-                .foregroundColor(status == .pending ? ThemeColors.textOnDark.opacity(0.5) : ThemeColors.textOnDark)
+                .foregroundColor(textColor)
             
             Spacer()
         }
@@ -243,11 +250,22 @@ struct PipelineStepRow: View {
     private var backgroundColor: Color {
         switch status {
         case .completed:
-            return ThemeColors.accentPurple
+            return ThemeColors.primaryAccent
         case .inProgress:
-            return ThemeColors.primaryBrand
+            return ThemeColors.primaryAccent.opacity(0.2)
         case .pending:
-            return ThemeColors.textOnDark.opacity(0.15)
+            return ThemeColors.slateViolet.opacity(0.3)
+        }
+    }
+    
+    private var textColor: Color {
+        switch status {
+        case .completed:
+            return ThemeColors.textOnDark
+        case .inProgress:
+            return ThemeColors.primaryAccent
+        case .pending:
+            return ThemeColors.textOnDark.opacity(0.5)
         }
     }
 }

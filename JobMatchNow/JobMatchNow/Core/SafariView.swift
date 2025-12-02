@@ -13,7 +13,8 @@ struct SafariView: UIViewControllerRepresentable {
         config.barCollapsingEnabled = true
         
         let safari = SFSafariViewController(url: url, configuration: config)
-        safari.preferredControlTintColor = UIColor(ThemeColors.wealthStrong)
+        // Use primaryAccent for Safari controls
+        safari.preferredControlTintColor = UIColor(ThemeColors.primaryAccent)
         return safari
     }
     
@@ -35,4 +36,3 @@ extension View {
         }
     }
 }
-

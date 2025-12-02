@@ -9,7 +9,7 @@ enum AuthMode {
 
 // MARK: - Auth View
 
-/// Authentication screen with OAuth provider buttons
+/// Authentication screen with email/password and OAuth
 struct AuthView: View {
     @StateObject private var authManager = AuthManager.shared
     @StateObject private var appState = AppState.shared
@@ -28,17 +28,17 @@ struct AuthView: View {
     
     var body: some View {
         ZStack {
-            // Background - using wealthDark for dark auth screen
-            ThemeColors.wealthDark
+            // Background - dark hero gradient
+            ThemeColors.heroGradientDark
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
                 Spacer()
                 
-                // Logo - brand orange for visual identity
+                // Logo with accent color
                 Image(systemName: "briefcase.fill")
                     .font(.system(size: 60))
-                    .foregroundColor(ThemeColors.primaryBrand)
+                    .foregroundColor(ThemeColors.primaryAccent)
                     .padding(.bottom, 20)
                 
                 Text("Welcome to JobMatchNow")
@@ -91,7 +91,7 @@ struct AuthView: View {
                         .padding(.horizontal, 40)
                 }
                 
-                // Submit button
+                // Submit button - PRIMARY ACCENT
                 Button {
                     submitForm()
                 } label: {
@@ -106,7 +106,7 @@ struct AuthView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(canSubmit ? ThemeColors.primaryBrand : ThemeColors.borderSubtle)
+                .background(canSubmit ? ThemeColors.primaryAccent : ThemeColors.slateViolet.opacity(0.5))
                 .cornerRadius(10)
                 .padding(.horizontal, 40)
                 .disabled(!canSubmit)
@@ -119,7 +119,7 @@ struct AuthView: View {
                 }
                 .padding(.horizontal, 40)
                 
-                // LinkedIn
+                // LinkedIn - secondary style
                 Button {
                     Task {
                         try? await authManager.signInWithLinkedIn()
@@ -133,7 +133,7 @@ struct AuthView: View {
                     .foregroundColor(ThemeColors.textOnDark)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(ThemeColors.accentPurple)
+                    .background(ThemeColors.slateViolet)
                     .cornerRadius(10)
                 }
                 .padding(.horizontal, 40)
@@ -148,7 +148,7 @@ struct AuthView: View {
                     ))
                 } label: {
                     Text("Skip for Demo")
-                        .foregroundColor(ThemeColors.wealthBright)
+                        .foregroundColor(ThemeColors.primaryAccent)
                 }
                 #endif
                 
@@ -164,9 +164,8 @@ struct AuthView: View {
                 Spacer()
             }
         }
-        .statusBarLightContent()  // Dark background → light status bar
+        .statusBarLightContent()
         .onTapGesture {
-            // Dismiss keyboard when tapping outside
             focusedField = nil
         }
         .alert("Account Created", isPresented: $showAlert) {
@@ -199,7 +198,7 @@ struct AuthView: View {
     private func submitForm() {
         guard canSubmit else { return }
         
-        focusedField = nil // Dismiss keyboard
+        focusedField = nil
         isSubmitting = true
         
         Task {
