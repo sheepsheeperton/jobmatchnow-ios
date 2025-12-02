@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Settings View
 
-/// App settings with account info, links, and logout
+/// App settings (Palette A colors only)
 struct SettingsView: View {
     @StateObject private var appState = AppState.shared
     @Environment(\.dismiss) private var dismiss

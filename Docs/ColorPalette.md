@@ -2,215 +2,53 @@
 
 > **Last Updated:** December 2025  
 > **Swift Reference:** `JobMatchNow/Core/ThemeColors.swift`  
-> **System:** Palette A (Rebalanced) – Indigo Brand + Vivid Accent
+> **System:** Palette A – Strict On-Palette Colors Only
 
-This document describes the official JobMatchNow color palette. Our system combines cool indigo brand tones with a **vivid blue accent** for CTAs, on **neutral white surfaces**.
-
----
-
-## 🎯 Key Distinction
-
-| Token | Role | Color |
-|-------|------|-------|
-| **`primaryBrand`** | Brand text, icons, headings | Deep Indigo `#3B3355` |
-| **`primaryAccent`** | CTAs, highlights, interactive | Vivid Blue `#4C7DFF` |
-| **Surfaces** | Page & card backgrounds | Neutral white/grey |
-
-> ⚠️ **Never use `primaryBrand` (Deep Indigo) for CTA backgrounds.** Always use `primaryAccent`.
+This document describes the official JobMatchNow brand color palette. **ALL colors must come from Palette A. No off-palette blues or system colors.**
 
 ---
 
-## 🎨 Palette Philosophy
+## ⚠️ Important Rules
 
-### Why This Split?
-
-**Problem Solved:** The original Palette A felt flat because the same purple was used for headings, icons, AND buttons. Everything blended together.
-
-**Solution:** 
-- **Brand colors** (Indigo/Violet) = identity, text, structure
-- **Accent color** (Vivid Blue) = action, interaction, emphasis
-- **Surfaces** = neutral white, not purple-tinted
-
-### 60-30-10 Rule
-
-**Light Mode:**
-| Proportion | Category | Colors |
-|------------|----------|--------|
-| **~60%** | Neutral Surfaces | `paperWhite`, `cardLight` (pure white), `borderGrey` |
-| **~30%** | Cool Structure | `mistBlue`, `softGrey`, subtle dividers |
-| **~10%** | Brand & Accent | `deepIndigo` (text), `primaryAccent` (CTAs) |
-
-**Dark Mode:**
-| Proportion | Category | Colors |
-|------------|----------|--------|
-| **~60%** | Dark Backgrounds | `inkBlack`, `surfaceGreyDark` |
-| **~30%** | Brand Structure | `deepIndigo`, `slateViolet` |
-| **~10%** | Accent + Status | `primaryAccent`, utility colors |
+1. **NO off-palette blues** – Do not use `systemBlue`, `.blue`, or any hex outside Palette A
+2. **NO halos/glows around buttons or icons** – Use simple filled or outlined shapes
+3. **Soft gradients are OK** – Use `introGradient` and `loadingGradient` for splash/analyzing screens
+4. **All surfaces are neutral** – White/grey only, not purple-tinted
 
 ---
 
-## ⭐ Primary Accent (CTAs & Highlights)
+## 🎨 Core Palette A
 
-### `primaryAccent` – Vivid Blue
-| Property | Value |
-|----------|-------|
-| **Hex** | `#4C7DFF` |
-| **RGB** | 76, 125, 255 |
-| **Swift** | `ThemeColors.primaryAccent` |
-
-**Usage:**
-- **Primary CTA buttons** (Upload Résumé, Sign In, Get Matches)
-- Key metrics and numbers on dashboard
-- Selected tab indicators
-- Progress indicators and active states
-- Highlights and badges that need to "pop"
-
-**Design Note:**  
-This vivid blue harmonizes with the indigo palette while providing clear visual distinction for interactive elements. It passes contrast checks on both white and dark backgrounds.
-
-### Supporting Accent Variants
-
-| Token | Hex | Use |
-|-------|-----|-----|
-| `accentLight` | `#7B9FFF` | Hover states on dark, softer highlights |
-| `accentDark` | `#3A5FCC` | Pressed states on light backgrounds |
+| Token | Hex | Role |
+|-------|-----|------|
+| **inkBlack** | `#000505` | Dark mode backgrounds, gradient dark end |
+| **deepIndigo** | `#3B3355` | Brand text, headings, icons |
+| **slateViolet** | `#5D5D81` | Secondary text on dark, inactive states |
+| **mistBlue** | `#BFCDE0` | Soft backgrounds, badges, subtle highlights |
+| **paperWhite** | `#FEFCFD` | Light mode backgrounds, text on dark |
 
 ---
 
-## 🎨 Core Brand Palette
+## ⭐ Primary Accent (CTAs)
 
-### `inkBlack` – Ink Black
-| Property | Value |
-|----------|-------|
-| **Hex** | `#000505` |
-| **Swift** | `ThemeColors.inkBlack` |
+| Token | Hex | Role |
+|-------|-----|------|
+| **primaryAccent** | `#7B6FA2` | **All primary CTAs**, highlights, selected states |
+| **accentPressed** | `#5D5481` | Pressed/active button states |
 
-**Usage:**
-- Dark mode app background (`surfaceDark`)
-- Rich dark shells for splash/analyzing screens
-- Anchor color for dark gradients
+The `primaryAccent` is a brighter, more saturated version of `slateViolet` that works well as a button fill on both light and dark backgrounds. **It stays in the purple/indigo family – NO off-palette blues.**
 
 ---
 
-### `deepIndigo` – Deep Indigo
-| Property | Value |
-|----------|-------|
-| **Hex** | `#3B3355` |
-| **Swift** | `ThemeColors.deepIndigo` |
+## 🔘 Neutral Greys
 
-**Usage:**
-- **Primary text** on light backgrounds (`textOnLight`)
-- Headings and titles
-- Brand icons (NOT buttons)
-- Logo treatments
+| Token | Hex | Role |
+|-------|-----|------|
+| **softGrey** | `#6B7280` | Secondary text on light backgrounds |
+| **borderGrey** | `#E5E7EB` | Dividers, card borders |
+| **surfaceGreyDark** | `#1A1B26` | Dark mode cards |
 
-> ⚠️ **NOT for CTA backgrounds** – use `primaryAccent` instead.
-
----
-
-### `slateViolet` – Slate Violet
-| Property | Value |
-|----------|-------|
-| **Hex** | `#5D5D81` |
-| **Swift** | `ThemeColors.slateViolet` |
-
-**Usage:**
-- Secondary text on dark backgrounds
-- Inactive/pending states
-- Supporting UI elements
-- Next/secondary buttons on dark screens
-
----
-
-### `mistBlue` – Mist Blue
-| Property | Value |
-|----------|-------|
-| **Hex** | `#BFCDE0` |
-| **Swift** | `ThemeColors.mistBlue` |
-
-**Usage:**
-- Soft background highlights
-- Explanation section backgrounds
-- Subtle badge fills
-- Secondary text on dark (`textSecondaryDark`)
-
----
-
-### `paperWhite` – Paper White
-| Property | Value |
-|----------|-------|
-| **Hex** | `#FEFCFD` |
-| **Swift** | `ThemeColors.paperWhite` |
-
-**Usage:**
-- Light mode page background (`surfaceLight`)
-- Text on dark backgrounds (`textOnDark`)
-
----
-
-## ⬜ Neutral Surfaces (No Purple Tint!)
-
-| Token | Hex | Use |
-|-------|-----|-----|
-| `surfaceLight` | `#FEFCFD` | Light mode page background |
-| `surfaceWhite` | `#FFFFFF` | Pure white option |
-| `cardLight` | `#FFFFFF` | Card backgrounds (light mode) |
-| `cardDark` | `#1A1B26` | Card backgrounds (dark mode) |
-| `borderGrey` | `#E5E7EB` | Dividers, card borders |
-| `softGrey` | `#6B7280` | Secondary text, captions |
-
-**Critical:** Cards are PURE WHITE, not tinted. This creates the clean SaaS look.
-
----
-
-## 🔴 Utility / Status Colors
-
-| Token | Hex | Use |
-|-------|-----|-----|
-| `errorRed` | `#E74C3C` | Errors, destructive actions |
-| `warningAmber` | `#F39C12` | Warnings, pending states |
-| `successGreen` | `#27AE60` | Success, completions |
-| `infoTeal` | `#17A2B8` | Informational callouts |
-
-> These are reserved for status indication ONLY. Never use as brand colors.
-
----
-
-## 🌈 Gradient System
-
-### `heroGradientDark` – Rich Dark Gradient
-**Colors:** `inkBlack` → `deepIndigo` → `slateViolet` (subtle)  
-**Swift:** `ThemeColors.heroGradientDark`
-
-**Usage:**
-- Splash screen background
-- Analyzing screen background
-- Onboarding backgrounds
-- Auth screen background
-
-Creates a rich, dimensional dark experience instead of flat black.
-
----
-
-### `accentGlow` – Radial Accent Glow
-**Colors:** `primaryAccent` (40% opacity) → transparent  
-**Swift:** `ThemeColors.accentGlow`
-
-**Usage:**
-- Behind step lists on dark screens
-- Behind logo/icons for depth
-- Subtle highlights on dark backgrounds
-
----
-
-### Other Gradients
-
-| Name | Colors | Use |
-|------|--------|-----|
-| `brandGradient` | Ink → Indigo → Violet → Mist | Full hero sweep |
-| `lightGradient` | Mist (30%) → Paper | Soft light mode emphasis |
-| `darkGradient` | Ink → Indigo | Simple dark gradient |
-| `accentGradient` | Accent → AccentLight | Button/badge gradient |
+These are neutral, not purple or blue-tinted.
 
 ---
 
@@ -218,12 +56,9 @@ Creates a rich, dimensional dark experience instead of flat black.
 
 | Token | Maps To | Role |
 |-------|---------|------|
-| `primaryBrand` | `deepIndigo` | Brand text/icons (NOT CTAs) |
+| `primaryBrand` | `deepIndigo` | Brand text, icons (NOT for CTAs) |
 | `primaryCTA` | `primaryAccent` | Button fills, key actions |
 | `secondaryCTA` | `primaryAccent` | Outline button border/text |
-| `primaryComplement` | `slateViolet` | Supporting brand tone |
-| `softComplement` | `mistBlue` | Soft backgrounds |
-| `deepComplement` | `inkBlack` | Dark anchors |
 | `textOnLight` | `deepIndigo` | Text on light surfaces |
 | `textOnDark` | `paperWhite` | Text on dark surfaces |
 | `textSecondaryLight` | `softGrey` | Muted text (light) |
@@ -236,20 +71,58 @@ Creates a rich, dimensional dark experience instead of flat black.
 
 ---
 
-## 📱 Component Mapping
+## 🌈 Gradients
+
+### `introGradient` – Soft Intro/Splash Gradient
+
+**Stops:** `inkBlack` → `deepIndigo` → `slateViolet` (85% opacity)  
+**Direction:** Top to bottom
+
+**Usage:**
+- Splash screen background
+- Auth screen background
+- Onboarding screen backgrounds
+
+Creates a calm, deep dusk sky feel. Smooth transitions, no banding.
+
+---
+
+### `loadingGradient` – Soft Loading/Analyzing Gradient
+
+**Stops:** `inkBlack` → `deepIndigo` → `slateViolet` (70%) → `mistBlue` (15%)  
+**Direction:** Top to bottom
+
+**Usage:**
+- Analyzing/loading screen background
+
+Similar to intro gradient but with subtle mistBlue tint at bottom for "active processing" feel.
+
+---
+
+### Other Gradients
+
+| Name | Stops | Use |
+|------|-------|-----|
+| `brandGradient` | Ink → Indigo → Violet → Mist (50%) | Marketing/hero sections |
+| `darkGradient` | Ink → Indigo | Simple dark background |
+| `lightGradient` | Mist (20%) → Paper | Light mode soft emphasis |
+
+---
+
+## 📱 Component Guidelines
 
 ### Primary CTAs
 
 ```swift
-// ✅ CORRECT - Uses primaryAccent
+// ✅ CORRECT
 Button("Upload Résumé") { }
     .foregroundColor(ThemeColors.textOnDark)
-    .background(ThemeColors.primaryAccent)  // Vivid blue
+    .background(ThemeColors.primaryAccent)  // Purple from Palette A
     .cornerRadius(12)
 
-// ❌ WRONG - Do NOT use primaryBrand for CTAs
+// ❌ WRONG – Do NOT use system blue
 Button("Upload Résumé") { }
-    .background(ThemeColors.primaryBrand)  // Too dark, blends with text
+    .background(.blue)  // NO!
 ```
 
 ### Secondary CTAs (Outline Style)
@@ -264,12 +137,18 @@ Button("Scan with Camera") { }
     )
 ```
 
-### Cards & Containers
+### Tertiary (Text-Only)
 
 ```swift
-// Light mode card - PURE WHITE
+Button("Cancel") { }
+    .foregroundColor(ThemeColors.primaryBrand)  // deepIndigo
+```
+
+### Cards
+
+```swift
 VStack { ... }
-    .background(ThemeColors.cardLight)  // #FFFFFF
+    .background(ThemeColors.cardLight)  // Pure white
     .cornerRadius(Theme.CornerRadius.medium)
     .overlay(
         RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
@@ -278,28 +157,23 @@ VStack { ... }
     .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
 ```
 
-### Text Hierarchy
-
-| Context | Token | Actual Color |
-|---------|-------|--------------|
-| Headings (light) | `textOnLight` | Deep Indigo |
-| Body (light) | `textOnLight` | Deep Indigo |
-| Secondary (light) | `textSecondaryLight` | Soft Grey |
-| Headings (dark) | `textOnDark` | Paper White |
-| Secondary (dark) | `textSecondaryDark` | Mist Blue |
-
-### Dashboard Metrics
+### Icons on Dark Screens
 
 ```swift
-// Key numbers use primaryAccent to pop
-Text("\(totalSearches)")
-    .font(.title2.bold())
-    .foregroundColor(ThemeColors.primaryAccent)  // Vivid blue
+// ✅ CORRECT – Simple circle, no halo
+ZStack {
+    Circle()
+        .fill(ThemeColors.slateViolet.opacity(0.3))
+        .frame(width: 120, height: 120)
+    
+    Image(systemName: "briefcase.fill")
+        .font(.system(size: 50))
+        .foregroundColor(ThemeColors.mistBlue)
+}
 
-// Labels use neutral grey
-Text("Total Searches")
-    .font(.caption)
-    .foregroundColor(ThemeColors.textSecondaryLight)  // Soft grey
+// ❌ WRONG – No glows/halos
+ThemeColors.accentGlow  // Don't use this
+    .frame(width: 300, height: 300)
 ```
 
 ---
@@ -308,55 +182,65 @@ Text("Total Searches")
 
 | Screen | Background | Primary CTA | Text |
 |--------|------------|-------------|------|
-| **Splash** | `heroGradientDark` + `accentGlow` | n/a | `textOnDark` |
-| **Onboarding** | `heroGradientDark` | `primaryAccent` | `textOnDark` |
-| **Auth** | `heroGradientDark` | `primaryAccent` | `textOnDark` |
+| **Splash** | `introGradient` | n/a | `textOnDark` |
+| **Onboarding** | `introGradient` | `primaryAccent` | `textOnDark` |
+| **Auth** | `introGradient` | `primaryAccent` | `textOnDark` |
 | **Upload** | `surfaceLight` | `primaryAccent` | `textOnLight` |
-| **Analyzing** | `heroGradientDark` + `accentGlow` | n/a | `textOnDark` |
+| **Analyzing** | `loadingGradient` | n/a | `textOnDark` |
 | **Results** | `surfaceLight` | `primaryAccent` | `textOnLight` |
 | **Dashboard** | `surfaceLight` | `primaryAccent` | `textOnLight` |
 | **Settings** | System List | `primaryAccent` | System |
 
 ---
 
+## ✅ Do's and Don'ts
+
+### ✅ DO
+
+- Use `introGradient` / `loadingGradient` for full-screen backgrounds on dark screens
+- Use `primaryAccent` for all CTA button fills
+- Use `primaryBrand` (deepIndigo) for text and icons
+- Use `cardLight` (white) for card backgrounds with `borderSubtle` borders
+- Use `mistBlue.opacity(0.2-0.3)` for soft highlight backgrounds
+
+### ❌ DON'T
+
+- Use `systemBlue`, `.blue`, or any off-palette blue
+- Add halos, glows, or radial gradients around buttons/icons
+- Tint surfaces with purple – keep them neutral white/grey
+- Use `primaryBrand` as CTA button background (too dark, blends with text)
+
+---
+
+## 🔴 Utility / Status Colors
+
+| Token | Hex | Use |
+|-------|-----|-----|
+| `errorRed` | `#E74C3C` | Errors, destructive actions |
+| `warningAmber` | `#F39C12` | Warnings, pending states |
+| `successGreen` | `#27AE60` | Success, completions |
+
+These are reserved for status indication ONLY.
+
+---
+
 ## ✅ Accessibility
 
-### Required Contrast Pairs
+### Contrast Pairs
 
 | Foreground | Background | Status |
 |------------|------------|--------|
-| `textOnLight` (deepIndigo) | `surfaceLight` (paperWhite) | ✅ 7.2:1 |
-| `textOnDark` (paperWhite) | `surfaceDark` (inkBlack) | ✅ 19.3:1 |
-| White | `primaryAccent` (#4C7DFF) | ✅ 4.5:1 |
-| White | `deepIndigo` (#3B3355) | ✅ 8.1:1 |
+| `textOnLight` | `surfaceLight` | ✅ Pass |
+| `textOnDark` | `inkBlack` | ✅ Pass |
+| `paperWhite` | `primaryAccent` | ✅ Pass |
+| `paperWhite` | `slateViolet` | ✅ Pass |
 
 ### Guidelines
 
-1. **Never rely on color alone** – Always pair with icons/labels
-2. **CTAs must be distinct** – primaryAccent ensures buttons stand out
-3. **Avoid long text on saturated backgrounds** – Gradients are for heroes only
-4. **Test both modes** – Verify readability in light AND dark mode
+1. Never rely on color alone – pair with icons/labels
+2. Keep long text on neutral surfaces
+3. Test in both light and dark modes
 
 ---
 
-## 🔧 Implementation Notes
-
-### Golden Rules
-
-1. **CTAs = `primaryAccent`** – Never `primaryBrand` or `slateViolet` for button fills
-2. **Cards = pure white** – No purple tint on `cardLight`
-3. **Text = `deepIndigo`** – For headings and body on light backgrounds
-4. **Highlights = `primaryAccent`** – Key metrics, selected tabs, progress
-
-### Legacy Aliases
-
-For backward compatibility, these aliases exist:
-- `wealthStrong` → `primaryAccent`
-- `wealthBright` → `accentLight`
-- `accentPurple` → `primaryAccent`
-
-New code should use canonical names.
-
----
-
-*Questions? Reference `Core/ThemeColors.swift` or contact the design team.*
+*All colors from `Core/ThemeColors.swift`. No exceptions.*

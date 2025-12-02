@@ -12,13 +12,13 @@ struct OnboardingPage: Identifiable {
 
 // MARK: - Onboarding Carousel View
 
-/// Multi-page onboarding carousel explaining app features
+/// Multi-page onboarding carousel (Palette A colors only)
 struct OnboardingCarouselView: View {
     @StateObject private var appState = AppState.shared
     @State private var currentPage = 0
     let onComplete: () -> Void
     
-    // MARK: - Pages
+    // MARK: - Pages (all colors from Palette A)
     
     private let pages: [OnboardingPage] = [
         OnboardingPage(
@@ -31,20 +31,20 @@ struct OnboardingCarouselView: View {
             icon: "cpu",
             title: "AI-Powered Matching",
             subtitle: "Our intelligent pipeline generates targeted search queries and matches you with real, live job postings that fit your profile.",
-            color: ThemeColors.accentLight
+            color: ThemeColors.slateViolet
         ),
         OnboardingPage(
             icon: "lock.shield.fill",
             title: "Your Data is Secure",
             subtitle: "We treat your résumé with care. Your data is encrypted and never shared with third parties without your consent.",
-            color: ThemeColors.slateViolet
+            color: ThemeColors.mistBlue
         )
     ]
     
     var body: some View {
         ZStack {
-            // Background - rich dark gradient
-            ThemeColors.heroGradientDark
+            // Soft background gradient (Palette A)
+            ThemeColors.introGradient
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -89,7 +89,7 @@ struct OnboardingCarouselView: View {
                 // Bottom buttons
                 VStack(spacing: 16) {
                     if currentPage == pages.count - 1 {
-                        // Get Started button - primary CTA with accent
+                        // Get Started button - primaryAccent (Palette A purple)
                         Button(action: {
                             appState.completeOnboarding()
                             onComplete()
@@ -103,7 +103,7 @@ struct OnboardingCarouselView: View {
                                 .cornerRadius(Theme.CornerRadius.medium)
                         }
                     } else {
-                        // Next button - secondary style
+                        // Next button - slateViolet
                         Button(action: {
                             withAnimation {
                                 currentPage += 1
@@ -136,16 +136,10 @@ struct OnboardingPageView: View {
         VStack(spacing: 32) {
             Spacer()
             
-            // Icon with glow effect
+            // Icon - simple circle, no halo
             ZStack {
-                // Subtle glow
                 Circle()
                     .fill(page.color.opacity(0.2))
-                    .frame(width: 160, height: 160)
-                    .blur(radius: 20)
-                
-                Circle()
-                    .fill(page.color.opacity(0.15))
                     .frame(width: 140, height: 140)
                 
                 Image(systemName: page.icon)

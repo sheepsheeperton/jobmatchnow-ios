@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Dashboard View
 
-/// Shows search history and metrics with neutral surfaces and accent highlights
+/// Shows search history and metrics (Palette A colors only)
 struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     @StateObject private var appState = AppState.shared
@@ -222,7 +222,7 @@ struct DashboardView: View {
                     value: viewModel.avgJobsPerSearch,
                     label: "Avg per Search",
                     icon: "chart.bar.fill",
-                    color: ThemeColors.primaryAccent
+                    color: ThemeColors.slateViolet
                 )
             }
             .padding(.vertical, 20)
@@ -270,7 +270,7 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - Summary Metric Item
+// MARK: - Summary Metric Item (Palette A)
 
 struct SummaryMetricItem: View {
     let value: String
@@ -300,7 +300,7 @@ struct SummaryMetricItem: View {
     }
 }
 
-// MARK: - Recent Session Card
+// MARK: - Recent Session Card (Palette A)
 
 struct RecentSessionCard: View {
     let session: DashboardSessionSummary
@@ -383,7 +383,7 @@ struct RecentSessionCard: View {
     }
 }
 
-// MARK: - Session Stat Item
+// MARK: - Session Stat Item (Palette A)
 
 struct SessionStatItem: View {
     let value: Int
@@ -403,8 +403,6 @@ struct SessionStatItem: View {
         }
     }
 }
-
-// MARK: - Previews
 
 #Preview("Dashboard - Loaded") {
     NavigationStack {

@@ -9,7 +9,7 @@ enum ResultsSource {
 
 // MARK: - Search Results View
 
-/// Displays job matches with neutral surfaces and accent highlights
+/// Displays job matches (Palette A colors only)
 struct SearchResultsView: View {
     let viewToken: String
     var source: ResultsSource = .currentSearch
@@ -245,7 +245,7 @@ struct SearchResultsView: View {
     }
 }
 
-// MARK: - Job Bucket Picker
+// MARK: - Job Bucket Picker (Palette A colors)
 
 struct JobBucketPicker: View {
     @Binding var selectedBucket: JobBucket
@@ -316,7 +316,7 @@ struct JobBucketPicker: View {
     }
 }
 
-// MARK: - Job Card View
+// MARK: - Job Card View (Palette A colors)
 
 struct JobCardView: View {
     let job: Job
@@ -401,12 +401,12 @@ struct JobCardView: View {
             HStack {
                 Image(systemName: "sparkles")
                     .font(.caption)
-                    .foregroundColor(ThemeColors.primaryAccent)
+                    .foregroundColor(ThemeColors.primaryBrand)
                 
                 Text("Why this matches you")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(ThemeColors.primaryAccent)
+                    .foregroundColor(ThemeColors.primaryBrand)
                 
                 Spacer()
                 
@@ -417,12 +417,12 @@ struct JobCardView: View {
                 } else {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
-                        .foregroundColor(ThemeColors.primaryAccent.opacity(0.7))
+                        .foregroundColor(ThemeColors.primaryBrand.opacity(0.7))
                 }
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 12)
-            .background(ThemeColors.primaryAccent.opacity(0.08))
+            .background(ThemeColors.mistBlue.opacity(0.2))
             .cornerRadius(Theme.CornerRadius.small)
         }
         .buttonStyle(PlainButtonStyle())
@@ -460,7 +460,7 @@ struct JobCardView: View {
             Spacer()
         }
         .padding(12)
-        .background(ThemeColors.mistBlue.opacity(0.2))
+        .background(ThemeColors.mistBlue.opacity(0.15))
         .cornerRadius(Theme.CornerRadius.small)
     }
     
@@ -492,7 +492,7 @@ struct JobCardView: View {
             }
         }
         .padding(12)
-        .background(ThemeColors.mistBlue.opacity(0.15))
+        .background(ThemeColors.mistBlue.opacity(0.1))
         .cornerRadius(Theme.CornerRadius.small)
     }
     
@@ -549,7 +549,7 @@ struct JobCardView: View {
     }
 }
 
-// MARK: - Remote Badge
+// MARK: - Remote Badge (Palette A colors)
 
 struct RemoteBadge: View {
     var body: some View {
@@ -563,12 +563,12 @@ struct RemoteBadge: View {
         .foregroundColor(ThemeColors.primaryAccent)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(ThemeColors.primaryAccent.opacity(0.12))
+        .background(ThemeColors.mistBlue.opacity(0.3))
         .cornerRadius(Theme.CornerRadius.small)
     }
 }
 
-// MARK: - Save Search Prompt
+// MARK: - Save Search Prompt (Palette A colors)
 
 struct SaveSearchPromptView: View {
     let onSave: () -> Void
@@ -592,7 +592,7 @@ struct SaveSearchPromptView: View {
             .foregroundColor(ThemeColors.primaryAccent)
         }
         .padding(12)
-        .background(ThemeColors.primaryAccent.opacity(0.1))
+        .background(ThemeColors.mistBlue.opacity(0.2))
         .cornerRadius(Theme.CornerRadius.small)
     }
 }

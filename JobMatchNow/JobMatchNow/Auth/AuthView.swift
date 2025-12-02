@@ -9,7 +9,7 @@ enum AuthMode {
 
 // MARK: - Auth View
 
-/// Authentication screen with email/password and OAuth
+/// Authentication screen (Palette A colors only, no halos)
 struct AuthView: View {
     @StateObject private var authManager = AuthManager.shared
     @StateObject private var appState = AppState.shared
@@ -28,14 +28,14 @@ struct AuthView: View {
     
     var body: some View {
         ZStack {
-            // Background - dark hero gradient
-            ThemeColors.heroGradientDark
+            // Soft background gradient (Palette A)
+            ThemeColors.introGradient
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
                 Spacer()
                 
-                // Logo with accent color
+                // Logo - simple, no halo
                 Image(systemName: "briefcase.fill")
                     .font(.system(size: 60))
                     .foregroundColor(ThemeColors.primaryAccent)
@@ -91,7 +91,7 @@ struct AuthView: View {
                         .padding(.horizontal, 40)
                 }
                 
-                // Submit button - PRIMARY ACCENT
+                // Submit button - primaryAccent (Palette A purple)
                 Button {
                     submitForm()
                 } label: {
@@ -119,7 +119,7 @@ struct AuthView: View {
                 }
                 .padding(.horizontal, 40)
                 
-                // LinkedIn - secondary style
+                // LinkedIn - slateViolet
                 Button {
                     Task {
                         try? await authManager.signInWithLinkedIn()
@@ -148,7 +148,7 @@ struct AuthView: View {
                     ))
                 } label: {
                     Text("Skip for Demo")
-                        .foregroundColor(ThemeColors.primaryAccent)
+                        .foregroundColor(ThemeColors.mistBlue)
                 }
                 #endif
                 

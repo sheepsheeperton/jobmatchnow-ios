@@ -53,7 +53,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().standardAppearance = navBarAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
         
-        // Set tint color for alerts - use primaryAccent
+        // Set tint color for alerts - use primaryAccent (Palette A purple)
         UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = UIColor(ThemeColors.primaryAccent)
     }
 }

@@ -4,8 +4,7 @@ import VisionKit
 
 // MARK: - Search Upload View
 
-/// Root view for the Search tab - Upload résumé
-/// Uses neutral surfaces with accent CTAs
+/// Root view for the Search tab (Palette A colors only)
 struct SearchUploadView: View {
     @StateObject private var appState = AppState.shared
     @State private var isShowingDocumentPicker = false
@@ -54,10 +53,10 @@ struct SearchUploadView: View {
                 
                 Spacer()
                 
-                // Upload illustration - soft mist circle with accent icon
+                // Upload illustration - mistBlue fill, primaryBrand icon
                 ZStack {
                     Circle()
-                        .fill(ThemeColors.mistBlue.opacity(0.3))
+                        .fill(ThemeColors.mistBlue.opacity(0.4))
                         .frame(width: 160, height: 160)
                     
                     Image(systemName: "doc.badge.arrow.up.fill")
@@ -96,7 +95,7 @@ struct SearchUploadView: View {
             
             // Bottom button section
             VStack(spacing: 16) {
-                // Primary upload button - ACCENT COLOR
+                // Primary upload button - primaryAccent (Palette A purple)
                 Button(action: {
                     print("[SearchUploadView] Upload button pressed")
                     isShowingDocumentPicker = true

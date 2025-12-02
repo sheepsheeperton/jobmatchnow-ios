@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Splash View
 
 /// Initial splash screen shown on app launch
-/// Uses dark hero gradient with accent glow for premium feel
+/// Uses soft intro gradient (Palette A only), no halos
 struct SplashView: View {
     @StateObject private var appState = AppState.shared
     @State private var isAnimating = false
@@ -11,29 +11,24 @@ struct SplashView: View {
     
     var body: some View {
         ZStack {
-            // Background - rich dark gradient
-            ThemeColors.heroGradientDark
+            // Soft background gradient (Palette A only)
+            ThemeColors.introGradient
                 .ignoresSafeArea()
             
-            // Subtle accent glow behind logo
-            ThemeColors.accentGlow
-                .frame(width: 300, height: 300)
-                .offset(y: -40)
-            
             VStack(spacing: 24) {
-                // App Icon / Logo
+                // App Icon / Logo - simple, no halo
                 ZStack {
                     Circle()
-                        .fill(ThemeColors.primaryAccent.opacity(0.2))
+                        .fill(ThemeColors.slateViolet.opacity(0.3))
                         .frame(width: 120, height: 120)
-                        .scaleEffect(isAnimating ? 1.1 : 1.0)
+                        .scaleEffect(isAnimating ? 1.05 : 1.0)
                     
                     Image(systemName: "briefcase.fill")
                         .font(.system(size: 50))
-                        .foregroundColor(ThemeColors.primaryAccent)
-                        .scaleEffect(isAnimating ? 1.05 : 1.0)
+                        .foregroundColor(ThemeColors.mistBlue)
+                        .scaleEffect(isAnimating ? 1.02 : 1.0)
                 }
-                .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: isAnimating)
+                .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: isAnimating)
                 
                 // App Name
                 VStack(spacing: 8) {
@@ -43,13 +38,13 @@ struct SplashView: View {
                     
                     Text("Find your perfect match")
                         .font(.subheadline)
-                        .foregroundColor(ThemeColors.textOnDark.opacity(0.7))
+                        .foregroundColor(ThemeColors.mistBlue)
                 }
                 
                 // Loading indicator
                 if !checkComplete {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.primaryAccent))
+                        .progressViewStyle(CircularProgressViewStyle(tint: ThemeColors.mistBlue))
                         .scaleEffect(1.2)
                         .padding(.top, 40)
                 }

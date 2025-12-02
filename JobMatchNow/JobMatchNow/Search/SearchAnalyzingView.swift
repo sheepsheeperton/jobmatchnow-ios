@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Search Analyzing View
 
-/// Pipeline loading screen with rich dark gradient and accent highlights
+/// Pipeline loading screen with soft gradient (Palette A only, no halos)
 struct SearchAnalyzingView: View {
     let viewToken: String
     
@@ -24,15 +24,9 @@ struct SearchAnalyzingView: View {
     
     var body: some View {
         ZStack {
-            // Rich dark gradient background
-            ThemeColors.heroGradientDark
+            // Soft loading gradient (Palette A only)
+            ThemeColors.loadingGradient
                 .ignoresSafeArea()
-            
-            // Subtle accent glow behind steps
-            ThemeColors.accentGlow
-                .frame(width: 400, height: 400)
-                .offset(y: 50)
-                .opacity(0.5)
             
             VStack(spacing: 40) {
                 // Header
@@ -45,7 +39,7 @@ struct SearchAnalyzingView: View {
                     
                     Text("This will only take a moment")
                         .font(.body)
-                        .foregroundColor(ThemeColors.textOnDark.opacity(0.7))
+                        .foregroundColor(ThemeColors.mistBlue)
                 }
                 .padding(.top, 60)
                 
@@ -205,7 +199,7 @@ enum StepStatus {
     case completed
 }
 
-// MARK: - Pipeline Step Row
+// MARK: - Pipeline Step Row (no halos, Palette A only)
 
 struct PipelineStepRow: View {
     let step: PipelineStep
@@ -214,6 +208,7 @@ struct PipelineStepRow: View {
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
+                // Simple circle background, no halo
                 Circle()
                     .fill(backgroundColor)
                     .frame(width: 44, height: 44)
@@ -224,7 +219,7 @@ struct PipelineStepRow: View {
                         .fontWeight(.semibold)
                         .foregroundColor(ThemeColors.textOnDark)
                 } else if status == .inProgress {
-                    // Accent-colored ring for current step
+                    // Outline ring for current step
                     Circle()
                         .stroke(ThemeColors.primaryAccent, lineWidth: 2)
                         .frame(width: 44, height: 44)
@@ -252,9 +247,9 @@ struct PipelineStepRow: View {
         case .completed:
             return ThemeColors.primaryAccent
         case .inProgress:
-            return ThemeColors.primaryAccent.opacity(0.2)
-        case .pending:
             return ThemeColors.slateViolet.opacity(0.3)
+        case .pending:
+            return ThemeColors.slateViolet.opacity(0.2)
         }
     }
     
@@ -263,7 +258,7 @@ struct PipelineStepRow: View {
         case .completed:
             return ThemeColors.textOnDark
         case .inProgress:
-            return ThemeColors.primaryAccent
+            return ThemeColors.mistBlue
         case .pending:
             return ThemeColors.textOnDark.opacity(0.5)
         }
