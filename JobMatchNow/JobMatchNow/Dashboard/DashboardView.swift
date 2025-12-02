@@ -131,6 +131,7 @@ struct DashboardView: View {
             
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // MARK: - Empty State View
@@ -176,6 +177,7 @@ struct DashboardView: View {
             
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // MARK: - Dashboard Content
@@ -191,6 +193,7 @@ struct DashboardView: View {
             }
             .padding()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // MARK: - Summary Strip Card
