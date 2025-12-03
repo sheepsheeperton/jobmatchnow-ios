@@ -112,7 +112,7 @@ struct OnboardingPageView: View {
                     imageName: page.imageName,
                     fallbackIcon: page.fallbackIcon
                 )
-                .frame(height: 180)
+                .frame(height: 220) // Increased height for scenes
                 
                 // Text content
                 VStack(spacing: 16) {
@@ -159,55 +159,62 @@ struct OnboardingPageView: View {
 
 // MARK: - Onboarding Illustration
 
-/// Displays image if available, otherwise shows a graceful fallback
+/// Displays image if available, otherwise shows a specialized scene or graceful fallback
 struct OnboardingIllustration: View {
     let imageName: String
     let fallbackIcon: String
     
     var body: some View {
-        // Try to load the image, fall back to gradient + SF Symbol
+        // Check if asset exists
         if let uiImage = UIImage(named: imageName) {
             Image(uiImage: uiImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(maxHeight: 180)
+                .frame(maxHeight: 200)
         } else {
-            // Fallback: gradient circle with SF Symbol
-            ZStack {
-                // Outer glow ring
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                ThemeColors.accentGreen.opacity(0.3),
-                                ThemeColors.brandPurpleMid.opacity(0.1),
-                                Color.clear
-                            ],
-                            center: .center,
-                            startRadius: 40,
-                            endRadius: 100
+            // Specialized Scenes
+            if imageName == "onboarding_personalized" {
+                OnboardingScenePersonalized()
+            }
+            // Add future scenes here for ai_matcher and fast_results
+            else {
+                // Generic Fallback: gradient circle with SF Symbol
+                ZStack {
+                    // Outer glow ring
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [
+                                    ThemeColors.accentGreen.opacity(0.3),
+                                    ThemeColors.brandPurpleMid.opacity(0.1),
+                                    Color.clear
+                                ],
+                                center: .center,
+                                startRadius: 40,
+                                endRadius: 100
+                            )
                         )
-                    )
-                    .frame(width: 180, height: 180)
-                
-                // Inner gradient circle
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                ThemeColors.brandPurpleMid.opacity(0.5),
-                                ThemeColors.brandPurpleDark.opacity(0.8)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                        .frame(width: 180, height: 180)
+                    
+                    // Inner gradient circle
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    ThemeColors.brandPurpleMid.opacity(0.5),
+                                    ThemeColors.brandPurpleDark.opacity(0.8)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .frame(width: 120, height: 120)
-                
-                // Icon
-                Image(systemName: fallbackIcon)
-                    .font(.system(size: 48, weight: .medium))
-                    .foregroundColor(ThemeColors.accentSand)
+                        .frame(width: 120, height: 120)
+                    
+                    // Icon
+                    Image(systemName: fallbackIcon)
+                        .font(.system(size: 48, weight: .medium))
+                        .foregroundColor(ThemeColors.accentSand)
+                }
             }
         }
     }
