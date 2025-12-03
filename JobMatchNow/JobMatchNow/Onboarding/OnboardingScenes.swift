@@ -134,11 +134,131 @@ struct OnboardingScenePersonalized: View {
     }
 }
 
+// MARK: - Scene 2: AI Résumé Scanning
+
+/// "A magnifying glass, document, and AI scanning beam represented using geometric shapes. Visual metaphor: smart analysis of a résumé."
+struct OnboardingSceneAIMatcher: View {
+    @State private var animate = false
+    
+    var body: some View {
+        ZStack {
+            // Background Glow
+            Circle()
+                .fill(ThemeColors.brandPurpleDark.opacity(0.2))
+                .blur(radius: 40)
+                .frame(width: 220, height: 220)
+            
+            // The Document
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(ThemeColors.surfaceWhite)
+                    .frame(width: 160, height: 210)
+                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 0, y: 8)
+                
+                // Document Content (Abstract Lines)
+                VStack(alignment: .leading, spacing: 10) {
+                    // Header block
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(ThemeColors.brandPurpleMid.opacity(0.2))
+                        .frame(width: 80, height: 14)
+                        .padding(.bottom, 8)
+                    
+                    // Body lines
+                    ForEach(0..<6) { i in
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(ThemeColors.softGrey.opacity(0.15))
+                            .frame(width: i % 2 == 0 ? 120 : 90, height: 8)
+                    }
+                    Spacer()
+                }
+                .padding(24)
+                .frame(width: 160, height: 210)
+                
+                // Scan Beam / Data Extraction Highlights
+                // (Only appears when scan line passes over)
+                VStack(spacing: 18) {
+                    ForEach(0..<3) { i in
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(ThemeColors.accentGreen.opacity(0.4))
+                            .frame(width: 120, height: 8)
+                            .opacity(animate ? 1 : 0)
+                            .animation(
+                                Animation.easeInOut(duration: 0.5)
+                                    .repeatForever(autoreverses: true)
+                                    .delay(Double(i) * 0.2),
+                                value: animate
+                            )
+                    }
+                }
+                .offset(y: 10)
+            }
+            .scaleEffect(0.9)
+            
+            // The Lens / Scanner
+            // Moving up and down
+            ZStack {
+                // Lens Ring
+                Circle()
+                    .strokeBorder(ThemeColors.brandPurpleMid, lineWidth: 8)
+                    .background(Circle().fill(ThemeColors.brandPurpleDark.opacity(0.1)))
+                    .frame(width: 100, height: 100)
+                
+                // Glass reflection
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.4), Color.clear],
+                            startPoint: .topLeading,
+                            endPoint: .center
+                        )
+                    )
+                    .frame(width: 90, height: 90)
+                    .clipShape(Circle())
+                
+                // Handle
+                Capsule()
+                    .fill(ThemeColors.brandPurpleDark)
+                    .frame(width: 12, height: 60)
+                    .offset(y: 60)
+                    .rotationEffect(.degrees(-45), anchor: .top)
+                    .offset(x: 30, y: 30)
+            }
+            .offset(y: animate ? 40 : -60) // Scan movement
+            .offset(x: animate ? 20 : -20) // Slight horizontal movement
+            .animation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true), value: animate)
+            
+            // Floating Data Particles (Extracted info)
+            Group {
+                Circle()
+                    .fill(ThemeColors.accentGreen)
+                    .frame(width: 12, height: 12)
+                    .offset(x: 60, y: -40)
+                    .opacity(animate ? 1 : 0)
+                    .scaleEffect(animate ? 1.2 : 0)
+                
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(ThemeColors.accentSand)
+                    .frame(width: 20, height: 8)
+                    .offset(x: -70, y: 20)
+                    .opacity(animate ? 1 : 0)
+                    .scaleEffect(animate ? 1.2 : 0)
+            }
+            .animation(.spring(response: 0.6, dampingFraction: 0.6).repeatForever(autoreverses: true).delay(1.0), value: animate)
+        }
+        .frame(height: 240)
+        .onAppear {
+            animate = true
+        }
+    }
+}
+
 // MARK: - Preview
 #Preview {
     ZStack {
         ThemeColors.introGradient.ignoresSafeArea()
-        OnboardingScenePersonalized()
+        VStack(spacing: 40) {
+            OnboardingScenePersonalized()
+            OnboardingSceneAIMatcher()
+        }
     }
 }
-

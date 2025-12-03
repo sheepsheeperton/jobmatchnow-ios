@@ -175,8 +175,10 @@ struct OnboardingIllustration: View {
             // Specialized Scenes
             if imageName == "onboarding_personalized" {
                 OnboardingScenePersonalized()
+            } else if imageName == "onboarding_ai_matcher" {
+                OnboardingSceneAIMatcher()
             }
-            // Add future scenes here for ai_matcher and fast_results
+            // Add future scenes here for fast_results
             else {
                 // Generic Fallback: gradient circle with SF Symbol
                 ZStack {
