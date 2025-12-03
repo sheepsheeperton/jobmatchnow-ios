@@ -252,6 +252,109 @@ struct OnboardingSceneAIMatcher: View {
     }
 }
 
+// MARK: - Scene 3: Fast Results
+
+/// "A stylized stopwatch or fast-forward icon combined with upward-moving shapes. Convey speed, quick results, and instant matching."
+struct OnboardingSceneFastResults: View {
+    @State private var animate = false
+    
+    var body: some View {
+        ZStack {
+            // Background: Upward "Speed Lines"
+            ForEach(0..<3) { i in
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 40, weight: .bold))
+                    .foregroundColor(ThemeColors.accentGreen.opacity(0.1))
+                    .offset(y: animate ? -80 : 80)
+                    .scaleEffect(animate ? 1.2 : 0.8)
+                    .opacity(animate ? 0 : 1)
+                    .animation(
+                        Animation.linear(duration: 1.5)
+                            .repeatForever(autoreverses: false)
+                            .delay(Double(i) * 0.5),
+                        value: animate
+                    )
+            }
+            
+            // Central Stopwatch / Timer Element
+            ZStack {
+                // Outer Ring
+                Circle()
+                    .stroke(ThemeColors.brandPurpleDark, lineWidth: 8)
+                    .frame(width: 140, height: 140)
+                    .opacity(0.3)
+                
+                // Progress Ring (Animated)
+                Circle()
+                    .trim(from: 0, to: 0.75)
+                    .stroke(
+                        AngularGradient(
+                            gradient: Gradient(colors: [ThemeColors.accentGreen, ThemeColors.brandPurpleMid]),
+                            center: .center
+                        ),
+                        style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                    )
+                    .frame(width: 140, height: 140)
+                    .rotationEffect(.degrees(animate ? 360 : 0))
+                    .animation(Animation.linear(duration: 4).repeatForever(autoreverses: false), value: animate)
+                
+                // Inner Face
+                Circle()
+                    .fill(ThemeColors.surfaceWhite)
+                    .frame(width: 110, height: 110)
+                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 4)
+                
+                // Clock Hand
+                Capsule()
+                    .fill(ThemeColors.brandPurpleDark)
+                    .frame(width: 6, height: 50)
+                    .offset(y: -20)
+                    .rotationEffect(.degrees(animate ? 360 : 0))
+                    .animation(Animation.linear(duration: 2).repeatForever(autoreverses: false), value: animate)
+                
+                // Center Pin
+                Circle()
+                    .fill(ThemeColors.accentGreen)
+                    .frame(width: 12, height: 12)
+            }
+            
+            // Floating Result Cards (Popping up)
+            Group {
+                // Left card
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(ThemeColors.brandPurpleMid)
+                    .frame(width: 50, height: 35)
+                    .rotationEffect(.degrees(-15))
+                    .offset(x: -70, y: 20)
+                    .offset(y: animate ? -10 : 10)
+                    .animation(Animation.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: animate)
+                
+                // Right card
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(ThemeColors.accentSand)
+                    .frame(width: 40, height: 30)
+                    .rotationEffect(.degrees(10))
+                    .offset(x: 70, y: -30)
+                    .offset(y: animate ? 15 : -15)
+                    .animation(Animation.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: animate)
+                
+                // Top icon (Thunderbolt/Speed)
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(ThemeColors.accentGreen)
+                    .offset(x: 40, y: -60)
+                    .scaleEffect(animate ? 1.2 : 0.8)
+                    .opacity(animate ? 1 : 0.5)
+                    .animation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: animate)
+            }
+        }
+        .frame(height: 240)
+        .onAppear {
+            animate = true
+        }
+    }
+}
+
 // MARK: - Preview
 #Preview {
     ZStack {
@@ -259,6 +362,7 @@ struct OnboardingSceneAIMatcher: View {
         VStack(spacing: 40) {
             OnboardingScenePersonalized()
             OnboardingSceneAIMatcher()
+            OnboardingSceneFastResults()
         }
     }
 }

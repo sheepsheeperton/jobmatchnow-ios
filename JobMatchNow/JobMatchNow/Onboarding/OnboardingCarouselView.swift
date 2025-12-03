@@ -177,9 +177,9 @@ struct OnboardingIllustration: View {
                 OnboardingScenePersonalized()
             } else if imageName == "onboarding_ai_matcher" {
                 OnboardingSceneAIMatcher()
-            }
-            // Add future scenes here for fast_results
-            else {
+            } else if imageName == "onboarding_fast_results" {
+                OnboardingSceneFastResults()
+            } else {
                 // Generic Fallback: gradient circle with SF Symbol
                 ZStack {
                     // Outer glow ring
