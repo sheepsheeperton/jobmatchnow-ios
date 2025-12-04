@@ -898,7 +898,7 @@ class APIService {
     
     /// Fetches an AI-generated explanation of why the user might be a good fit for a role
     /// Endpoint: POST /api/insights/role-snippet
-    func fetchRoleExplanation(role: String, viewToken: String) async throws -> String {
+    func fetchRoleExplanation(role: String, viewToken: String) async throws -> RoleSnippetResponse {
         guard let url = URL(string: "\(baseURL)/api/insights/role-snippet") else {
             throw APIError.invalidURL
         }
@@ -947,6 +947,12 @@ class APIService {
         
         print("[APIService] Role explanation response - Status code:", httpResponse.statusCode)
         
+        // Log raw response for debugging
+        if let responseBody = String(data: data, encoding: .utf8) {
+            let preview = responseBody.prefix(300)
+            print("[APIService] Role snippet raw response:", preview)
+        }
+        
         // Handle error status codes
         if httpResponse.statusCode != 200 {
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
@@ -954,22 +960,22 @@ class APIService {
         }
         
         // Decode response
-        struct RoleExplanationResponse: Decodable {
-            let explanation: String
-        }
-        
         do {
-            let decoded = try JSONDecoder().decode(RoleExplanationResponse.self, from: data)
-            print("[APIService] ✅ Role explanation fetched successfully")
-            return decoded.explanation
+            let decoded = try JSONDecoder().decode(RoleSnippetResponse.self, from: data)
+            print("[APIService] ✅ Role explanation fetched - summary: \(decoded.summary.prefix(50))..., \(decoded.bullets.count) bullets")
+            return decoded
         } catch {
-            // Fallback: try to get raw text
-            if let text = String(data: data, encoding: .utf8), !text.isEmpty {
-                print("[APIService] ✅ Role explanation fetched (raw text)")
-                return text
-            }
-            print("[APIService] Failed to decode role explanation:", error)
+            print("[APIService] ❌ Failed to decode role snippet:", error)
             throw APIError.decodingError(error)
         }
     }
+}
+
+// MARK: - Role Snippet Response
+
+/// Response from POST /api/insights/role-snippet
+struct RoleSnippetResponse: Codable {
+    let role: String
+    let summary: String
+    let bullets: [String]
 }

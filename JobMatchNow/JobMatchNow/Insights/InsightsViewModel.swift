@@ -37,8 +37,8 @@ final class InsightsViewModel: ObservableObject {
     /// Suggested roles from AI analysis
     @Published private(set) var suggestedRoles: [String] = []
     
-    /// Role explanations cache: role → explanation text
-    @Published private(set) var roleExplanations: [String: String] = [:]
+    /// Role explanations cache: role → structured response
+    @Published private(set) var roleExplanations: [String: RoleSnippetResponse] = [:]
     
     /// Currently expanded role (only one at a time)
     @Published var expandedRole: String?
@@ -132,15 +132,15 @@ final class InsightsViewModel: ObservableObject {
         explanationError = nil
         
         do {
-            let explanation = try await apiService.fetchRoleExplanation(
+            let response = try await apiService.fetchRoleExplanation(
                 role: role,
                 viewToken: lastSearch.viewToken
             )
             
-            roleExplanations[role] = explanation
+            roleExplanations[role] = response
             isLoadingExplanation = false
             
-            print("[InsightsViewModel] ✅ Fetched explanation for role: \(role)")
+            print("[InsightsViewModel] ✅ Fetched explanation for role: \(role) - \(response.bullets.count) bullets")
             
         } catch {
             isLoadingExplanation = false

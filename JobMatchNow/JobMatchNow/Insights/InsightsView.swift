@@ -266,7 +266,7 @@ struct InsightsView: View {
                     RoleChipView(
                         role: role,
                         isExpanded: viewModel.expandedRole == role,
-                        explanation: viewModel.roleExplanations[role],
+                        snippetResponse: viewModel.roleExplanations[role],
                         isLoading: viewModel.isLoadingExplanation && viewModel.expandedRole == role,
                         error: viewModel.expandedRole == role ? viewModel.explanationError : nil,
                         onTap: {
@@ -294,7 +294,7 @@ struct InsightsView: View {
 struct RoleChipView: View {
     let role: String
     let isExpanded: Bool
-    let explanation: String?
+    let snippetResponse: RoleSnippetResponse?
     let isLoading: Bool
     let error: String?
     let onTap: () -> Void
@@ -350,19 +350,32 @@ struct RoleChipView: View {
                                 .font(.subheadline)
                                 .foregroundColor(ThemeColors.textSecondaryLight)
                         }
-                    } else if let explanation = explanation {
-                        // Explanation content
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "sparkles")
-                                .font(.caption)
-                                .foregroundColor(ThemeColors.accentGreen)
-                                .padding(.top, 2)
-                            
-                            Text(explanation)
-                                .font(.subheadline)
-                                .foregroundColor(ThemeColors.textOnLight)
-                                .lineSpacing(4)
-                                .fixedSize(horizontal: false, vertical: true)
+                    } else if let response = snippetResponse {
+                        // Summary paragraph
+                        Text(response.summary)
+                            .font(.subheadline)
+                            .foregroundColor(ThemeColors.textOnLight)
+                            .lineSpacing(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                        
+                        // Bullets list
+                        if !response.bullets.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(response.bullets, id: \.self) { bullet in
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.caption)
+                                            .foregroundColor(ThemeColors.accentGreen)
+                                            .padding(.top, 2)
+                                        
+                                        Text(bullet)
+                                            .font(.subheadline)
+                                            .foregroundColor(ThemeColors.textOnLight.opacity(0.85))
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                            }
+                            .padding(.top, 4)
                         }
                     }
                 }
