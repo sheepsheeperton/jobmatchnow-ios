@@ -893,4 +893,83 @@ class APIService {
             }
         }
     }
+    
+    // MARK: - 8. Fetch Role Explanation
+    
+    /// Fetches an AI-generated explanation of why the user might be a good fit for a role
+    /// Endpoint: POST /api/insights/role-snippet
+    func fetchRoleExplanation(role: String, viewToken: String) async throws -> String {
+        guard let url = URL(string: "\(baseURL)/api/insights/role-snippet") else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        
+        // Add auth if available
+        if let accessToken = UserDefaults.standard.string(forKey: "supabase_access_token"),
+           !accessToken.isEmpty {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        }
+        
+        // Encode request body
+        struct RoleExplanationRequest: Encodable {
+            let role: String
+            let view_token: String
+        }
+        
+        let requestBody = RoleExplanationRequest(role: role, view_token: viewToken)
+        
+        do {
+            request.httpBody = try JSONEncoder().encode(requestBody)
+        } catch {
+            print("[APIService] Failed to encode role explanation request:", error)
+            throw APIError.decodingError(error)
+        }
+        
+        print("[APIService] 🔮 Fetching role explanation for '\(role)' with token \(viewToken.prefix(8))...")
+        
+        // Perform request
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            print("[APIService] Role explanation network error:", error)
+            throw APIError.networkError(error)
+        }
+        
+        // Check HTTP response
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        print("[APIService] Role explanation response - Status code:", httpResponse.statusCode)
+        
+        // Handle error status codes
+        if httpResponse.statusCode != 200 {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
+        }
+        
+        // Decode response
+        struct RoleExplanationResponse: Decodable {
+            let explanation: String
+        }
+        
+        do {
+            let decoded = try JSONDecoder().decode(RoleExplanationResponse.self, from: data)
+            print("[APIService] ✅ Role explanation fetched successfully")
+            return decoded.explanation
+        } catch {
+            // Fallback: try to get raw text
+            if let text = String(data: data, encoding: .utf8), !text.isEmpty {
+                print("[APIService] ✅ Role explanation fetched (raw text)")
+                return text
+            }
+            print("[APIService] Failed to decode role explanation:", error)
+            throw APIError.decodingError(error)
+        }
+    }
 }

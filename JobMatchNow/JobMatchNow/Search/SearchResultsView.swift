@@ -10,6 +10,7 @@ enum ResultsSource {
 // MARK: - Search Results View
 
 /// Displays job matches (triadic palette)
+/// Resume Score and Suggested Roles moved to Insights tab
 struct SearchResultsView: View {
     let viewToken: String
     var source: ResultsSource = .currentSearch
@@ -105,23 +106,6 @@ struct SearchResultsView: View {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 12)
-                }
-                
-                // Resume Score Card (shown if available)
-                if let score = viewModel.resumeScore {
-                    ResumeScoreCard(
-                        score: score,
-                        feedback: viewModel.resumeFeedback
-                    )
-                    .padding(.horizontal)
-                    .padding(.bottom, 12)
-                }
-                
-                // Suggested Roles Section (shown if available)
-                if !viewModel.suggestedRoles.isEmpty {
-                    SuggestedRolesSection(roles: viewModel.suggestedRoles)
-                        .padding(.horizontal)
-                        .padding(.bottom, 12)
                 }
                 
                 // Error message
@@ -231,6 +215,10 @@ struct SearchResultsView: View {
                         Label("Open Dashboard", systemImage: "rectangle.stack")
                     }
                     
+                    Button(action: { openInsights() }) {
+                        Label("View Insights", systemImage: "sparkles")
+                    }
+                    
                     Divider()
                     
                     Button(action: { showSettings = true }) {
@@ -270,106 +258,14 @@ struct SearchResultsView: View {
         appState.switchToTab(.dashboard)
     }
     
+    private func openInsights() {
+        appState.switchToTab(.insights)
+    }
+    
     private func logOut() {
         Task {
             await AuthManager.shared.signOut()
         }
-    }
-}
-
-// MARK: - Resume Score Card
-
-struct ResumeScoreCard: View {
-    let score: Int
-    let feedback: String?
-    @State private var isExpanded = false
-    
-    private var scoreColor: Color {
-        if score >= 80 { return ThemeColors.accentGreen }
-        if score >= 60 { return ThemeColors.warningAmber }
-        return ThemeColors.errorRed
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button(action: { withAnimation { isExpanded.toggle() } }) {
-                HStack {
-                    Image(systemName: "doc.text.magnifyingglass")
-                        .foregroundColor(ThemeColors.primaryBrand)
-                    
-                    Text("Resume Score")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(ThemeColors.primaryBrand)
-                    
-                    Spacer()
-                    
-                    Text("\(score) / 100")
-                        .font(.headline)
-                        .fontWeight(.bold)
-                        .foregroundColor(scoreColor)
-                    
-                    if feedback != nil {
-                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.caption)
-                            .foregroundColor(ThemeColors.textSecondaryLight)
-                    }
-                }
-            }
-            .buttonStyle(PlainButtonStyle())
-            
-            if isExpanded, let feedback = feedback {
-                Text(feedback)
-                    .font(.caption)
-                    .foregroundColor(ThemeColors.textSecondaryLight)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-        .padding(12)
-        .background(ThemeColors.accentSand.opacity(0.3))
-        .cornerRadius(Theme.CornerRadius.small)
-    }
-}
-
-// MARK: - Suggested Roles Section
-
-struct SuggestedRolesSection: View {
-    let roles: [String]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "sparkles")
-                    .foregroundColor(ThemeColors.accentGreen)
-                Text("Suggested Roles for You")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(ThemeColors.primaryBrand)
-            }
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(roles, id: \.self) { role in
-                        Text(role)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(ThemeColors.primaryBrand)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(ThemeColors.accentSand)
-                            .cornerRadius(Theme.CornerRadius.pill)
-                    }
-                }
-            }
-        }
-        .padding(12)
-        .background(ThemeColors.cardLight)
-        .cornerRadius(Theme.CornerRadius.small)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
-                .stroke(ThemeColors.borderSubtle, lineWidth: 1)
-        )
     }
 }
 

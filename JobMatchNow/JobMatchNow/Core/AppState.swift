@@ -32,7 +32,8 @@ final class AppState: ObservableObject {
     
     enum Tab: Int {
         case search = 0
-        case dashboard = 1
+        case insights = 1
+        case dashboard = 2
     }
     
     // MARK: - Auth State Enum
