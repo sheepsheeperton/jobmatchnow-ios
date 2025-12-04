@@ -438,16 +438,16 @@ struct LastSearchCard: View {
                         .fontWeight(.medium)
                         .foregroundColor(ThemeColors.textSecondaryLight)
                     
+                    // Primary title: current role (matches Dashboard)
                     Text(displayTitle)
                         .font(.headline)
                         .foregroundColor(ThemeColors.primaryBrand)
                     
-                    if let currentRole = lastSearch.currentRoleTitle, !currentRole.isEmpty {
-                        Text("Based on your role: \(currentRole)")
-                            .font(.subheadline)
-                            .foregroundColor(ThemeColors.textSecondaryLight)
-                            .lineLimit(1)
-                    }
+                    // Secondary: search intent (if different from title)
+                    Text(subtitleText)
+                        .font(.subheadline)
+                        .foregroundColor(ThemeColors.textSecondaryLight)
+                        .lineLimit(1)
                     
                     HStack(spacing: 12) {
                         Label("\(lastSearch.totalMatches) matches", systemImage: "briefcase")
@@ -481,14 +481,25 @@ struct LastSearchCard: View {
         .disabled(isLoading)
     }
     
+    /// Primary title: user's current role (matches Dashboard display)
     private var displayTitle: String {
-        if let searchTitle = lastSearch.lastSearchTitle, !searchTitle.isEmpty {
-            return searchTitle
+        // Prefer current role title (matches Dashboard)
+        if let currentRole = lastSearch.currentRoleTitle, !currentRole.isEmpty {
+            return currentRole
         }
+        // Fallback to legacy label
         if let label = lastSearch.label, !label.isEmpty {
             return label
         }
         return "Recent search"
+    }
+    
+    /// Subtitle: search intent / what jobs were searched for
+    private var subtitleText: String {
+        if let searchTitle = lastSearch.lastSearchTitle, !searchTitle.isEmpty {
+            return "Last search: \(searchTitle)"
+        }
+        return "View your matched jobs"
     }
     
     private var formattedDate: String {
