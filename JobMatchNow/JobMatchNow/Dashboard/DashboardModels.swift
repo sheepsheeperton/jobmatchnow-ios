@@ -10,26 +10,67 @@ import Foundation
 // MARK: - Dashboard API Response
 
 /// Top-level response from GET /api/me/dashboard endpoint
-/// Backend returns: { "summary": {...}, "recent_sessions": [...] }
+/// Backend returns: { "summary": {...}, "recent_sessions": [...], "recent_starred_jobs": [...] }
 struct DashboardAPIResponse: Decodable {
     let summary: DashboardSummaryMetrics
     let recentSessions: [DashboardSessionSummary]
+    let recentStarredJobs: [DashboardSavedJob]
     
     enum CodingKeys: String, CodingKey {
         case summary
         case recentSessions = "recent_sessions"
+        case recentStarredJobs = "recent_starred_jobs"
     }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         summary = try container.decodeIfPresent(DashboardSummaryMetrics.self, forKey: .summary) ?? DashboardSummaryMetrics()
         recentSessions = try container.decodeIfPresent([DashboardSessionSummary].self, forKey: .recentSessions) ?? []
+        recentStarredJobs = try container.decodeIfPresent([DashboardSavedJob].self, forKey: .recentStarredJobs) ?? []
     }
     
     // For previews/testing
-    init(summary: DashboardSummaryMetrics, recentSessions: [DashboardSessionSummary]) {
+    init(summary: DashboardSummaryMetrics, recentSessions: [DashboardSessionSummary], recentStarredJobs: [DashboardSavedJob] = []) {
         self.summary = summary
         self.recentSessions = recentSessions
+        self.recentStarredJobs = recentStarredJobs
+    }
+}
+
+// MARK: - Dashboard Saved Job
+
+/// A saved/starred job from the dashboard API
+struct DashboardSavedJob: Identifiable, Decodable {
+    let id: String
+    let title: String
+    let company: String
+    let location: String
+    let jobUrl: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id = "job_id"
+        case title
+        case company = "company_name"
+        case location
+        case jobUrl = "job_url"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        company = try container.decodeIfPresent(String.self, forKey: .company) ?? "Unknown Company"
+        location = try container.decodeIfPresent(String.self, forKey: .location) ?? "Location not specified"
+        jobUrl = try container.decodeIfPresent(String.self, forKey: .jobUrl)
+    }
+    
+    // For previews/testing
+    init(id: String, title: String, company: String, location: String, jobUrl: String?) {
+        self.id = id
+        self.title = title
+        self.company = company
+        self.location = location
+        self.jobUrl = jobUrl
     }
 }
 
@@ -292,13 +333,34 @@ extension DashboardAPIResponse {
             viewedJobsCount: 28,
             starredJobsCount: 5
         ),
-        recentSessions: DashboardSessionSummary.samples
+        recentSessions: DashboardSessionSummary.samples,
+        recentStarredJobs: DashboardSavedJob.samples
     )
     
     static let empty = DashboardAPIResponse(
         summary: DashboardSummaryMetrics(),
-        recentSessions: []
+        recentSessions: [],
+        recentStarredJobs: []
     )
+}
+
+extension DashboardSavedJob {
+    static let samples: [DashboardSavedJob] = [
+        DashboardSavedJob(
+            id: "job_1",
+            title: "Senior iOS Developer",
+            company: "Apple Inc.",
+            location: "Cupertino, CA",
+            jobUrl: "https://example.com/job1"
+        ),
+        DashboardSavedJob(
+            id: "job_2",
+            title: "Swift Engineer",
+            company: "Spotify",
+            location: "Remote",
+            jobUrl: "https://example.com/job2"
+        )
+    ]
 }
 
 extension DashboardSessionSummary {

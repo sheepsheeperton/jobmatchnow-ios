@@ -64,6 +64,10 @@ final class DashboardViewModel: ObservableObject {
         dashboardData?.recentSessions ?? []
     }
     
+    var savedJobs: [DashboardSavedJob] {
+        dashboardData?.recentStarredJobs ?? []
+    }
+    
     var hasData: Bool {
         guard let data = dashboardData else { return false }
         return data.summary.totalSearches > 0 || !data.recentSessions.isEmpty
@@ -215,7 +219,8 @@ final class DashboardViewModel: ObservableObject {
                 if var data = dashboardData {
                     data = DashboardAPIResponse(
                         summary: data.summary,
-                        recentSessions: data.recentSessions.filter { $0.id != session.id }
+                        recentSessions: data.recentSessions.filter { $0.id != session.id },
+                        recentStarredJobs: data.recentStarredJobs
                     )
                     dashboardData = data
                 }

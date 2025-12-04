@@ -28,6 +28,15 @@ final class ResultsViewModel: ObservableObject {
     /// Error message if fetch failed
     @Published private(set) var errorMessage: String?
     
+    /// Resume quality score (0-100, nil if not available)
+    @Published private(set) var resumeScore: Int?
+    
+    /// Resume feedback summary (nil if not available)
+    @Published private(set) var resumeFeedback: String?
+    
+    /// Suggested roles from AI analysis
+    @Published private(set) var suggestedRoles: [String] = []
+    
     /// Current job bucket filter
     /// Defaults to .all to match initial load (no query params = all jobs)
     @Published var selectedBucket: JobBucket = .all {
@@ -66,6 +75,11 @@ final class ResultsViewModel: ObservableObject {
         self.selectedBucket = .all
         
         print("[ResultsViewModel] Initialized with \(jobs.count) jobs, default bucket: \(self.selectedBucket.rawValue)")
+        
+        // Fetch session metadata for resume score and suggested roles
+        Task {
+            await fetchSessionMetadata()
+        }
     }
     
     // MARK: - Public Methods
@@ -89,6 +103,51 @@ final class ResultsViewModel: ObservableObject {
             errorMessage = "Failed to load jobs. Tap to retry."
             print("[ResultsViewModel] ❌ Error refreshing jobs: \(error)")
         }
+    }
+    
+    /// Fetch session metadata for resume score and suggested roles
+    private func fetchSessionMetadata() async {
+        do {
+            let sessionStatus = try await apiService.getSessionStatus(viewToken: viewToken)
+            
+            // Update resume score if available
+            if let score = sessionStatus.resume_score {
+                resumeScore = score
+                resumeFeedback = sessionStatus.resume_feedback
+                print("[ResultsViewModel] Resume score: \(score)")
+            }
+            
+            // Update suggested roles if available
+            if let roles = sessionStatus.realistic_target_roles, !roles.isEmpty {
+                suggestedRoles = roles
+                print("[ResultsViewModel] Suggested roles: \(roles.joined(separator: ", "))")
+            }
+            
+        } catch {
+            // Non-critical - don't show error to user
+            print("[ResultsViewModel] ⚠️ Could not fetch session metadata: \(error)")
+        }
+    }
+    
+    /// Toggle bookmark state for a job
+    func toggleBookmark(for index: Int) {
+        guard index >= 0, index < jobs.count else { return }
+        
+        let wasStarred = jobs[index].isStarred
+        jobs[index].isStarred.toggle()
+        
+        let interactionType: JobInteractionType = wasStarred ? .unstar : .star
+        
+        // Fire and forget - API call happens in background
+        Task {
+            try? await apiService.trackJobInteraction(
+                jobId: jobs[index].job_id,
+                viewToken: viewToken,
+                interactionType: interactionType
+            )
+        }
+        
+        print("[ResultsViewModel] \(wasStarred ? "Unstarred" : "Starred") job: \(jobs[index].title)")
     }
     
     /// Retry after error
@@ -117,4 +176,3 @@ extension ResultsViewModel {
         return ResultsViewModel(jobs: sampleJobs, viewToken: "preview_token")
     }
 }
-

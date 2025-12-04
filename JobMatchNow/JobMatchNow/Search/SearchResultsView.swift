@@ -107,6 +107,23 @@ struct SearchResultsView: View {
                     .padding(.bottom, 12)
                 }
                 
+                // Resume Score Card (shown if available)
+                if let score = viewModel.resumeScore {
+                    ResumeScoreCard(
+                        score: score,
+                        feedback: viewModel.resumeFeedback
+                    )
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+                }
+                
+                // Suggested Roles Section (shown if available)
+                if !viewModel.suggestedRoles.isEmpty {
+                    SuggestedRolesSection(roles: viewModel.suggestedRoles)
+                        .padding(.horizontal)
+                        .padding(.bottom, 12)
+                }
+                
                 // Error message
                 if let errorMessage = viewModel.errorMessage {
                     Button(action: { viewModel.retry() }) {
@@ -138,7 +155,7 @@ struct SearchResultsView: View {
                 // Job cards list
                 ScrollView {
                     LazyVStack(spacing: 16) {
-                        ForEach(filteredJobs) { job in
+                        ForEach(Array(filteredJobs.enumerated()), id: \.element.id) { index, job in
                             JobCardView(
                                 job: job,
                                 explanationState: explanationManager.state(for: job.job_id),
@@ -154,6 +171,9 @@ struct SearchResultsView: View {
                                 onViewDetails: { url in
                                     selectedJobURL = url
                                     showSafari = true
+                                },
+                                onToggleBookmark: {
+                                    viewModel.toggleBookmark(for: index)
                                 }
                             )
                         }
@@ -189,6 +209,18 @@ struct SearchResultsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { startNewSearch() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus.circle.fill")
+                        Text("New Search")
+                            .fontWeight(.medium)
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(ThemeColors.accentGreen)
+                }
+            }
+            
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button(action: { startNewSearch() }) {
@@ -242,6 +274,102 @@ struct SearchResultsView: View {
         Task {
             await AuthManager.shared.signOut()
         }
+    }
+}
+
+// MARK: - Resume Score Card
+
+struct ResumeScoreCard: View {
+    let score: Int
+    let feedback: String?
+    @State private var isExpanded = false
+    
+    private var scoreColor: Color {
+        if score >= 80 { return ThemeColors.accentGreen }
+        if score >= 60 { return ThemeColors.warningAmber }
+        return ThemeColors.errorRed
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button(action: { withAnimation { isExpanded.toggle() } }) {
+                HStack {
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .foregroundColor(ThemeColors.primaryBrand)
+                    
+                    Text("Resume Score")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(ThemeColors.primaryBrand)
+                    
+                    Spacer()
+                    
+                    Text("\(score) / 100")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundColor(scoreColor)
+                    
+                    if feedback != nil {
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.caption)
+                            .foregroundColor(ThemeColors.textSecondaryLight)
+                    }
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            if isExpanded, let feedback = feedback {
+                Text(feedback)
+                    .font(.caption)
+                    .foregroundColor(ThemeColors.textSecondaryLight)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(12)
+        .background(ThemeColors.accentSand.opacity(0.3))
+        .cornerRadius(Theme.CornerRadius.small)
+    }
+}
+
+// MARK: - Suggested Roles Section
+
+struct SuggestedRolesSection: View {
+    let roles: [String]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundColor(ThemeColors.accentGreen)
+                Text("Suggested Roles for You")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(ThemeColors.primaryBrand)
+            }
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(roles, id: \.self) { role in
+                        Text(role)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(ThemeColors.primaryBrand)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(ThemeColors.accentSand)
+                            .cornerRadius(Theme.CornerRadius.pill)
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .background(ThemeColors.cardLight)
+        .cornerRadius(Theme.CornerRadius.small)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
+                .stroke(ThemeColors.borderSubtle, lineWidth: 1)
+        )
     }
 }
 
@@ -325,6 +453,7 @@ struct JobCardView: View {
     let onToggleExpand: () -> Void
     let onRetryExplanation: () -> Void
     let onViewDetails: (URL) -> Void
+    let onToggleBookmark: () -> Void
     
     private var jobURL: URL? {
         guard let urlString = job.job_url else { return nil }
@@ -334,6 +463,7 @@ struct JobCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             mainCardContent
+            jobBadgesRow
             whyThisMatchesRow
             
             if isExpanded {
@@ -369,9 +499,13 @@ struct JobCardView: View {
                 
                 Spacer()
                 
-                if job.isRemote {
-                    RemoteBadge()
+                // Bookmark button
+                Button(action: onToggleBookmark) {
+                    Image(systemName: job.isStarred ? "bookmark.fill" : "bookmark")
+                        .font(.title3)
+                        .foregroundColor(job.isStarred ? ThemeColors.accentGreen : ThemeColors.softGrey)
                 }
+                .buttonStyle(PlainButtonStyle())
             }
             
             HStack(spacing: 6) {
@@ -394,6 +528,44 @@ struct JobCardView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - Job Quality Badges
+    
+    @ViewBuilder
+    private var jobBadgesRow: some View {
+        let badges = buildBadges()
+        
+        if !badges.isEmpty {
+            HStack(spacing: 8) {
+                ForEach(badges, id: \.text) { badge in
+                    JobQualityBadge(text: badge.text, color: badge.color, icon: badge.icon)
+                }
+                Spacer()
+            }
+            .padding(.top, 10)
+        }
+    }
+    
+    private func buildBadges() -> [(text: String, color: Color, icon: String)] {
+        var badges: [(text: String, color: Color, icon: String)] = []
+        
+        // High Match badge
+        if job.isHighMatch {
+            badges.append((text: "High Match", color: ThemeColors.accentGreen, icon: "star.fill"))
+        }
+        
+        // Fresh badge
+        if job.isFresh {
+            badges.append((text: "Fresh", color: ThemeColors.warningAmber, icon: "clock.fill"))
+        }
+        
+        // Remote-Friendly badge
+        if job.isRemote {
+            badges.append((text: "Remote-Friendly", color: ThemeColors.brandPurpleMid, icon: "wifi"))
+        }
+        
+        return badges
     }
     
     private var whyThisMatchesRow: some View {
@@ -546,6 +718,29 @@ struct JobCardView: View {
         .buttonStyle(PlainButtonStyle())
         .disabled(jobURL == nil)
         .padding(.top, 12)
+    }
+}
+
+// MARK: - Job Quality Badge
+
+struct JobQualityBadge: View {
+    let text: String
+    let color: Color
+    let icon: String
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption2)
+            Text(text)
+        }
+        .font(.caption2)
+        .fontWeight(.semibold)
+        .foregroundColor(color)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(color.opacity(0.15))
+        .cornerRadius(Theme.CornerRadius.small)
     }
 }
 

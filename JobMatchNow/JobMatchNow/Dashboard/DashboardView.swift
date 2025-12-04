@@ -9,6 +9,8 @@ struct DashboardView: View {
     @State private var showSettings = false
     @State private var sessionToDelete: DashboardSessionSummary?
     @State private var showDeleteConfirmation = false
+    @State private var selectedJobURL: URL?
+    @State private var showSafari = false
     
     var body: some View {
         Group {
@@ -69,6 +71,12 @@ struct DashboardView: View {
         } message: {
             if let session = sessionToDelete {
                 Text("This will permanently delete \"\(session.displayTitle)\" from your search history.")
+            }
+        }
+        .sheet(isPresented: $showSafari) {
+            if let url = selectedJobURL {
+                SafariView(url: url)
+                    .ignoresSafeArea()
             }
         }
     }
@@ -190,10 +198,49 @@ struct DashboardView: View {
                 if !viewModel.recentSessions.isEmpty {
                     recentSearchesSection
                 }
+                
+                if !viewModel.savedJobs.isEmpty {
+                    savedJobsSection
+                }
             }
             .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // MARK: - Saved Jobs Section
+    
+    private var savedJobsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "bookmark.fill")
+                    .foregroundColor(ThemeColors.accentGreen)
+                Text("Saved Jobs")
+                    .font(.headline)
+                    .foregroundColor(ThemeColors.primaryBrand)
+                
+                Spacer()
+                
+                Text("\(viewModel.savedJobs.count)")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(ThemeColors.accentGreen)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(ThemeColors.accentGreen.opacity(0.1))
+                    .cornerRadius(Theme.CornerRadius.small)
+            }
+            .padding(.horizontal, 4)
+            
+            ForEach(viewModel.savedJobs) { job in
+                SavedJobCard(job: job) {
+                    if let urlStr = job.jobUrl, let url = URL(string: urlStr) {
+                        selectedJobURL = url
+                        showSafari = true
+                    }
+                }
+            }
+        }
     }
     
     // MARK: - Summary Strip Card
@@ -404,6 +451,68 @@ struct SessionStatItem: View {
                 .font(.caption)
                 .foregroundColor(ThemeColors.textSecondaryLight)
         }
+    }
+}
+
+// MARK: - Saved Job Card (triadic)
+
+struct SavedJobCard: View {
+    let job: DashboardSavedJob
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Bookmark icon
+                ZStack {
+                    Circle()
+                        .fill(ThemeColors.accentGreen.opacity(0.1))
+                        .frame(width: 40, height: 40)
+                    
+                    Image(systemName: "bookmark.fill")
+                        .font(.subheadline)
+                        .foregroundColor(ThemeColors.accentGreen)
+                }
+                
+                // Job info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(job.title)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(ThemeColors.primaryBrand)
+                        .lineLimit(1)
+                    
+                    Text(job.company)
+                        .font(.caption)
+                        .foregroundColor(ThemeColors.textSecondaryLight)
+                        .lineLimit(1)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.caption2)
+                        Text(job.location)
+                            .font(.caption)
+                    }
+                    .foregroundColor(ThemeColors.softGrey)
+                    .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                    .foregroundColor(ThemeColors.textSecondaryLight)
+            }
+            .padding(12)
+            .background(ThemeColors.cardLight)
+            .cornerRadius(Theme.CornerRadius.medium)
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                    .stroke(ThemeColors.borderSubtle, lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .disabled(job.jobUrl == nil)
     }
 }
 

@@ -56,6 +56,41 @@ struct SessionStatus: Decodable {
     let status: String?
     let created_at: String?
     let error_message: String?
+    
+    // Resume quality fields (future-ready)
+    let resume_score: Int?
+    let resume_feedback: String?
+    
+    // Suggested roles fields
+    let realistic_target_roles: [String]?
+    let last_search_title: String?
+    let current_role_title: String?
+    let current_role_company: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case status
+        case created_at
+        case error_message
+        case resume_score
+        case resume_feedback
+        case realistic_target_roles
+        case last_search_title
+        case current_role_title
+        case current_role_company
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        status = try container.decodeIfPresent(String.self, forKey: .status)
+        created_at = try container.decodeIfPresent(String.self, forKey: .created_at)
+        error_message = try container.decodeIfPresent(String.self, forKey: .error_message)
+        resume_score = try container.decodeIfPresent(Int.self, forKey: .resume_score)
+        resume_feedback = try container.decodeIfPresent(String.self, forKey: .resume_feedback)
+        realistic_target_roles = try container.decodeIfPresent([String].self, forKey: .realistic_target_roles)
+        last_search_title = try container.decodeIfPresent(String.self, forKey: .last_search_title)
+        current_role_title = try container.decodeIfPresent(String.self, forKey: .current_role_title)
+        current_role_company = try container.decodeIfPresent(String.self, forKey: .current_role_company)
+    }
 }
 
 struct Job: Decodable, Identifiable {
@@ -69,6 +104,9 @@ struct Job: Decodable, Identifiable {
     let source_query: String?
     let category: String?
     let isRemote: Bool
+    
+    // Transient client-side state (not persisted)
+    var isStarred: Bool = false
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -95,10 +133,11 @@ struct Job: Decodable, Identifiable {
         source_query = try container.decodeIfPresent(String.self, forKey: .source_query)
         category = try container.decodeIfPresent(String.self, forKey: .category)
         isRemote = try container.decodeIfPresent(Bool.self, forKey: .isRemote) ?? false
+        isStarred = false
     }
     
     // Initializer for previews/testing
-    init(id: String, job_id: String, title: String, company_name: String, location: String, posted_at: String?, job_url: String?, source_query: String?, category: String?, isRemote: Bool = false) {
+    init(id: String, job_id: String, title: String, company_name: String, location: String, posted_at: String?, job_url: String?, source_query: String?, category: String?, isRemote: Bool = false, isStarred: Bool = false) {
         self.id = id
         self.job_id = job_id
         self.title = title
@@ -109,6 +148,61 @@ struct Job: Decodable, Identifiable {
         self.source_query = source_query
         self.category = category
         self.isRemote = isRemote
+        self.isStarred = isStarred
+    }
+    
+    // MARK: - Computed Properties for Badges
+    
+    /// Returns true if job is a "High Match" (direct category)
+    var isHighMatch: Bool {
+        category?.lowercased() == "direct"
+    }
+    
+    /// Returns true if job was posted within last 48 hours
+    var isFresh: Bool {
+        guard let postedStr = posted_at?.lowercased() else { return false }
+        
+        // Parse common relative date patterns
+        if postedStr.contains("hour") || postedStr.contains("minute") || postedStr.contains("just") {
+            return true
+        }
+        if postedStr.contains("1 day") || postedStr.contains("today") || postedStr.contains("yesterday") {
+            return true
+        }
+        if let match = postedStr.range(of: "(\\d+)\\s*day", options: .regularExpression),
+           let daysStr = postedStr[match].split(separator: " ").first,
+           let days = Int(daysStr), days <= 2 {
+            return true
+        }
+        
+        return false
+    }
+}
+
+// MARK: - Job Interaction
+
+enum JobInteractionType: String {
+    case view = "view"
+    case star = "star"
+    case unstar = "unstar"
+    case apply = "apply"
+}
+
+// MARK: - Saved Job (for Dashboard)
+
+struct SavedJob: Identifiable, Decodable {
+    let id: String
+    let title: String
+    let company: String
+    let location: String
+    let jobUrl: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id = "job_id"
+        case title
+        case company = "company_name"
+        case location
+        case jobUrl = "job_url"
     }
 }
 
@@ -124,6 +218,7 @@ enum APIError: LocalizedError {
     case networkError(Error)
     case missingViewToken
     case unauthorized
+    case timeout
 
     var errorDescription: String? {
         switch self {
@@ -145,6 +240,8 @@ enum APIError: LocalizedError {
             return "Missing view token in response"
         case .unauthorized:
             return "Please sign in to access your dashboard"
+        case .timeout:
+            return "Request timed out"
         }
     }
 }
@@ -736,5 +833,64 @@ class APIService {
         print("[APIService] Explanation decoded - \(explanation.bullets.count) bullet points")
         
         return explanation
+    }
+    
+    // MARK: - 7. Track Job Interaction
+    
+    /// Tracks a user interaction with a job (view, star, unstar, apply)
+    /// Endpoint: POST /api/jobs/interaction
+    func trackJobInteraction(jobId: String, viewToken: String, interactionType: JobInteractionType) async throws {
+        guard let url = URL(string: "\(baseURL)/api/jobs/interaction") else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Add auth if available
+        if let accessToken = UserDefaults.standard.string(forKey: "supabase_access_token"),
+           !accessToken.isEmpty {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        }
+        
+        // Encode request body
+        struct InteractionRequest: Encodable {
+            let job_id: String
+            let view_token: String
+            let interaction_type: String
+        }
+        
+        let requestBody = InteractionRequest(
+            job_id: jobId,
+            view_token: viewToken,
+            interaction_type: interactionType.rawValue
+        )
+        
+        do {
+            request.httpBody = try JSONEncoder().encode(requestBody)
+        } catch {
+            print("[APIService] Failed to encode interaction request:", error)
+            throw APIError.decodingError(error)
+        }
+        
+        print("[APIService] 📌 Tracking interaction: \(interactionType.rawValue) for job \(jobId)")
+        
+        // Perform request - fire and forget style, don't block on errors
+        let (_, response): (Data, URLResponse)
+        do {
+            (_, response) = try await session.data(for: request)
+        } catch {
+            print("[APIService] ⚠️ Interaction tracking failed (non-blocking):", error)
+            return // Don't throw - this is non-critical
+        }
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            if httpResponse.statusCode == 200 || httpResponse.statusCode == 201 {
+                print("[APIService] ✅ Interaction tracked successfully")
+            } else {
+                print("[APIService] ⚠️ Interaction tracking returned status:", httpResponse.statusCode)
+            }
+        }
     }
 }
