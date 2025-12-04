@@ -72,9 +72,9 @@ struct SearchAnalyzingView: View {
                     .foregroundColor(ThemeColors.textOnDark)
                     .multilineTextAlignment(.center)
                 
-                Text("This will only take a moment")
-                    .font(.body)
-                    .foregroundColor(ThemeColors.textSecondaryDark)
+                    Text("This may take 1 to 2 minutes")
+                        .font(.body)
+                        .foregroundColor(ThemeColors.textSecondaryDark)
             }
             .padding(.top, 60)
             
