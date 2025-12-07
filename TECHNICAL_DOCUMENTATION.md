@@ -1,7 +1,7 @@
 # JobMatchNow iOS - Technical Documentation
 
-**Last Updated:** December 1, 2025  
-**Version:** 1.1  
+**Last Updated:** December 7, 2025  
+**Version:** 2.0  
 **Platform:** iOS 16.0+  
 **Framework:** SwiftUI + UIKit Lifecycle
 
@@ -42,8 +42,8 @@
 │  SplashView → OnboardingCarousel → AuthView             │
 │                                          ↓               │
 │                                    MainTabView           │
-│                                    /         \           │
-│                         SearchTab         DashboardTab   │
+│                              /        |        \         │
+│                     SearchTab   InsightsTab   DashboardTab│
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -166,15 +166,23 @@ TabView(selection: $appState.selectedTab) {
         SearchUploadView()
     }
     .tabItem { Label("Search", systemImage: "magnifyingglass") }
-    .tag(AppTab.search)
+    .tag(AppState.Tab.search)
+    
+    // Insights Tab
+    NavigationStack {
+        InsightsView()
+    }
+    .tabItem { Label("Insights", systemImage: "sparkles") }
+    .tag(AppState.Tab.insights)
     
     // Dashboard Tab
     NavigationStack {
         DashboardView()
     }
-    .tabItem { Label("Dashboard", systemImage: "chart.bar") }
-    .tag(AppTab.dashboard)
+    .tabItem { Label("Dashboard", systemImage: "rectangle.stack") }
+    .tag(AppState.Tab.dashboard)
 }
+.tint(ThemeColors.primaryBrand)  // Brand purple for tab bar accents
 ```
 
 ### Navigation Patterns
@@ -337,25 +345,91 @@ struct DashboardSessionSummary: Identifiable, Decodable {
 
 #### SplashView
 - **Purpose:** App launch screen, checks for existing session
-- **Design:** Dark gradient background (midnight → deepComplement)
-- **Logo:** JobMatchNow icon in primaryBrand color
+- **Design:** Dark gradient background using `ThemeColors.introGradient`
+- **Logo:** App icon (`AppLogo` from assets) with rounded corners
 
 #### OnboardingCarouselView
-- **Purpose:** Feature introduction carousel (3 pages)
+- **Purpose:** Feature introduction carousel (3 pages), shown only once
+- **Persistence:** `hasCompletedOnboarding` flag in UserDefaults via AppState
 - **Pages:**
-  1. "Match Your Resume" - AI-powered matching
-  2. "Find Perfect Roles" - Job discovery
-  3. "Track Your Progress" - Dashboard overview
-- **CTA:** "Get Started" button navigates to AuthView
+  1. "Personalized job matches, powered by your unique experience"
+  2. "Not a job board — a smart matcher built around your résumé"
+  3. "Get job recommendations in under 60 seconds"
+- **CTA:** "Next" (pages 1-2), "Get started" (page 3)
+- **Illustrations:** Programmatic SwiftUI scenes in `OnboardingScenes.swift`
+
+#### OnboardingScenes.swift
+- **Purpose:** Programmatic vector-style illustrations for onboarding cards
+- **Contains:**
+  - `OnboardingScenePersonalized` - Resume card with floating skill badges
+  - `OnboardingSceneAIMatcher` - Document with scanning lens effect
+  - `OnboardingSceneFastResults` - Stopwatch with speed lines
+- **Design:** Flat, minimal, geometric style using ThemeColors palette
 
 ---
 
-### 4. Settings Module (`Settings/`)
+### 4. Consent Module (`Consent/`)
+
+#### DataConsentView
+- **Purpose:** Privacy consent gate before first resume upload
+- **Shows:** Only once, when user first tries to upload a resume
+- **Persistence:** `hasAcceptedDataConsent` flag in UserDefaults via AppState
+- **Content:**
+  - Explanation of AI processing (Claude)
+  - Data storage and encryption info
+  - Bulleted list of what data is collected
+  - "I Agree and Continue" primary CTA
+  - "Not now" secondary action
+  - Links to Privacy Policy and Terms of Use
+
+#### Integration
+- `SearchUploadView` checks `appState.hasAcceptedDataConsent`
+- If false, presents `DataConsentView` as fullScreenCover
+- User cannot upload until consent is granted
+
+---
+
+### 5. Insights Module (`Insights/`)
+
+#### InsightsView
+- **Purpose:** Display AI-powered resume insights and role suggestions
+- **ViewModel:** `InsightsViewModel`
+- **Features:**
+  - Resume Score card (0-100 with feedback)
+  - Suggested Roles section with tappable chips
+  - Role explanations with AI-generated summaries and bullets
+  - Loading, error, and empty states
+
+#### InsightsViewModel
+```swift
+@MainActor
+final class InsightsViewModel: ObservableObject {
+    @Published var resumeScore: Int?
+    @Published var resumeFeedback: String?
+    @Published var suggestedRoles: [String] = []
+    @Published var roleExplanations: [String: RoleSnippetResponse] = [:]
+    @Published var expandedRole: String?
+    
+    func loadLatestSessionInsights() async
+    func toggleRoleExplanation(_ role: String)
+    func fetchRoleExplanation(role: String) async
+}
+```
+
+---
+
+### 7. Settings Module (`Settings/`)
 
 #### SettingsView
 - **Purpose:** App settings and account management
 - **Features:**
-  - Sign Out button (calls `AuthManager.signOut()`)
+  - **Data & AI Processing section:**
+    - "How we use your résumé" → Opens `DataConsentInfoView` (read-only consent info)
+  - **Account section:**
+    - Sign Out button (calls `AuthManager.signOut()`)
+  - **Debug section (development only):**
+    - Reset Onboarding flag
+    - Reset Data Consent flag
   - App version info
   - Dismiss with "Done" button
 
@@ -372,10 +446,12 @@ struct DashboardSessionSummary: Identifiable, Decodable {
 | Method | Endpoint | Auth Required | Purpose |
 |--------|----------|---------------|---------|
 | `POST` | `/api/resume` | No | Upload resume, get view_token |
-| `GET` | `/api/public/session?token=<viewToken>` | No | Poll analysis status |
+| `GET` | `/api/public/session?token=<viewToken>` | No | Poll analysis status (includes resume_score, realistic_target_roles) |
 | `GET` | `/api/public/jobs?token=<viewToken>&scope=<local\|national>` | No | Fetch job matches |
-| `GET` | `/api/me/dashboard` | **Yes** | Get user dashboard summary |
+| `GET` | `/api/me/dashboard` | **Yes** | Get user dashboard summary + recent_starred_jobs |
 | `POST` | `/api/jobs/explanation` | No | Get AI explanation for job match |
+| `POST` | `/api/jobs/interaction` | No | Track job interaction (view, star, apply) |
+| `POST` | `/api/insights/role-snippet` | No | Get AI explanation for suggested role |
 
 #### Authentication Implementation
 
@@ -426,27 +502,57 @@ do {
 
 ### Color Palette (`Core/ThemeColors.swift`)
 
-**Brand Colors:**
+**System:** Triadic Palette — Purple (brand) + Green-Teal (actions) + Warm Sand (accents)
+
+**Purple Family (Brand):**
 ```swift
-ThemeColors.primaryBrand       // #FF7538 - Atomic Tangerine (CTAs)
-ThemeColors.primaryComplement  // #38A1FF - Vibrant Sky Blue (secondary actions)
-ThemeColors.softComplement     // #A1D6FF - Soft Ice Blue (subtle highlights)
-ThemeColors.deepComplement     // #005D8A - Deep Cyan (dark mode cards)
-ThemeColors.midnight           // #0D3A6A - Midnight Navy (headings, dark text)
+ThemeColors.brandPurpleDark    // #3B3355 - Primary brand for headings, icons
+ThemeColors.brandPurpleMid     // #5D5D81 - Secondary structure, inactive states
+ThemeColors.primaryBrand       // Maps to brandPurpleDark (semantic alias)
 ```
 
-**Utility Colors:**
+**Green-Teal (Primary Actions):**
 ```swift
-ThemeColors.warmAccent         // #FFB140 - Warm Honey (warnings, accents)
-ThemeColors.errorRed           // #E74C3C - Bright Red (destructive actions)
-ThemeColors.surfaceLight       // #F9F9F9 - Light Gray (light mode background)
-ThemeColors.surfaceWhite       // #FFFFFF - Pure White (cards)
-ThemeColors.borderSubtle       // #E5E7EB - Light Gray-Blue (dividers)
-ThemeColors.textOnLight        // #0D3A6A - Midnight Navy (dark text on light)
-ThemeColors.textOnDark         // #F9F9F9 - Light Gray (light text on dark)
+ThemeColors.accentGreen        // #52885E - ⭐ PRIMARY CTAs, buttons, key metrics
+ThemeColors.accentGreenPressed // #3D6847 - Pressed button states
+ThemeColors.primaryAccent      // Maps to accentGreen (semantic alias)
 ```
 
-**Usage Guide:** See `Docs/ColorPalette.md` for detailed 60-30-10 hierarchy rules.
+**Warm Sand (Secondary Accents):**
+```swift
+ThemeColors.accentSand         // #F5EEE4 - Soft backgrounds, subtle chips
+ThemeColors.accentSandDark     // #E8DFD2 - Borders on sand surfaces
+ThemeColors.secondaryAccent    // Maps to accentSand (semantic alias)
+```
+
+**Neutrals:**
+```swift
+ThemeColors.surfaceLight       // #F9FAFB - Light mode page background
+ThemeColors.surfaceWhite       // #FFFFFF - Card backgrounds (light mode)
+ThemeColors.surfaceDark        // #0A0A0F - Dark mode page background
+ThemeColors.cardLight          // #FFFFFF - Cards (light mode)
+ThemeColors.cardDark           // #1A1B26 - Cards (dark mode)
+ThemeColors.borderSubtle       // #E5E7EB - Dividers, card borders
+ThemeColors.softGrey           // #6B7280 - Secondary text
+ThemeColors.paperWhite         // #FEFCFD - Text on dark backgrounds
+```
+
+**Text Colors:**
+```swift
+ThemeColors.textOnLight        // brandPurpleDark - Primary text on light
+ThemeColors.textOnDark         // paperWhite - Primary text on dark
+ThemeColors.textSecondaryLight // softGrey - Secondary text (light mode)
+ThemeColors.textSecondaryDark  // #A0A0B0 - Secondary text (dark mode)
+```
+
+**Gradients:**
+```swift
+ThemeColors.introGradient      // For splash/intro screens
+ThemeColors.loadingGradient    // For analyzing/loading screens
+ThemeColors.brandGradient      // For marketing/hero sections
+```
+
+**Usage Guide:** See `Docs/ColorPalette.md` for detailed 60-30-10 hierarchy rules and component mapping.
 
 ### Typography
 
@@ -642,20 +748,34 @@ enum JobBucket: String, CaseIterable {
 final class AppState: ObservableObject {
     static let shared = AppState()
     
-    @Published var authState: AuthState = .unauthenticated
-    @Published var selectedTab: AppTab = .search
-    @Published var currentViewToken: String?
-    @Published var lastSearch: LastSearchInfo?    // Synced from Dashboard
+    @Published var authState: AuthState = .loading
+    @Published var selectedTab: Tab = .search
+    @Published var hasCompletedOnboarding: Bool      // Persisted in UserDefaults
+    @Published var hasAcceptedDataConsent: Bool      // Persisted in UserDefaults
+    @Published var currentUser: UserInfo?
+    @Published var lastSearch: LastSearchInfo?       // Synced from Dashboard
     
-    enum AuthState {
+    enum AuthState: Equatable {
+        case loading
         case authenticated
         case unauthenticated
     }
     
-    enum AppTab: Int {
+    enum Tab: Int {
         case search = 0
-        case dashboard = 1
+        case insights = 1
+        case dashboard = 2
     }
+    
+    // Methods
+    func completeOnboarding()     // Sets flag + persists
+    func resetOnboarding()        // Clears flag (debug)
+    func acceptDataConsent()      // Sets flag + persists
+    func resetDataConsent()       // Clears flag (debug)
+    func signIn(user: UserInfo)
+    func signOut()
+    func saveLastSearch(_ info: LastSearchInfo)
+    func switchToTab(_ tab: Tab)
     
     // Last search info with semantic labels
     struct LastSearchInfo: Codable, Equatable {
@@ -688,9 +808,92 @@ RootView()
 
 ## Recent Changes
 
+### December 7, 2025
+
+#### 1. **Insights Tab & Module** (Latest)
+- **Change:** Added dedicated Insights tab as third navigation item
+- **Purpose:** Move resume score and suggested roles off results page for cleaner UX
+- **Features:**
+  - Resume Score card with 0-100 score and full feedback
+  - Suggested Roles section with tappable chips
+  - Role explanations fetch structured JSON (summary + bullets) from API
+  - Loading, error, and empty states
+- **New Files:**
+  - `Insights/InsightsView.swift` - UI for insights display
+  - `Insights/InsightsViewModel.swift` - Data loading and role explanation fetching
+- **API Integration:** Uses existing `/api/public/session` for score/roles, new `/api/insights/role-snippet` for explanations
+
+#### 2. **Data Consent Gate**
+- **Change:** Added privacy consent screen before first resume upload
+- **Purpose:** Comply with privacy best practices for AI data processing
+- **Flow:** User must accept consent before uploading resume (one-time gate)
+- **Persistence:** `hasAcceptedDataConsent` flag in UserDefaults via AppState
+- **New Files:**
+  - `Consent/DataConsentView.swift` - Full consent UI + read-only info variant
+- **Integration:** SearchUploadView checks flag, presents fullScreenCover if needed
+
+#### 3. **Onboarding Carousel Enhancement**
+- **Change:** Added programmatic SwiftUI illustrations for onboarding
+- **Purpose:** Beautiful onboarding without requiring external image assets
+- **New Files:**
+  - `Onboarding/OnboardingScenes.swift` - Three animated scenes:
+    - `OnboardingScenePersonalized` - Resume card with floating badges
+    - `OnboardingSceneAIMatcher` - Document with scanning lens
+    - `OnboardingSceneFastResults` - Stopwatch with speed lines
+- **Design:** Flat, minimal, geometric style using ThemeColors triadic palette
+
+#### 4. **Job Bookmarks (Saved Jobs)**
+- **Change:** Added ability to save/star jobs from results
+- **UI:** Bookmark icon on job cards (outlined/filled toggle)
+- **API:** New `APIService.trackJobInteraction(jobId:viewToken:interactionType:)` 
+- **Dashboard:** "Saved Jobs" section displays `recent_starred_jobs` from API
+- **Files Changed:**
+  - `SearchResultsView.swift` - Bookmark icon on cards
+  - `ResultsViewModel.swift` - `toggleBookmark(for:)` method
+  - `DashboardModels.swift` - `DashboardSavedJob` struct
+  - `DashboardView.swift` - Saved Jobs section
+
+#### 5. **Job Quality Badges**
+- **Change:** Client-side quality labels on job cards
+- **Badges:**
+  - "High Match" - when `category == "direct"`
+  - "Fresh" - when `posted_at` ≤ 48 hours
+  - "Remote-Friendly" - when `isRemote == true`
+- **Files Changed:** `SearchResultsView.swift` - `JobQualityBadge` components
+
+#### 6. **Pipeline Error Handling**
+- **Change:** Improved error handling in analyzing flow
+- **Features:**
+  - Timeout detection during session polling
+  - "Processing Failed" alert with Retry / Upload Different File options
+  - Graceful handling of "failed" status from backend
+- **Files Changed:** `SearchAnalyzingView.swift`
+
+#### 7. **Triadic Color System**
+- **Change:** Migrated from Palette A to triadic system
+- **Colors:**
+  - Purple (brand) - typography, icons, brand identity
+  - Green-teal (actions) - primary CTAs, buttons, key metrics
+  - Warm sand (accents) - soft highlights, subtle badges
+- **Files Changed:** 
+  - `ThemeColors.swift` - Complete rewrite
+  - `Docs/ColorPalette.md` - Updated documentation
+
+#### 8. **Search/Dashboard Title Consistency**
+- **Change:** Last Search card now shows same title as Dashboard
+- **Display:** Primary shows `currentRoleTitle`, subtitle shows `lastSearchTitle`
+- **Files Changed:** `SearchUploadView.swift` - `LastSearchCard` component
+
+#### 9. **UI Polish**
+- **Splash screen:** Replaced briefcase icon with AppLogo asset
+- **Loading screen:** Updated copy to "This may take 1 to 2 minutes"
+- **Dashboard:** Fixed black bars on empty state (full-bleed background)
+
+---
+
 ### December 1, 2025
 
-#### 0. **Camera Scanning for Resume Upload** (Latest)
+#### 1. **Camera Scanning for Resume Upload**
 - **Change:** Added camera scanning capability using VisionKit's document scanner
 - **Purpose:** Allow users to photograph their résumé directly with iPhone camera
 - **Features:**
@@ -714,7 +917,7 @@ RootView()
   ```
 - **Note:** No backend changes required - OCR already processes image files
 
-#### 1. **Semantic Labels for Search Sessions**
+#### 3. **Semantic Labels for Search Sessions**
 - **Change:** Added `currentRoleTitle`, `currentRoleCompany`, `lastSearchTitle` to dashboard and search models
 - **Purpose:** Show meaningful labels instead of generic "Search" or "Recent search"
 - **Dashboard Card Now Shows:**
@@ -730,7 +933,7 @@ RootView()
   - `DashboardView.swift` - Updated `RecentSessionCard` subtitle
   - `SearchUploadView.swift` - Updated `LastSearchCard` display logic
 
-#### 1. **Automatic Token Refresh**
+#### 4. **Automatic Token Refresh**
 - **Change:** Dashboard now automatically refreshes expired Supabase tokens
 - **Problem:** After ~1 hour, tokens expire and dashboard shows "Session expired"
 - **Solution:**
@@ -744,7 +947,7 @@ RootView()
 
 ### November 30, 2025
 
-#### 2. **Job Bucket Filter Refactor**
+#### 1. **Job Bucket Filter Refactor**
 - **Change:** Replaced dual-control filtering with single 4-button bucket control
 - **Old:** Local/National scope toggle + All/Remote filter (2 separate controls)
 - **New:** All | Remote | Local | National (single mutually-exclusive control)
@@ -758,33 +961,33 @@ RootView()
   - `ResultsViewModel.swift` - Replaced `locationScope` with `selectedBucket`
   - `SearchResultsView.swift` - Replaced `LocationScopeToggle` and `JobFilter` with `JobBucketPicker`
 
-#### 3. **Dashboard Authentication Fix**
+#### 2. **Dashboard Authentication Fix**
 - **Problem:** `GET /api/me/dashboard` returned 401 Unauthorized
 - **Solution:**
   - Added `APIError.unauthorized` case
   - Modified `APIService.getDashboard()` to add Authorization header
   - Updated `DashboardViewModel.loadDashboard()` to show "Please sign in" error for unauthorized state
 
-#### 4. **Dashboard Model Update**
+#### 3. **Dashboard Model Update**
 - **Problem:** Dashboard decoding failed with `keyNotFound("id")`
 - **Solution:**
   - Updated `DashboardSessionSummary` CodingKeys to match new backend JSON
   - Updated `DashboardView` to show: Total | Local | National | Remote
 
-#### 5. **Last Search Card Functionality**
+#### 4. **Last Search Card Functionality**
 - **Problem:** "Last Search" card on Upload screen was not tappable
 - **Solution:**
   - Made entire card a tappable Button
   - Added navigation to historical results
 
-#### 6. **Status Bar Visibility**
+#### 5. **Status Bar Visibility**
 - **Problem:** Status bar icons invisible on light backgrounds
 - **Solution:**
   - Implemented custom `RootHostingController` with Combine observation
   - Created `StatusBarStyleManager.shared` singleton
   - Migrated from SwiftUI App lifecycle to UIKit AppDelegate/SceneDelegate
 
-#### 7. **2025 Color System & Theme Migration**
+#### 6. **2025 Color System & Theme Migration**
 - Migrated all views from `Theme.*` to `ThemeColors.*`
 - Removed non-palette violets/purples
 - Updated gear icons, empty states, and cards to use approved colors
@@ -908,41 +1111,54 @@ xcodebuild -project JobMatchNow.xcodeproj \
 
 ```
 JobMatchNow/
+├── Assets.xcassets/
+│   ├── AccentColor.colorset/
+│   ├── AppIcon.appiconset/
+│   ├── AppLogo.imageset/                 # App logo for splash screen
+│   ├── onboarding_personalized.imageset/ # Onboarding illustration slot
+│   ├── onboarding_ai_matcher.imageset/   # Onboarding illustration slot
+│   └── onboarding_fast_results.imageset/ # Onboarding illustration slot
 ├── Core/
 │   ├── AppDelegate.swift                 # UIKit app lifecycle
 │   ├── SceneDelegate.swift               # Window scene management
 │   ├── RootView.swift                    # Auth state routing
-│   ├── MainTabView.swift                 # Tab navigation
+│   ├── MainTabView.swift                 # 3-tab navigation (Search, Insights, Dashboard)
 │   ├── AppState.swift                    # Global state singleton
 │   ├── Theme.swift                       # (Deprecated) Legacy colors
-│   ├── ThemeColors.swift                 # Design token color palette
+│   ├── ThemeColors.swift                 # Triadic color palette
 │   ├── StatusBarStyleManager.swift       # Custom UIHostingController
 │   └── SafariView.swift                  # SFSafariViewController wrapper
 ├── Auth/
 │   ├── AuthManager.swift                 # Supabase auth logic
 │   └── AuthView.swift                    # Sign in/up UI
+├── Consent/
+│   └── DataConsentView.swift             # Data consent gate + info view
 ├── Onboarding/
 │   ├── SplashView.swift                  # Launch screen
-│   └── OnboardingCarouselView.swift      # Feature intro
+│   ├── OnboardingCarouselView.swift      # 3-page feature intro
+│   └── OnboardingScenes.swift            # Programmatic SwiftUI illustrations
 ├── Search/
 │   ├── SearchUploadView.swift            # Resume upload (file picker + camera)
 │   ├── DocumentScannerView.swift         # VisionKit camera scanner wrapper
 │   ├── ImageProcessor.swift              # Image normalization & compression
-│   ├── SearchAnalyzingView.swift         # Analysis progress
-│   ├── SearchResultsView.swift           # Job matches
-│   ├── ResultsViewModel.swift            # Results state management
-│   └── ExplanationManager.swift          # (Future) AI explanations
+│   ├── SearchAnalyzingView.swift         # Analysis progress with error handling
+│   ├── SearchResultsView.swift           # Job matches with badges & bookmarks
+│   ├── ResultsViewModel.swift            # Results state + bookmark toggle
+│   └── ExplanationManager.swift          # AI match explanations
+├── Insights/
+│   ├── InsightsView.swift                # Resume score & suggested roles UI
+│   └── InsightsViewModel.swift           # Insights data & role explanations
 ├── Dashboard/
-│   ├── DashboardView.swift               # Search history UI
-│   ├── DashboardViewModel.swift          # Dashboard state
-│   └── DashboardModels.swift             # Summary & session models
+│   ├── DashboardView.swift               # Search history + saved jobs UI
+│   ├── DashboardViewModel.swift          # Dashboard state + starred jobs
+│   └── DashboardModels.swift             # Summary, session, saved job models
 ├── Settings/
-│   └── SettingsView.swift                # App settings
+│   └── SettingsView.swift                # App settings + data consent info
 ├── Network/
-│   └── APIService.swift                  # API client
+│   └── APIService.swift                  # API client + job interactions
 ├── Models/
 │   ├── SearchSession.swift               # Session data
-│   └── JobExplanation.swift              # (Future) Explanation models
+│   └── JobExplanation.swift              # Explanation models
 └── Resources/
     └── SampleResume.pdf                  # Sample resume for testing
 ```
@@ -952,18 +1168,19 @@ JobMatchNow/
 ## Future Enhancements
 
 ### Planned Features
-1. **AI Job Explanations** - "Why this matches you" expandable cards
-2. **Job Bookmarking** - Save jobs for later review
+1. ✅ ~~AI Job Explanations~~ - "Why this matches you" expandable cards (Completed Dec 2025)
+2. ✅ ~~Job Bookmarking~~ - Save jobs for later review (Completed Dec 2025)
 3. **Advanced Filters** - Salary range, experience level, company size
 4. **Push Notifications** - New matches for saved searches
 5. **Profile Management** - Edit resume, preferences in-app
 6. **Dark Mode** - Full dark mode support (currently mixed light/dark)
+7. ✅ ~~Resume Insights~~ - Score and suggested roles (Completed Dec 2025)
 
 ### Technical Debt
-- Migrate fully from `Theme.swift` to `ThemeColors.swift` (deprecation warnings remain)
+- ✅ ~~Migrate fully from `Theme.swift` to `ThemeColors.swift`~~ (Completed Dec 2025 - triadic system)
 - Add unit tests for ViewModels and APIService
 - Implement error analytics (e.g., Sentry, Firebase Crashlytics)
-- Add retry logic with exponential backoff for API failures
+- ✅ ~~Add retry logic for API failures~~ (Completed Dec 2025 - pipeline error handling)
 - ✅ ~~Implement token refresh flow for expired Supabase sessions~~ (Completed Dec 1, 2025)
 
 ---
@@ -976,5 +1193,5 @@ JobMatchNow/
 
 ---
 
-*This documentation reflects the state of the codebase as of November 30, 2025. For the latest changes, see git commit history.*
+*This documentation reflects the state of the codebase as of December 7, 2025. For the latest changes, see git commit history.*
 
